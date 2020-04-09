@@ -1,0 +1,25 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteLaunchConfiguration
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _y8VG8LY-Eeak39QdlE0Nvg
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/21/17 9:08 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_NDQ8YMJFEeei44WvxanlTg	// kind: 'test' name: 'CodeCoverageMetadataBrowse' path: 'CodeCoverageMetadataBrowse.test'
+_VPL1UM7EEeeaRfBnZ17kwg	// kind: 'test' name: 'CodeCoverageTDOSection' path: 'CodeCoverageTDOSection.test'
+_HYStIHqcEea2J_ZTcwmemQ	// kind: 'test' name: 'DebugConfigurationSelectionDialog' path: 'DebugConfigurationSelectionDialog.test'
+_y3YncFdeEeeXyt4ANXXdUw	// kind: 'test' name: 'EmbeddedSteps' path: 'EmbeddedSteps.test'
+_Cq6PMMJKEeei44WvxanlTg	// kind: 'test' name: 'MetadataBrowseDialog' path: 'MetadataBrowseDialog.test'
+_hgVykH6vEeeKdogbi4OGzg	// kind: 'test' name: 'XpedAutofillRecall' path: 'XpedAutofillRecall.test'
+_suqwwKOREee41a3BXHVq4g	// kind: 'test' name: 'XpedCodeCoverageConfiguration' path: 'XpedCodeCoverageConfiguration.test'
+_Tyr3UHwHEeaucpLG7Fz7mQ	// kind: 'test' name: 'XpedLaunchConfigurationMgr' path: 'XpedLaunchConfigurationMgr.test'
+_H8bgIONDEea3ark9aBxh3g	// kind: 'test' name: 'XpedLaunchResourceValidationRecall' path: 'XpedLaunchResourceValidationRecall.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

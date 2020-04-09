@@ -1,0 +1,87 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_kR5YUER7EeamKrg04Gqe-Q
+Element-Name: DeleteOnlineProjectWhileLoggedIn
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _zhPxwEUHEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/11/17 9:40 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val sourcePDSName "XDEVREG.OLPDLT.PERF.PLI"]
+global [val copybookPDSName "XDEVREG.OLPDLT.PERF.PLI.COPYLIB"]
+global [val loggedInProjectName TestOnlineDeletePerformance]
+global [val loggedOutProjectName TestOnlineDeletePerformanceNoLogin]
+
+delete-online-project $loggedInProjectName
+delete-online-project $loggedOutProjectName -port $PORT_20947
+
+create-online-project $loggedInProjectName
+add-source-online-project -projectName $loggedInProjectName -datasetName $sourcePDSName
+add-copybook-online-project -project $loggedInProjectName -copybook $copybookPDSName
+
+create-online-project $loggedOutProjectName -port $PORT_20947
+add-source-online-project -projectName $loggedOutProjectName -datasetName $sourcePDSName -portNum $PORT_20947
+add-copybook-online-project -project $loggedOutProjectName -copybook $copybookPDSName -portNum $PORT_20947
+
+
+proc "deleteProjectPerformanceCheck" [val loggedInProjectName] [val loggedInHostName] [val loggedInPort] [val loggedOutProjectName] [val loggedOutHostName] [val loggedOutPort] {
+    with [get-view $PROJECT_EXPLORER | get-tree] { 
+        select [format "%s [%s:%s]" $loggedInProjectName $loggedInHostName $loggedInPort]
+           [format "%s [%s:%s]" $loggedOutProjectName $loggedOutHostName $loggedOutPort]
+        get-menu Delete | click
+        with [get-window "Delete Resources"] {
+            get-button "Yes" | click
+        }
+    }
+
+	wait-project-delete -seconds 30 -hostname $HOST -portNum $PORT -portNum2 $PORT_20947
+}
+
+proc "wait-project-delete" [val seconds 30] [val hostname $HOST] [val portNum $PORT] [val portNum2 $PORT_20947]
+{
+	try -delay 1000 -times $seconds -command 
+	{
+	 	get-view $PROJECT_EXPLORER | get-tree | verify-error
+	 	{
+        	get-item [format "%s [%s:%s]" $loggedInProjectName $hostname $portNum]
+    	}
+    
+    	get-view $PROJECT_EXPLORER | get-tree | verify-error
+    	{
+        	get-item [format "%s [%s:%s]" $loggedOutProjectName $hostname $portNum2]
+    	}    
+	}
+	-catch 
+	{
+		log  [format "Waited %s seconds and could not delete projects" $seconds]
+	}
+}
+
+// Test the performance of deleting two online projects - An online project with a host still connected and an online project with 
+// the host disconnected.  The online project with the host connected will force a refresh of the project before attemtping the
+// delete to improve the performance of the delete (by forcing the caching of the host resources).
+
+deleteProjectPerformanceCheck -loggedInProjectName $loggedInProjectName -loggedInHostName $HOST -loggedInPort $PORT -loggedOutProjectName $loggedOutProjectName -loggedOutHostName $HOST -loggedOutPort $PORT_20947
+
+// TODO: This is special cleanup do to the fact that removing all hosts in this test's context messes with Topaz's
+// host caching (and causes tests to fail when re-running them.) This is probably because of a bug in our product,
+// but for now this gets around the issue for us. We should investigate further and remove this.
+get-tab-folder | get-tab-item $HOST_EXPLORER | click
+add-filter $FILTER_XDEVREG -hostName $HOST -portNum $PORT
+with [get-view $HOST_EXPLORER | get-tree | get-item [format "Hosts/%s:%s/z\\/OS Datasets/xdevreg" $HOST $PORT]] {
+	expand
+	// TODO: If you find tests failing after running this test, you may need to add a refresh to the dataset you are
+	// working with here:
+	get-item "XDEVREG.COMPARE" | select-item | get-menu Refresh | click
+	get-item "XDEVREG.HS.JCL" | select-item | get-menu Refresh | click
+	get-item "XDEVREG.COBOL" | select-item | get-menu Refresh | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

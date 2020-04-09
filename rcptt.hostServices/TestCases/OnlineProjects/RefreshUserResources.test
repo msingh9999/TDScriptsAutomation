@@ -1,0 +1,89 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_CSp7IEUJEeamKrg04Gqe-Q
+Element-Name: RefreshUserResources
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _ziHUcEUHEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 1/23/17 8:37 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test cases for refreshing user files and folders in a Compuware online mainframe project.
+
+Test cases covered:
+* Refresh of user folder picks up changes on the local filesystem
+* Refresh of user file picks up changes on the local filesystem
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/* Validate case for refreshing a user folder. */
+
+global [val projectName "OnlineProject"]
+global [val userFolderName "UserFolder"]
+global [val newFolderName "newFolder"]
+global [val createUserFilesBatchFileName "createUserFiles.bat"]
+global [val updateUserFileBatchFileName "updateUserFile.bat"]
+global [val newFileName "newFile.txt"]
+global [val userFileName "userFile.txt"]
+
+// Execute bat file to create UserFolder/newFolder/newFile.txt
+get-tab-folder | get-tab-item $PROJECT_EXPLORER | click
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $createUserFilesBatchFileName]
+    | get-menu "Open With/System Editor" | click
+    
+// Validate UserFolder/newFolder is not shown in project yet
+get-view $PROJECT_EXPLORER | get-tree | verify-error {
+	get-item [format "%s \\[%s:%s\\]/%s/%s/%s" $projectName $HOST $PORT $userFolderName $newFolderName $newFileName]
+}
+
+wait -ms 2000
+
+// Refresh UserFolder
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s" $projectName $HOST $PORT $userFolderName] | get-menu Refresh | click
+
+// Validate UserFolder/newFolder/newFile.txt is now shown in project
+get-view $PROJECT_EXPLORER | get-tree | get-item [format "%s \\[%s:%s\\]/%s/%s/%s" $projectName $HOST $PORT $userFolderName $newFolderName $newFileName]
+    | get-property caption | equals $newFileName | verify-true
+
+/* Validate case for refreshing a user file. */
+// Validate existing user file contains expected text
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $userFileName]
+    | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $userFileName] | get-menu "Open With/Compuware Editor" | click
+get-editor $userFileName | get-text-viewer | get-property text | equals "old line" | verify-true
+get-editor $userFileName | close
+
+// Execute bat file to modify user file
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $updateUserFileBatchFileName]
+	| get-menu "Open With/System Editor" | click
+
+// Verify file shows as "out of sync" when opened in Compuware editor
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $userFileName]
+	| get-menu "Open With/Compuware Editor" | click
+get-editor $userFileName | get-editbox -after [get-label [format "Editing: %s on %s/%s" $userFileName $projectName $userFolderName]] 
+    | get-property text 
+    | contains [format "Resource is out of sync with the file system: '/%s/%s/%s'." $projectName $userFolderName $userFileName] 
+    | verify-true
+get-editor $userFileName | close
+
+// Refresh user file
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $userFileName]
+	| get-menu Refresh | click
+
+// Verify user file now contains modified text when opened in Compuware editor
+get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s/%s" $projectName $HOST $PORT $userFolderName $userFileName]
+	| get-menu "Open With/Compuware Editor" | click
+get-editor $userFileName | get-text-viewer | get-property text | equals "old line \n"
+    + "new line" | verify-true
+get-editor $userFileName | close
+
+delete-online-project -projectName $projectName
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

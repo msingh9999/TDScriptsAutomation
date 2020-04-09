@@ -1,0 +1,204 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CompuwareEditorHyperlinks
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _wHPCsL5NEeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201704062317
+Save-Time: 7/7/17 10:03 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val hyperlinksJCLDatasetName "XDEVREG.HYPRLNKS.JCL"]
+
+// Attempted to create a preferences context to ensure the preferences state at the beginning of the test but
+// have not been able to get this to work.  So for a work around, use the "Restore Defaults" to restore the preferences
+// to a somewhat known state.
+
+// Make sure the "Only display z/OS dataset hyperlinks for the following file extensions:" preference is enabled/checked
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Hyperlinks"
+    get-button "Restore Defaults" | click
+    with [get-group "File extensions"] {
+        get-button "Only display z/OS dataset hyperlinks for the following file extensions:" | check 
+    }        
+    get-button OK | click
+}
+
+add-filter $FILTER_XDEVREG
+submit-job "XDEVREG.HS.JCL" "MIGRATE5" -jobName "XDEVMIG5"
+
+// Open dataset XDEVREG.HYPRLNKS.JCL in browse mode and test the various datasets, etc. that are set up in this file (they should not be changed/edited)
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $hyperlinksJCLDatasetName]
+    | get-menu "Browse With/Compuware Editor" | click
+}
+
+// Select line 4, XDEVREG.XPED.DDIO and try a right-click Hyperlink / Browse menu
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 4 17
+    select-range 4 18 4 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window $HOST_EXPLORER 
+    | get-label "XDEVREG.XPED.DDIO could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." 
+    | get-property caption 
+    | equals "XDEVREG.XPED.DDIO could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." 
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+ // Select line 5, XDEVREG.XPED.DDIO(PLITYPE) and try a right-click Hyperlink / Browse menu   
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 5 26
+    select-range 5 27 5 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window $HOST_EXPLORER 
+    | get-label "XDEVREG.XPED.DDIO(PLITYPE) could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." 
+    | get-property caption 
+    | equals "XDEVREG.XPED.DDIO(PLITYPE) could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." 
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+// Select line 6, XDEVREG.HS.API.TEST.LINEAR and try a right-click Hyperlink / Browse menu  
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 6 26
+    select-range 6 27 6 1
+    get-menu "Hyperlink/Browse" | click
+}
+
+// In case the dataset is migrated, try and recall it and re-open it
+try -command {
+	get-window "Dataset is migrated" | get-button Yes | click
+	HE-dataset-wait-for-migration -hostname $HOST -portNum $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.API.TEST.LINEAR"
+	// Try and open line 6, XDEVREG.HS.API.TEST.LINEAR and try a right-click Hyperlink / Browse menu again
+	with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+	    set-caret-pos 6 26
+	    select-range 6 27 6 1
+	    get-menu "Hyperlink/Browse" | click
+	}
+} -catch {
+}
+
+
+get-window $HOST_EXPLORER | get-label "There are no editors available that support the display of VSAM datasets." 
+    | get-property caption | equals "There are no editors available that support the display of VSAM datasets." 
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+// Select line 7, XDEVREG.XPED.JCL and try a right-click Hyperlink / Browse menu  
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 7 15
+    select-range 7 17 7 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window "Dataset Selection" | get-section Members | get-table | select "CWXTCOB" | double-click
+get-editor "CWXTCOB.jcl" | close
+
+// Select line 8, XDEVREG.XPED.JCL(PLITYPEJ) and try a right-click Hyperlink / Browse menu 
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName]] {
+    with [get-text-viewer] {
+        set-caret-pos 8 26
+        select-range 8 27 8 1
+        get-menu "Hyperlink/Browse" | click
+    }
+    click
+}
+get-editor "PLITYPEJ.jcl" | close
+
+// Select line 9, XDEVREG.DOESNT.EXIST and try a right-click Hyperlink / Browse menu 
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 9 20
+    select-range 9 21 9 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window $HOST_EXPLORER 
+    | get-label [format "XDEVREG.DOESNT.EXIST does not exist on host %s:%s. Do you want to attempt to find XDEVREG.DOESNT.EXIST on another host?" $HOST $PORT]
+    | get-property caption 
+    | equals [format "XDEVREG.DOESNT.EXIST does not exist on host %s:%s. Do you want to attempt to find XDEVREG.DOESNT.EXIST on another host?" $HOST $PORT]
+    | verify-true
+get-window $HOST_EXPLORER | get-button No | click
+
+// Select line 10, XDEVREG.OMVS.USER.HFS and try a right-click Hyperlink / Browse menu
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 10 22
+    select-range 10 22 10 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window $HOST_EXPLORER 
+    | get-label "XDEVREG.OMVS.USER.HFS could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." 
+    | get-property caption 
+    | equals "XDEVREG.OMVS.USER.HFS could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." 
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+// Select line 10, XDEVREG.HS.API.TEST.SEQ.MIGRATED and try a right-click Hyperlink / Browse menu
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 11 32
+    select-range 11 33 11 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window "Dataset is migrated" 
+    | get-label "The dataset XDEVREG.HS.API.TEST.SEQ.MIGRATED is migrated. Would you like to recall the dataset?" 
+    | get-property caption 
+    | equals "The dataset XDEVREG.HS.API.TEST.SEQ.MIGRATED is migrated. Would you like to recall the dataset?" 
+    | verify-true
+get-window "Dataset is migrated" | get-button No | click
+
+// Select line 12, XDEVREG.HS.API.TEST.SEQ and try a right-click Hyperlink / Browse menu
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 12 23
+    select-range 12 24 12 1
+    get-menu "Hyperlink/Browse" | click
+}
+
+try
+{
+	with [get-window "File-AID Data Editor Request"] {
+	    get-button Close | click
+	}
+}
+-catch
+{
+	with [get-window "Open Resource"] {
+	    get-button OK | click
+	}
+}
+
+// Select line 13, /u/pmidzr0/hello.txt and try a right-click Hyperlink / Browse menu
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 13 20
+    select-range 13 21 13 1
+    get-menu "Hyperlink/Browse" | click
+}
+get-window $HOST_EXPLORER 
+    | get-label [format "/u/pmidzr0/hello.txt does not exist on host %s:%s. Do you want to attempt to find /u/pmidzr0/hello.txt on another host?" $HOST $PORT]
+    | get-property caption 
+    | equals [format "/u/pmidzr0/hello.txt does not exist on host %s:%s. Do you want to attempt to find /u/pmidzr0/hello.txt on another host?" $HOST $PORT]
+    | verify-true
+get-window $HOST_EXPLORER | get-button No | click
+
+
+with [get-editor [format "%S.jcl" $hyperlinksJCLDatasetName]] {
+    with [get-text-viewer] {
+        // Select line 14, XDEVREG.HYPRLNKS.JCL and try a right-click Hyperlink / Browse menu - does nothing because this is the member we already have open
+        set-caret-pos 14 20
+        select-range 14 21 14 1
+        get-menu "Hyperlink/Browse" | click
+        // Select line 15, /u/xdevreg/test.txt and try a right-click Hyperlink / Browse menu - should open this Unix text file in browse mode
+        set-caret-pos 15 19
+        select-range 15 20 15 1
+        get-menu "Hyperlink/Browse" | click
+    }
+    click
+}
+get-editor "test.txt" | close
+get-view $HOST_EXPLORER | click
+get-editor [format "%S.jcl" $hyperlinksJCLDatasetName] | close
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

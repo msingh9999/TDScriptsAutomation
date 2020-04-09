@@ -1,0 +1,55 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresExampleLauncher
+Element-Type: context
+Element-Version: 2.0
+Id: _wvcyALzIEearCfJIpjdCZQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 12/9/16 1:35 PM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+/* Opens the Example Launcher view. */
+proc "open-example-launcher-view"
+{
+	get-menu "Window/Show View/Other..." | click
+	with [get-window "Show View"]
+	{
+	    get-tree | select "Compuware/Example Launcher"
+	    get-button OK | click
+	}
+}
+
+/* Executes the specified example within the Example Launcher view. */
+proc "execute-example" [val exampleDirectory]
+{
+	with [get-view "Example Launcher" | get-group Examples]
+	{
+	    get-tree | select $exampleDirectory
+	    get-button Run | click
+	}
+}
+
+/* Verifies the given result within the result dialog of the given name. */
+proc "verify-example-result" [val dialogTitle] [val resultValue]
+{
+	with [get-window $dialogTitle]
+	{
+		get-editbox | get-property text | equals $resultValue | verify-true
+		get-button OK | click
+	}
+}
+
+/* Chooses the specified host within the host selection dialog. */
+proc "choose-host-in-dialog" [val hostPort]
+{
+	with [get-window "Select z/OS host"]
+	{
+    	get-table | select $hostPort
+    	get-button OK | click
+    }
+}
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

@@ -1,0 +1,108 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q
+Element-Name: Rename
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _dwn1kL4-EeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 8/4/17 10:48 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- Rename ----------------------------------------------"
+
+global [val sourceDataset1 "XDEVREG.RENAME1.COBOL"]
+global [val sourceDataset2 "XDEVREG.RENAME2.COBOL"]
+global [val sourceDataset3 "XDEVREG.RENAME1.SEQ"]
+global [val sourceDataset4 "XDEVREG.RENAME2.SEQ"]
+
+global [val targetDataset1 [format "XDEVREG.RENAME1.COBOL.T%S" [get-time | format-time -format mmssSSS]]]
+wait -ms 100
+global [val targetDataset2 [format "XDEVREG.RENAME2.COBOL.T%S" [get-time | format-time -format mmssSSS]]]
+wait -ms 100
+global [val targetDataset3 [format "XDEVREG.RENAME1.SEQ.T%S" [get-time | format-time -format mmssSSS]]]
+wait -ms 100
+global [val targetDataset4 [format "XDEVREG.RENAME2.SEQ.T%S" [get-time | format-time -format mmssSSS]]]
+
+global [val renamedDataset1 [concat $targetDataset1 ".TEST"]]
+global [val renamedDataset2 [concat $targetDataset2 ".TEST"]]
+global [val renamedDataset3 [concat $targetDataset3 ".TEST"]]
+global [val renamedDataset4 [concat $targetDataset4 ".TEST"]]
+
+global [val filterXdevregRename "XDEVREG.RENAME*"]
+
+remove-filter -filter $FILTER_XDEVREG
+add-filter $filterXdevregRename
+
+copy-pds -hostName $HOST -portNum $PORT -filter $filterXdevregRename -sourcePDS $sourceDataset1 -targetPDS $targetDataset1
+
+copy-pds -hostName $HOST -portNum $PORT -filter $filterXdevregRename -sourcePDS $sourceDataset2 -targetPDS $targetDataset2
+
+copy-pds -hostName $HOST -portNum $PORT -filter $filterXdevregRename -sourcePDS $sourceDataset3 -targetPDS $targetDataset3
+
+copy-pds -hostName $HOST -portNum $PORT -filter $filterXdevregRename -sourcePDS $sourceDataset4 -targetPDS $targetDataset4
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $targetDataset1]
+    | get-menu "Rename..." | click
+get-window Rename | get-table | get-editbox | set-text [concat $targetDataset1 ".TEST"]
+with [get-window Rename] {
+    get-button Rename | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+get-window Rename | get-button Rename | click
+get-window Rename | get-table | get-item $targetDataset1 | get-property "columns[1]" 
+    | equals [format "Resource %S successfully renamed to %S." $targetDataset1 $renamedDataset1] 
+    | verify-true
+get-window Rename | get-button Done | click
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $targetDataset3] [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $targetDataset2] [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $targetDataset4]
+    get-menu "Rename..." | click
+}
+with [get-window Rename | get-table] {
+    get-editbox | set-text $renamedDataset3
+    select $targetDataset2 | get-editbox | set-text $renamedDataset2
+    select $targetDataset4 | get-editbox | set-text $renamedDataset4
+}
+with [get-window Rename] {
+    get-button Rename | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+get-window Rename | get-button Rename | click
+with [get-window Rename | get-table] {
+    get-item $targetDataset3 | get-property "columns[1]" 
+        | equals [format "Resource %S successfully renamed to %S." $targetDataset3 $renamedDataset3] 
+        | verify-true
+    get-item $targetDataset2 | get-property "columns[1]" 
+        | equals [format "Resource %S successfully renamed to %S." $targetDataset2 $renamedDataset2] 
+        | verify-true
+    get-item $targetDataset4 | get-property "columns[1]" 
+        | equals [format "Resource %S successfully renamed to %S." $targetDataset4 $renamedDataset4]  
+        | verify-true
+}
+get-window Rename | get-button Done | click
+
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $filterXdevregRename] | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $renamedDataset1] [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $renamedDataset3] [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $renamedDataset2] [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregRename -dataset $renamedDataset4]
+    get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+with [get-window Delete | get-table] {
+    get-item $renamedDataset1 | get-property "columns[2]" 
+        | equals [format "Resource %S successfully deleted." $renamedDataset1] | verify-true
+    get-item $renamedDataset3 | get-property "columns[2]" 
+        | equals [format "Resource %S successfully deleted." $renamedDataset3] | verify-true
+    get-item $renamedDataset2 | get-property "columns[2]" 
+        | equals [format "Resource %S successfully deleted." $renamedDataset2] | verify-true
+    get-item $renamedDataset4 | get-property "columns[2]" 
+        | equals [format "Resource %S successfully deleted." $renamedDataset4] | verify-true
+}
+get-window Delete | get-button Done | click
+remove-filter -filter $filterXdevregRename
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

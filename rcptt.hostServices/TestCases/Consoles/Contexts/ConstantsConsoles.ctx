@@ -1,0 +1,25 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsConsoles
+Element-Type: context
+Element-Version: 2.0
+Id: _QgUBwEULEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201609202322
+Save-Time: 3/27/17 8:26 AM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Mon Mar 27 08:26:10 EDT 2017
+TSOConsoleMenu=1 TSO Commands Console
+OpenConsole=Open Console
+ClearConsole=Clear Console
+CloseConsole=Close Console
+DisplaySelectedConsole=Display Selected Console
+PinConsole=Pin Console
+ZOSConsoleMenu=2 z\\/OS Console
+CompuwareConsole=Compuware Console
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

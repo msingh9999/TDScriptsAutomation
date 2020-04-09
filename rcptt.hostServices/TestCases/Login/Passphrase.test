@@ -1,0 +1,201 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: Passphrase
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _YlVlAEklEeaHCMJmhjhZHw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 11/1/17 1:41 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val UID "COM1"]
+// TODO: Switch over port when passphrase PTF has been applied
+global [val PASSPHRASE_PORT $PORT]
+global [val PASS_PHRASE "Regress@pass010"]
+
+add-host -portNum $PASSPHRASE_PORT
+
+logout -port $PASSPHRASE_PORT
+
+// Test login of existing passphrase
+get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $HOST $PASSPHRASE_PORT] | get-menu "Login..." | click
+with [get-window Login] {
+    with [get-editbox -after [get-label "User ID:"]] {
+        set-text $UID
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    get-editbox -after [get-label "Password:"] | set-text $PASS_PHRASE
+    get-button OK | click
+}
+
+get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $HOST $PASSPHRASE_PORT] | get-menu Logout | click
+get-window Logout | get-button Yes | click
+
+// Change passphrase tests [b=blank in passphrase comment(s)]
+
+// Test passphrase beginning and ending with single quotes
+get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $HOST $PASSPHRASE_PORT] | get-menu "Login..." | click
+with [get-window Login] {
+    get-editbox -after [get-label "User ID:"] | set-text $UID
+    with [get-section "Change Password"] {
+		try -command {
+			get-window Login | get-section "Change Password" | get-link | get-property "isExpanded()" | equals true | verify-true
+		} -catch {
+			click
+		}    	
+
+        get-editbox -after [get-label "New password:"] | set-text [decrypt "1kjIvFVZe32J3HuIgnhuzR2adBmXXgHIm1WzadFjQqc="] //''mylongpassphrase''
+    }
+}
+
+with [get-window Login] {    
+	get-label "" -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property "image.path" 
+    	| equals "org.eclipse.jface/icons/full/message_warning.png" | verify-true
+    	
+ 	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// Test passphrase beginning and ending with a blank
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "KeGAa4E1wsokG/03LT+/WU3LSQHjFsx1YieS1v6mhxI="] //'bmylongpassphraseb'
+
+with [get-window Login] {	
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// Test passphrase starting with two single quotes
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "1kjIvFVZe32J3HuIgnhuzXz3OXCzgGDY4treeZG6K0c="] //''mylongpassphrase
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// Test passphrase ending with two single quotes
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "MRoeZWxIVmeGbwQ8XS5Vcvt+PsGI+g1Hjrss84R3gLI="] //mylongpassphrase''
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// Test passphrase with only a blank
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "7s/NA/S6cdurhZu9M1Vcvw=="] //b
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// Test passphrase starting with a blank
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "jTTJxv9PQhxyYGtZC+iqQZJFZECwu3MFQdvYSQLTGOA="] //bmylongpassphrase
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// test passphrase ending with a blank
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "MRoeZWxIVmeGbwQ8XS5VciX3aSdBl3a13qgu/zmelfA="] //mylongpassphraseb
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Passphrases starting or ending with a single quote or space may not login into TSO successfully." 
+    	| verify-true
+}
+
+// Test simple passphrase; no quotes or blanks
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "MRoeZWxIVmeGbwQ8XS5VcjJtnuRb3Kbj5T7rQgu4BbA="] //'mylongpassphrase'
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Please enter your login credentials." 
+    	| verify-true
+}
+
+// Test start of passphrase as just a single quote
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "D+7WTH0z3t647cNr06LXZQ=="] //'
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Please enter your login credentials." 
+    	| verify-true
+}
+
+// Test start of passphrase with two single quotes
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "RL5rsdxetPZldU+lxvbFtA=="] //''
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Please enter your login credentials." 
+    	| verify-true
+}
+
+// Test passphrase with embedded blanks
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "yu/C1vQMl0WjsxvHTBAFoT4i3eyXOY9jgBUEMBsouL0="] //myblongbpassphrase
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Please enter your login credentials." 
+    	| verify-true
+}
+
+// Test passphrase with embedded quotes
+get-window Login | get-section "Change Password" | get-editbox -after [get-label "New password:"] 
+    | set-text [decrypt "6miIym+9kTUaqyqk+uSrgFl590uxp9sHpoXNAARFzwk="] //my'long'passphrase
+
+with [get-window Login] {
+	get-editbox -after [get-label [format "Login Credentials for %s:%s" $HOST $PASSPHRASE_PORT]] | get-property text 
+    	| equals "Please enter your login credentials." 
+    	| verify-true
+}
+
+// Test changing password with passphrase CWE-121074 (Should not work).
+with [get-window Login] {
+    with [get-editbox -after [get-label "User ID:"]] {
+        set-text xdevreg
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    get-editbox -after [get-label "Password:"] | set-text [decrypt "GCCQ5KeLMRHd4spOzx8A1g=="]
+    with [get-section "Change Password"] {
+        with [get-editbox -after [get-label "New password:"]] {
+            set-text [decrypt "Ns3/YIsJ0PACT6xkFu7j4A=="]
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        get-editbox -after [get-label "Confirm new password:"] | set-text [decrypt "Ns3/YIsJ0PACT6xkFu7j4A=="]
+    }
+    get-button OK | click
+}
+get-window Login | get-editbox -after [get-label "Login Credentials for cw01:30947"] | get-property text 
+    | equals "Password and Passphrase cannot be mixed." | verify-true
+    
+with [get-window Login] {
+   	get-button Cancel | click
+}
+
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

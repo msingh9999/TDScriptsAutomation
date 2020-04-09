@@ -1,0 +1,168 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresCodeCoverage
+Element-Type: context
+Element-Version: 2.0
+Id: _urTgQEU4EeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 11/20/17 3:34 PM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+proc "add-cc-repository" [val hostName $HOST][val portNum $PORT][val filter "XDEVREG*"] [val repositoryName ""]
+{
+	get-tree | select Repositories | get-menu -path "Add..." | click
+	with [get-window "Code Coverage"] {
+	    with [get-section Repositories] {
+	        get-editbox -after [get-label "Name:"] | set-text $filter
+	        get-button List | click
+	    }
+	    
+	    handle-login-dialog
+	
+	    get-section Repositories | get-table | select $repositoryName
+	    get-button OK | click
+	}
+}
+
+proc "remove-cc-repository" [val hostName $HOST][val portNum $PORT][val repositoryName ""]
+{
+	try
+	{
+		open-perspective "Code Coverage"
+		get-tree | select [format "Repositories/%s:%s/%s" $hostName $portNum $repositoryName] | get-menu -path Remove | click
+		get-window "Remove Repository" | get-button Yes | click
+	}
+	-catch
+	{
+		log [format "remove-cc-repository failed for repository %s." $repositoryName]
+	}
+}
+
+proc "delete-filter" [val filterName]
+{
+	try 
+	{
+		open-perspective "Code Coverage"
+		get-view "Code Coverage" | get-tree | select [format "Report Filters/%s" $filterName] | get-menu Delete | click
+		get-window "Code Coverage" | get-button Yes | click
+	} 
+	-catch
+	{
+		log [format "delete-filter failed for filter %s." $filterName]
+	}
+}
+
+proc "delete-report" [val reportName]
+{
+	try 
+	{
+		open-perspective "Code Coverage"
+		get-view "Code Coverage" | get-tree | select [format "Report Requests/%s" $reportName] | get-menu Delete | click
+		get-window "Code Coverage" | get-button Yes | click
+	} 
+	-catch
+	{
+		log [format "delete-report failed for report %s." $reportName]
+	}
+}
+
+proc "get-report-view" [val reportName]
+{
+	wait-for-report -reportName $reportName
+	get-view [format "%s.*" $reportName] 
+}
+
+/* Returns true if the specified filter exists in the Host Explorer tree. */
+proc "has-cc-repository" [val repository] {
+	try -command 
+	{
+		get-preferences-menu | click
+   		with [get-window Preferences] {
+		    get-tree | select "Compuware/Code Coverage"
+    		get-table | get-item $repository   		
+			bool true
+		}
+	} 
+	-catch 
+	{
+		bool false
+	}
+	-finally
+	{
+		with [get-window Preferences] {
+			get-button OK | click
+		}
+	}	
+}
+
+proc "wait-for-report" [val reportName]
+{
+	try -delay 1000 -times 10 -command
+	{
+		log [format "wait-for-report for %s." $reportName]
+		get-tab-folder | get-property activePage | equals $reportName | verify-true
+	}
+	-catch
+	{
+		log [format "wait-for-report failed for %s." $reportName]
+	}
+}
+
+/**
+ * Restores the Annotations preferences to their defaults.
+ */
+proc "restore-annotations-prefrences"
+{
+	get-preferences-menu | click
+	with [get-window Preferences]
+	{
+    	get-tree | select "General/Editors/Text Editors/Annotations"
+    	get-button "Restore Defaults" | click
+    	get-button OK | click
+	}
+}
+
+/* Sets the Code Coverage perspective switch preference */
+proc "set-cc-perspective-switch-preference" [val preferenceValue "Prompt"]
+{
+	get-preferences-menu | click
+	with [get-window Preferences] {
+	    get-tree | select "Compuware/Code Coverage"
+	    get-group "Open the associated perspective when a Code Coverage report runs" | get-button $preferenceValue | click
+	    get-button OK | click
+	}
+}
+
+/**
+ * Creates a Code Coverage report request with the specified name.
+ */
+proc "create-cc-report-request" [val reportName]
+{
+	if [get-view "Code Coverage" | get-tree | has-item [format "Report Requests/%s" $reportName] | not]
+	{
+		get-view "Code Coverage" | get-button "Create a New Report Request" | click
+		with [get-window "Code Coverage Report Request"]
+		{
+		    get-editbox -after [get-label "Report request name:"] | set-text $reportName
+		    if [get-combo -after [get-label "Repository:"] | get-property "getText()" -raw | not-eq "XDEVREG.CC.REPOSIT"]
+		    {
+			    get-button "Browse..." | click
+			    with [get-window "Code Coverage"] {
+			        with [get-section Repositories] {
+			            get-editbox -after [get-label "Name:"] | set-text "XDEVREG.CC.REPOSIT"
+			            get-button List | click
+			            get-table | select "XDEVREG.CC.REPOSIT"
+			        }
+			        get-button OK | click
+			    }
+		    }
+		    get-button OK | click
+		}
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

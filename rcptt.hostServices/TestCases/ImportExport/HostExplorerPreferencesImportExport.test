@@ -1,0 +1,138 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _7WSUgGhrEeargO7pG6rfCA
+Element-Name: HostExplorerPreferencesImportExport
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _0KcEIBrsEeeLrZD9rw5kPA
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 12/14/17 4:34 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the preferences on the Host Explorer preference page are imported and exported properly.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Export location within project that gets cleared with every run of the test; see Contexts for project
+global [val exportLocation [concat [get-workspace-location]"/ImportExportProject/export"]]
+global [val translateHebrewText "Enable bidirectional data flow between the host and workstation for Hebrew text"]
+global [val insertLeftToRightText "Insert left-to-right control characters"]
+
+// Set button states to non-default values
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tree | select "Compuware/Host Explorer"
+	get-button "Restore Defaults" | click
+
+    get-group "Default dataset open mode" | get-button Browse | click
+
+    with [get-group Editing]
+    {
+        get-button "Show warning when files are edited outside of a Compuware editor" | uncheck
+        get-button "Convert backslash characters into yen signs" | check
+    }
+
+    get-group Browsing | get-button "Show message when browsing files with binary data" | uncheck
+
+    with [get-group Presentation]
+    {
+        get-button "Display migrated datasets" | uncheck
+        get-button "Display hidden files" | uncheck
+    }
+
+    with [get-group "Bidirectional Text"]
+    {
+        get-button $insertLeftToRightText | uncheck
+        get-button $translateHebrewText | uncheck
+    }
+
+    get-button OK | click
+}
+
+// Export the preferences
+get-menu "File/Export..." | click
+with [get-window Export]
+{
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+
+with [get-window "Export Compuware Configuration Settings"]
+{
+    get-group "Configuration Settings" | get-tree | get-item "Host Explorer/General Preferences" | check
+    get-combo -after [get-label "To directory:"] | set-text $exportLocation
+    get-button Finish | click
+    try -command
+    {
+    	get-window "Import/Export Warning" | get-button Yes | click
+    } -catch
+    {
+    	// Okay if window is missing
+    }
+    get-window "Import/Export" | get-button OK | click
+}
+
+// Reset preferences to default values
+get-preferences-menu | click
+with [get-window Preferences]
+{
+	get-button "Restore Defaults" | click
+    get-button OK | click
+}
+
+// Import the preferences
+get-menu "File/Import..." | click
+with [get-window Import]
+{
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+
+with [get-window "Import Compuware Configuration Settings"]
+{
+    get-group "Configuration Settings" | get-tree | get-item "Host Explorer/General Preferences" | check
+    get-combo -after [get-label "From directory:"] | select $exportLocation
+    get-button Finish | click
+    get-window "Import/Export" | get-button OK | click
+}
+
+// Verify preferences are back to non-default values
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-group "Default dataset open mode" | get-button Browse | get-property selected | equals true | verify-true
+    with [get-group Editing]
+    {
+        get-button "Show warning when files are edited outside of a Compuware editor" | get-property selected
+            | equals false | verify-true
+        get-button "Convert backslash characters into yen signs" | get-property selected | equals true | verify-true
+    }
+
+    get-group Browsing | get-button "Show message when browsing files with binary data" | get-property selected | equals false | verify-true
+
+    with [get-group Presentation]
+    {
+        get-button "Display migrated datasets" | get-property selected | equals false | verify-true
+        get-button "Display hidden files" | get-property selected | equals false | verify-true
+    }
+
+    with [get-group "Bidirectional Text"]
+    {
+        get-button $translateHebrewText | get-property selected | equals false | verify-true
+        get-button $insertLeftToRightText | get-property selected | equals false | verify-true
+    }
+
+	// Change back to defaults
+	get-button "Restore Defaults" | click
+    get-button OK | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

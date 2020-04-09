@@ -1,0 +1,297 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: JESExplorer
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _RtYtML4-EeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/18/18 12:40 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the JES Explorer view.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+add-filter -filter $FILTER_XDEVREG
+
+proc "refresh-jes-explorer" [val retries 10]
+{
+	get-view $JES_EXPLORER | get-button "Refresh\tF5" | click
+    try -delay 1000 -times $retries -command
+    {
+		get-view $JES_EXPLORER | get-label -after [get-table] | get-property caption | contains "Found" | verify-true
+    }
+    -catch 
+    {
+        log [format "Waited 10 seconds, %s times, but refresh did not finish" $retries]
+    }
+}
+
+proc "cancel-job" [val jobname] [val retries 10]
+{
+    try -delay 1000 -times $retries -command
+    {
+		with [get-view $JES_EXPLORER] {
+		    get-button "Refresh\tF5" | click
+		    wait -ms 1500
+		    get-table | select $jobname -column $JES_JOB_COLUMN_NAME | get-menu "Cancel Job" | click
+		}
+		get-window "Cancel Confirmation" | get-button OK | click
+    }
+    -catch 
+    {
+        log [format "Waited 10 seconds, %s times, but could not find submitted job named %s" $retries $jobname]
+    }
+}
+
+proc "cancel-job-with-dump" [val jobname] [val retries 10]
+{
+    try -delay 1000 -times $retries -command
+    {
+		with [get-view $JES_EXPLORER] {
+		    get-button "Refresh\tF5" | click
+		    wait -ms 1500
+		    get-table | select $jobname -column $JES_JOB_COLUMN_NAME | get-menu "Cancel Job With Dump" | click
+		}
+		get-window "Cancel Confirmation" | get-button OK | click
+    }
+    -catch 
+    {
+        log [format "Waited 10 seconds, %s times, but could not find submitted job named %s" $retries $jobname]
+    }
+}
+
+proc "purge-job" [val jobname] [val retries 10]
+{
+    try -delay 1000 -times $retries -command
+    {
+		with [get-view $JES_EXPLORER] {
+		    get-button "Refresh\tF5" | click
+		    wait -ms 1500
+		    get-table | select $jobname -column $JES_JOB_COLUMN_NAME | get-menu "Purge" | click
+		}
+		get-window "Purge Confirmation" | get-button OK | click
+    }
+    -catch 
+    {
+        log  [format "Waited 10 seconds, %s times, but could not find submitted job named %s" $retries $jobname]
+    }
+}
+
+/** JES EXPLORER - BUTTON/LABEL TESTS */
+
+// Test toolbar button enablement before connecting
+with [get-view $JES_EXPLORER] {
+    with [get-button "Connect...\tF6"] {
+        get-property enablement | equals true | verify-true
+        get-property tooltip | equals "Connect...\tF6" | verify-true
+    }
+    with [get-button "z/OS Console"] {
+        get-property enablement | equals true | verify-true
+        get-property tooltip | equals "z/OS Console" | verify-true
+    }
+}
+
+get-button "View Menu" | click
+get-view $JES_EXPLORER | get-menu "Preferences..." | click
+with [get-window "Preferences (Filtered)"] {
+    with [get-group "Job limit prompt"] {
+        get-button "Display prompt when number of jobs exceeds:" | uncheck
+    }
+    get-button OK | click
+}
+
+// Clear out the Prefix value if previously set
+with [get-view $JES_EXPLORER] {
+    with [get-combo -after [get-label "Prefix:"]] {
+        set-text ""
+    }
+}
+
+// Clear out the Owner value if previously set
+with [get-view $JES_EXPLORER] {
+    with [get-editbox -after [get-label "Owner:"]] {
+        set-text ""
+    }
+}
+
+// Connect - assuming we have removed all but the default test host/port
+with [get-view $JES_EXPLORER] {
+    get-button "Connect...\tF6" | click
+}
+
+// Verify message that prefix or owner must be specified
+get-view $JES_EXPLORER | get-label "Either Prefix or Owner must be specified." | get-property caption 
+    | equals "Either Prefix or Owner must be specified." | verify-true
+
+// Enter XDEVREG as the owner
+with [get-view $JES_EXPLORER] {
+    with [get-editbox -after [get-label "Owner:"]] {
+        set-text XDEVREG
+        key-type Enter
+    }
+}
+
+// Add extra columns not shown by default
+get-view $JES_EXPLORER | get-table | get-menu -path "Select Columns..." | click
+with [get-window "Select Columns"] {
+    get-list | select "End Time" "Programmer Name" "Start Time" "Submit Time" System
+    get-button "Add >" | click
+    get-list -after [get-label "Show these columns in this order:"] -index 1 
+        | select "End Time" "Programmer Name" "Start Time" "Submit Time" System
+    get-button OK | click
+}
+
+// Force a refresh to populate the added columns
+refresh-jes-explorer
+
+/** JES EXPLORER - JOBS TESTS */
+
+// test the job display limit
+get-button "View Menu" | click
+get-view $JES_EXPLORER | get-menu "Preferences..." | click
+with [get-window "Preferences (Filtered)"] {
+    with [get-group "Job limit prompt"] {
+        get-button "Display prompt when number of jobs exceeds:" | check
+        get-editbox 
+            -after [get-label "Specifying job prefix and owner criteria that is too broad may result in longer wait times.A job limit prompt can be configured to notify you when this limit is reached. You canthen choose whether or not to override the limit."] 
+            | set-text 1
+    }
+    get-button OK | click
+}
+
+get-view $JES_EXPLORER | get-button "Refresh\tF5" | click
+get-window "Job Display Limit Exceeded" | get-button No | click
+get-view $JES_EXPLORER | get-table | get-property itemCount | equals 1 | verify-true
+get-button "View Menu" | click
+get-view $JES_EXPLORER | get-menu "Preferences..." | click
+with [get-window "Preferences (Filtered)"] {
+    get-group "Job limit prompt" | get-button "Display prompt when number of jobs exceeds:" | uncheck
+    get-button OK | click
+}
+
+get-view $JES_EXPLORER | get-button "Refresh\tF5" | click
+with [get-view $JES_EXPLORER | get-table] {
+    get-property itemCount | equals 1 | verify-false
+}
+
+get-button "View Menu" | click
+get-view $JES_EXPLORER | get-menu "Preferences..." | click
+with [get-window "Preferences (Filtered)"] {
+    get-group "Job limit prompt" | get-button "Display prompt when number of jobs exceeds:" | check
+    get-button OK | click
+}
+
+get-view $JES_EXPLORER | get-button "Refresh\tF5" | click
+get-window "Job Display Limit Exceeded" | get-button Yes | click
+get-view $JES_EXPLORER | get-table | get-property itemCount | equals 1 | verify-false
+
+get-button "View Menu" | click
+get-view $JES_EXPLORER | get-menu "Preferences..." | click
+with [get-window "Preferences (Filtered)"] {
+    with [get-group "Job limit prompt"] {
+        get-editbox 
+            -after [get-label "Specifying job prefix and owner criteria that is too broad may result in longer wait times.A job limit prompt can be configured to notify you when this limit is reached. You canthen choose whether or not to override the limit."] 
+            | set-text 500
+        get-button "Display prompt when number of jobs exceeds:" | uncheck
+    }
+    get-button OK | click
+}
+
+// test the "Extract JCL" command
+submit-job -filter $FILTER_XDEVREG -dataset $XDEVREG.HS.JCL -member "CANCEL1"
+try -delay 1000 -times 10 -command
+{
+	with [get-view $JES_EXPLORER] {	
+		get-button "Refresh\tF5" | click
+		wait -ms 1500
+		get-table | get-item "CANCEL" | get-property "values['Description']" | equals "Executing" | verify-true
+	}
+}
+-catch 
+{
+    log "Waited 10 seconds, %s times, but the job didn't start executing"
+}
+get-view $JES_EXPLORER | get-table | select "CANCEL" -column $JES_JOB_COLUMN_NAME | get-menu "Extract Job JCL" | click
+try -delay 1000 -times 10 -command
+{
+	get-tab-folder -index 1 | get-property activePage | contains "CANCEL" | verify-true
+	get-tab-folder -index 1 | get-property activePage | contains ".jcl" | verify-true
+}
+-catch 
+{
+    log "Waited 10 seconds, %s times, but the extracted JCL didn't appear in an editor"
+}
+close-all-editors
+
+/** JES EXPLORER - DD TESTS */
+
+with [get-view $JES_EXPLORER] {
+	get-table | select "CANCEL" -column $JES_JOB_COLUMN_NAME
+    get-table -after [get-label "Selected job.*"] | get-property itemCount | equals 4 | verify-true
+    get-label "Selected job.*" | get-property caption | contains "15 records" | verify-true
+}
+
+get-view $JES_EXPLORER | get-table -after [get-label "Selected job.*"] | select JESJCL -column $JES_DD_COLUMN_NAME | double-click
+get-editor "CANCEL.*" | get-label "Browsing.*" | get-property caption | contains JESJCL | verify-true
+close-all-editors
+
+/** JES EXPLORER - OPTIONS AND COMMANDS TESTS */
+
+// Test the queues (Print, Execution/Input, Started Tasks, Batch, TSO Users)
+with [get-view $JES_EXPLORER] {
+    with [get-button "Print"] {
+        uncheck
+        check
+    }
+    with [get-button "Execution/Input"] {
+        uncheck
+        check
+    }
+    with [get-button "Started Tasks"] {
+        uncheck
+        check
+    }
+    with [get-button "Batch"] {
+        uncheck
+        check
+    }
+    with [get-button "TSO Users"] {
+        uncheck
+        check
+    }
+}
+
+// test the "Cancel" command
+cancel-job -jobname "CANCEL"
+get-view $JES_EXPLORER | get-table | get-item "CANCEL" -column $JES_JOB_COLUMN_NAME | get-property "values['Description']" | equals "Cancel command issued" | verify-true
+
+// test the "Purge" command
+purge-job -jobname "CANCEL"
+try -delay 1000 -times 10 -command
+{
+	with [get-view $JES_EXPLORER] {
+	    get-button "Refresh\tF5" | click
+	    wait -ms 1500
+	    get-table | verify-error {get-item "CANCEL" -column $JES_JOB_COLUMN_NAME}
+	}
+}
+-catch 
+{
+    log "Waited 10 seconds, %s times, but the job named CANCEL didn't get removed from the JES Explorer"
+}
+
+// test the "Cancel With Dump" command
+submit-job -filter $FILTER_XDEVREG -dataset $XDEVREG.HS.JCL -member "CANCEL1"
+cancel-job-with-dump -jobname "CANCEL"
+get-view $JES_EXPLORER | get-table | get-item "CANCEL" -column $JES_JOB_COLUMN_NAME | get-property "values['Description']" | equals "Cancel command issued" | verify-true
+purge-job -jobname "CANCEL"
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

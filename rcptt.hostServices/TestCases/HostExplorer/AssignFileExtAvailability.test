@@ -1,0 +1,90 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: AssignFileExtAvailability
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _HcOUUAJ3Eee2so-HTnFWDw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/12/17 12:45 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- AssignFileExtAvailability ----------------------------------------------"
+
+global [val assignFileExtMenu "Assign File Extension..."]
+
+add-host -portNum $PORT
+login-from-host -port $PORT
+
+add-filter -filter $FILTER_XDEVREG -portNum $PORT
+
+with [get-view $HOST_EXPLORER | get-tree] 
+{
+	//Host node
+	select [format "Hosts/cw01:%s" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+	
+	// z\OS Datasets node 
+	select [format "Hosts/cw01:%s/z\\/OS Datasets" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+	
+	// PDS
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.COMPILE.JCL" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	// PDS member
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.COMPILE.JCL/CWXTCOB" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	// PDSE
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.COBOL" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	//PDSE non-loadlib member
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.COBOL/ALATRA10" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	//PDSE loadlib
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.PDSE.EMBED.SRC.LOAD" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	//PDSE loadlib member
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.PDSE.EMBED.SRC.LOAD/CWXTCOB" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+	
+	//PDSE loadlib member section
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.PDSE.EMBED.SRC.LOAD/CWXTCOB/CWXTDATE" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+
+	// DDIO (Compuware Source Listing Dataset)
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.DDIO.TEST" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	//DDIO member
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.DDIO.TEST/TESTDECI (.*)" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+
+	// VSAM 
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.ESDS" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+
+	// Sequential	
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.SEQ" $PORT]
+	get-menu $assignFileExtMenu | get-property enablement | equals true | verify-true
+	
+	//Alias
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.COBOL.ALIAS" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+
+	// Migrated (no "Allocate Like..." option)
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.SEQ.MIGRATED" $PORT]
+	verify-error {get-menu $assignFileExtMenu}
+}
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,158 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: ZOSSynchronizationActionService
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _on4kQCf3EeaVl-h40AzGIA
+Runtime-Version: 2.0.2.201511100828
+Save-Time: 1/17/17 9:51 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+// If we run into issues with collisions with multiple testers because we are committing/adding then deleting members from existing
+// XDEVREG owned datasets, we could modify this test to copy the original datasets to temporary datasets, use those for the tests 
+// and delete them afterwards
+
+global [val filterCOM1 "COM1.*"]
+global [val datasetCOM1 "COM1.COBOL.SOURCE"]
+global [val projectName "OfflineTestProject"]
+global [val modifiedProjectName "> OfflineTestProject"]
+global [val datasetXdevreg "XDEVREG.HS.API.TEST.COBOL.SOURCE"]
+global [val modifiedDatasetXdevreg "> XDEVREG.HS.API.TEST.COBOL.SOURCE"]
+global [val sourceMember1 "TEST"]
+global [val modifiedSourceMember1 "> TEST"]
+global [val sourceMember2 "COM3"]
+global [val modifiedSourceMember2 "> COM3"]
+global [val sequentialDataset "XDEVREG.DEMO.SEQS3"]
+global [val temporarySequentialDataset [format "XDEVREG.SEQ.T%S" [get-time | format-time -format mmssSSS]]]
+
+proc "create-member" [val memberName] [val datasetName] [val projectName]
+{
+    get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s [%s:%s]" $projectName $HOST $PORT $datasetName $HOST $PORT] 
+    | get-menu "New/PDS Member File in a Compuware Mainframe Project" | click
+    
+    with [get-window "New PDS Member File"]
+    {
+        get-editbox -after [get-label "Member name:"] | set-text $memberName
+        get-button Finish | click
+    } 
+}
+
+try -command {
+
+	add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+	add-filter -hostName $HOST -portNum $PORT -filter $filterCOM1
+	
+	copy-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -sourcePDS $sequentialDataset -targetPDS $temporarySequentialDataset
+	
+	create-offline-project -hostName $HOST -port $PORT -projectName $projectName
+	
+	get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterCOM1 -dataset $datasetCOM1] | get-menu Refresh | click
+	
+	add-source-offline-project -hostName $HOST -portNum $PORT -projectName $projectName -filter $filterCOM1 -datasetName $datasetCOM1
+	
+	get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetXdevreg] | get-menu Refresh | click
+	
+	add-source-offline-project -hostName $HOST -portNum $PORT -projectName $projectName -filter $FILTER_XDEVREG -datasetName $datasetXdevreg
+	
+	add-source-offline-project -hostName $HOST -portNum $PORT -projectName $projectName -filter $FILTER_XDEVREG -datasetName $temporarySequentialDataset
+	
+	// Create new source member and verify its existence in Project Explorer tree
+	create-member -projectName $projectName -datasetName $datasetXdevreg -memberName $sourceMember1
+	get-editor [format "%s.cbl" $sourceMember1] | close 
+	
+	get-view $PROJECT_EXPLORER | get-tree 
+	    | get-item [format "%s [%s:%s]/%s [%s:%s]/%s.cbl [%s:%s]" $modifiedProjectName $HOST $PORT $modifiedDatasetXdevreg $HOST $PORT $modifiedSourceMember1 $HOST $PORT]
+	
+	// Create new source member with reserved name and verify its existence in Project Explorer tree
+	create-member -projectName $modifiedProjectName -datasetName $modifiedDatasetXdevreg -memberName $sourceMember2
+	get-editor [format "_%s.cbl" $sourceMember2] | close 
+	
+	get-view $PROJECT_EXPLORER | get-tree 
+	    | get-item [format "%s [%s:%s]/%s [%s:%s]/%s.cbl [%s:%s]" $modifiedProjectName $HOST $PORT $modifiedDatasetXdevreg $HOST $PORT $modifiedSourceMember2 $HOST $PORT]
+	
+	// Verify Synchronize with z/OS menu option enabled for project with changed items
+	with [get-view $PROJECT_EXPLORER | get-tree] {
+        select [format "> %s [%s:%s]" $projectName $HOST $PORT] 
+        get-menu "Team/Synchronize with z\\/OS" | get-property enablement | equals true | verify-true
+        get-menu "Team/Override and Commit to z\\/OS" | get-property enablement | equals false | verify-true
+        get-menu "Team/Update from z\\/OS" | get-property enablement | equals false | verify-true
+    }
+	
+	// Verify Override and Commit and Update From z/OS menu items for changed PDS
+    with [get-view $PROJECT_EXPLORER | get-tree] {
+        select [format "> %s [%s:%s]/> %s [%s:%s]" $projectName $HOST $PORT $datasetXdevreg $HOST $PORT] 
+        get-menu "Team/Override and Commit to z\\/OS" | get-property enablement | equals true | verify-true
+        get-menu "Team/Update from z\\/OS" | get-property enablement | equals true | verify-true
+    }
+	
+	// Verify Override and Commit and Update From z/OS menu items for changed dataset member
+	with [get-view $PROJECT_EXPLORER | get-tree] {
+        select [format "> %s [%s:%s]/> %s [%s:%s]/> %s.cbl [%s:%s]" $projectName $HOST $PORT $datasetXdevreg $HOST $PORT $sourceMember1 $HOST $PORT] [format "> %s [%s:%s]/> %s [%s:%s]/> %s.cbl [%s:%s]" $projectName $HOST $PORT $datasetXdevreg $HOST $PORT $sourceMember2 $HOST $PORT]
+        get-menu "Team/Override and Commit to z\\/OS" | get-property enablement | equals true | verify-true
+        get-menu "Team/Update from z\\/OS" | get-property enablement | equals true | verify-true
+    }
+	
+	// Force commit of new members to z/OS Host
+	
+	with [get-view $PROJECT_EXPLORER | get-tree] {
+	    select [format "> %s [%s:%s]/> %s [%s:%s]/> %s.cbl [%s:%s]" $projectName $HOST $PORT $datasetXdevreg $HOST $PORT $sourceMember1 $HOST $PORT] [format "> %s [%s:%s]/> %s [%s:%s]/> %s.cbl [%s:%s]" $projectName $HOST $PORT $datasetXdevreg $HOST $PORT $sourceMember2 $HOST $PORT]
+	    get-menu "Team/Override and Commit to z\\/OS" | click
+	}
+	
+	get-window $HOST_EXPLORER | get-button Yes | click
+	
+	// Delete new/commited members from z/OS host
+	
+	with [get-view $HOST_EXPLORER | get-tree] {
+	    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetXdevreg -member $sourceMember1]
+	           [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetXdevreg -member $sourceMember2]
+	    get-menu "Delete" | click
+	    with [get-window Delete]
+	    {
+	        get-button Delete | click
+	        get-button Done | click
+	    }
+	}
+	
+	// Verify new members no longer exist on z/OS Host
+	
+	logout -hostName $HOST -port $PORT
+	login-from-host -hostName $HOST -port $PORT
+	
+	with [get-view $HOST_EXPLORER | get-tree] {
+	    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetXdevreg] | get-menu Refresh | click
+	    verify-error {get-item [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetXdevreg -member $sourceMember1]}
+	    verify-error {get-item [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetXdevreg -member $sourceMember2]}
+	}
+	
+	remove-filter -hostName $HOST -port $PORT -filter $filterCOM1
+	
+	// Verify Override and Commit and Update From z/OS options for modified sequential file
+	
+	with [get-view $PROJECT_EXPLORER] 
+	{
+	    click
+	    get-tree | select [format "%s \\[%s:%s\\]/%s.data \\[%s:%s\\]" $projectName $HOST $PORT $temporarySequentialDataset $HOST $PORT] | double-click
+	}
+	
+	with [get-view $PROJECT_EXPLORER | get-tree] {
+	    get-menu "Team/Override and Commit to z\\/OS" | get-property enablement | equals true | verify-true
+	    get-menu "Team/Update from z\\/OS" | get-property enablement | equals true | verify-true
+	}
+	get-view $PROJECT_EXPLORER | click
+	get-editor [format "%s.data" $temporarySequentialDataset] | close
+	
+	delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $temporarySequentialDataset
+}
+-finally {
+	delete-offline-project -projectName $projectName
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

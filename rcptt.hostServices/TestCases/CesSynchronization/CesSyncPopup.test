@@ -1,0 +1,65 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: CesSyncPopup
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _oLsswFm2EeadhvMZFS_VPA
+Runtime-Version: 2.2.0.201704062317
+Save-Time: 5/15/17 11:05 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val validCesSyncUrl $CES_URL]
+
+log "---------------------------------------------- CesSyncPopup ----------------------------------------------"
+
+// Test clicking popup link with missing CES URL displays and error dialog
+
+get-preferences-menu | click
+
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-editbox -after [get-label "URL:"] | set-text ""
+    get-button OK | click
+}
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "resetRealCommandSet"
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync" -className "com.compuware.frameworks.hostservices.ces.sync.internal.startup.CesSyncStartupUtilities" -methodName "createAndDisplayPopup"
+
+with [get-window -class CesUpdatePopup] {
+    get-property sizeable | equals false | verify-true
+	with [get-label "Updates are available from Compuware Enterprise Services (CES)."] {
+     	get-property "getStyle()" | contains "WRAP" | verify-true
+    	get-property "getStyle()" | contains "NO_FOCUS" | verify-true
+	}
+    get-label -after [get-label "CES Synchronization"] | get-text | log
+    get-link "<a>Synchronize</a>" | click-link
+}
+
+get-window "Error Synchronizing with Compuware Enterprise Services" | get-button OK | click
+
+// Test clicking popup link with a valid CES URL brings one to the CES Synchronization wizard
+
+get-preferences-menu | click
+
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-editbox -after [get-label "URL:"] | set-text $validCesSyncUrl
+    get-button OK | click
+}
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync" -className "com.compuware.frameworks.hostservices.ces.sync.internal.startup.CesSyncStartupUtilities" -methodName "createAndDisplayPopup"
+
+with [get-window -class CesUpdatePopup] {
+    get-link "<a>Synchronize</a>" | click-link
+}
+
+with [get-window "Compuware Enterprise Services Synchronization"] {
+	get-label "Synchronize Remote HCI Connections" | get-property caption | equals "Synchronize Remote HCI Connections" | verify-true
+	get-button Cancel | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

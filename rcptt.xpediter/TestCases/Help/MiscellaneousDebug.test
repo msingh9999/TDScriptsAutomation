@@ -1,0 +1,133 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: MiscellaneousDebug
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _HIuz8JxvEee5T_BDt0pU3g
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/20/18 11:35 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to validate miscellaneous Xpediter context sensitive help
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- MiscellaneousDebug ----------------------------------------------"
+
+global [val XDEVREG_XPED_JCL "XDEVREG.XPED.JCL"]
+global [val PLITYPEJ PLITYPEJ]
+global [val PLITYPEJ2 "PLITYPEJ - 2"]
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG
+	-dataset $XDEVREG_XPED_JCL -member $PLITYPEJ] | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+get-window "Debug Configurations" | get-button Close | click
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG
+	-dataset $XDEVREG_XPED_JCL -member $PLITYPEJ] | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Select Debug Configuration"] {
+	get-button "Create a new configuration" | click
+	get-button Help | click
+}
+
+with [get-window "Select Debug Configuration"] {
+	get-button Help | click
+	get-button Open | click
+}
+
+with [get-window "Debug Configurations"] {
+	get-editbox -after [get-label "Name:"] | set-text "PLITYPEJ - 2"
+	get-button Close | click
+	get-window "Save Changes" | get-button Yes | click
+}
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] {
+	get-tree | select "Xpediter Batch Debug Session/PLITYPEJ"
+	get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+get-eclipse-window | key-type F6
+wait-for-caret-on-line "PLITYPE1 [PLITYPES]" 63
+
+get-editor "PLITYPE1 [PLITYPES]" | get-editbox | get-menu -path "Add Watch Variables..." | click
+with [get-window Watch] {
+	get-button "On current line" | click
+	validate-context-help "Xpediter/Eclipse supports the use of watch variables, including setting"
+}
+
+with [get-window Watch] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-view Variables | get-tree | select "A/[1]" | get-menu -path "Vertical Hex Display" | click
+with [get-window "Vertical Hex Display"] {
+	validate-context-help "Variable names, types, and values can be viewed and edited from the"
+}
+
+with [get-window "Vertical Hex Display"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-editor "PLITYPE1 [PLITYPES]" | get-editbox | get-menu -path "Set Conditional Breakpoint..." | click
+with [get-window "Conditional Breakpoint"] {
+	validate-context-help "Conditional breakpoints are breakpoints that only stop execution once a specified conditio" +
+		"n is met.&nbsp;Upon encountering a source line designated with a conditional breakpoint, Xpediter/Eclipse ev" +
+		"aluates whether the associated condition is true.&nbsp;If true,&nbsp;the breakpoint is honored and execution" +
+		" stops at that source line. If false, the breakpoint is ignored and execution continues."
+}
+
+with [get-window "Conditional Breakpoint"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-editor "PLITYPE1 [PLITYPES]" | get-editbox | get-menu -path "Set When Condition..." | click
+with [get-window "When Condition"] {
+	validate-context-help "Unlike <a href=\"#Conditional_Breakpoint\">conditional breakpoints</a>, When conditions ar" +
+		"e not associated with a particular source line. Source statements are executed one at a time. Every defined " +
+		"When condition expression is evaluated after each executed source statement. While multiple When conditions " +
+		"can be active simultaneously, &nbsp;they are evaluated in the order in which they were defined. After a defi" +
+		"ned When condition is satisfied (evaluates to true), program execution halts, positioned at the last execute" +
+		"d source statement"
+}
+
+with [get-window "When Condition"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+with [get-view Debug] {
+	click
+	get-button "Exit with Abend..." | click
+}
+
+with [get-window "Exit with Abend"] {
+	get-button "User (e.g., Unnnn):" | click
+	validate-context-help "Xpediter/Eclipse allows users to request that a step terminate with"
+}
+
+with [get-window "Exit with Abend"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-view Debug | get-tree | select "PLITYPEJ [Xpediter Batch Debug Session]" | get-menu -path "Terminate and Remove"
+	| click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,280 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: Search
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _737XkIvOEeakRZO-pZTR5w
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/22/17 7:53 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val sourcePDS "XDEVREG.SEARCH.COBOL"]
+global [val sourcePDS2 "XDEVREG.SEARCH.COBOL.BIG"]
+global [val sourcePDS3 "XDEVREG.COMPEDIT.SOURCE"]
+global [val sourceSEQ "XDEVREG.HYPRLNKS.DATA"]
+global [val sourceSEQ2 "XDEVREG.HYPRLNKS.JCL"]
+global [val sourcePDSMember "A@"]
+global [val sourcePDSMember2 "ALA04600"]
+global [val sourcePDSMember3 "BR9159RC"]
+global [val sourcePDS2Member "$$$$$$B$"]
+global [val sourcePDS2Member2 "$$$$BEC1"]
+global [val sourcePDS2Member3 "DEBUG"]
+
+proc "restore-search-defaults" 
+{
+	get-preferences-menu | click
+	with [get-window Preferences] 
+	{
+	    get-tree | select "Compuware/Search"
+	    get-button "Restore Defaults" | click
+	    get-button OK | click
+	}
+}
+
+add-filter -filter $FILTER_XDEVREG
+
+restore-search-defaults
+
+// Test searching single PDS
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS] 
+    | get-menu "Search..." | click
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        set-text program
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'program' - 1091 records, 1132 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'program' - 1091 records, 1132 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+// Test search navigation
+
+// Verify button enablement
+//get-view Search | get-tree | select "XDEVREG.COBOL"
+with [get-view Search] {
+    get-button "Show Next Match (M1+.)" | get-property enablement | equals true | verify-true
+    get-button "Show Previous Match (M1+,)" | get-property enablement | equals true | verify-true
+}
+
+// TODO: Need to resolve SlickEdit issues with RCPTT first...
+//get-view Search | get-button "Show Next Match (M1+.)" | click
+
+//get-editor "ALATRA10.cbl" | get-text-viewer | get-property "getSelectionText()" | contains "PROGRAM-ID" | verify-true
+
+//get-view Search | get-button "Show Next Match (M1+.)" | click
+
+//get-editor "ALATRA10.cbl" | get-text-viewer | get-property "getSelectionText()" | contains "BEGIN-PROGRAM" | verify-true
+
+get-view Search | close
+
+// Test searching multiple PDSs
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS]
+                                            [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2] 
+    | get-menu "Search..." | click
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        select program
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'program' - 4359 records, 4509 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'program' - 4359 records, 4509 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+get-view Search | close
+
+// Test searching single Sequential
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceSEQ] 
+    | get-menu "Search..." | click
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        set-text xdevreg
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'xdevreg' - 9 records, 9 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'xdevreg' - 9 records, 9 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+get-view Search | close
+
+// Test searching multiple Sequentials
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceSEQ]
+                                            [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceSEQ2] 
+    | get-menu "Search..." | click
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        select xdevreg
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'xdevreg' - 21 records, 21 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'xdevreg' - 21 records, 21 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+get-view Search | close
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS]
+    | get-menu "Refresh" | click
+    
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2]
+    | get-menu "Refresh" | click    
+
+// Test searching explicit PDS Members from multiple PDSs
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS -member $sourcePDSMember]
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS -member $sourcePDSMember2] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS -member $sourcePDSMember3] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2 -member $sourcePDS2Member] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2 -member $sourcePDS2Member2] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2 -member $sourcePDS2Member3] 
+    | get-menu "Search..." | click
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        select program
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'program' - 515 records, 518 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'program' - 515 records, 518 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+get-view Search | close
+
+// Test mixed bag search
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS -member $sourcePDSMember]
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS -member $sourcePDSMember2] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS -member $sourcePDSMember3] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2 -member $sourcePDS2Member] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2 -member $sourcePDS2Member2] 
+                                            [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS2 -member $sourcePDS2Member3] 
+                                            [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceSEQ] 
+                                            [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceSEQ2] 
+                                            [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourcePDS3] 
+    | get-menu "Search..." | click
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        select program
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'program' - 532 records, 536 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'program' - 532 records, 536 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+// Test Open Related Search option 
+// Setup Assumptions:
+//    Search window is still open with results from latest execution.
+with [get-view Search] {
+    get-tree | select "XDEVREG.SEARCH.COBOL"
+    get-button "Open Related Search" | click
+}
+
+// Test Search Preferences
+get-window Search | get-link "<a>Preferences...</a>" | click-link
+with [get-window Preferences] {
+    get-editbox -after [get-label "Limit number of records returned to:"] | set-text 1
+    get-button OK | click
+}
+
+get-window Search | get-button Search | click
+
+get-window "Search Results" | get-button OK | click
+
+get-view Search | get-link [format "'program' - 1 records, 1 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'program' - 1 records, 1 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+// Fix this - cannot always rely node name will be same in search; also fix to only change prefs once and then back...
+
+//with [get-view Search | get-tree] {
+//    get-item "XDEVREG.COBOL" | get-property childCount | equals 1 | verify-true
+//    get-item "XDEVREG.COBOL/ALATRA10 \\(1 records, 1 occurrences\\)" | get-property childCount | equals 1 | verify-true
+//}
+
+//get-view Search | get-tree 
+//    | get-item "XDEVREG.SEARCH.COBOL/ALA04600 \\(1 records, 1 occurrences\\)/   3:       PROGRAM-ID.     ALA04600.                                        00000300"
+//    | get-property "getText()" 
+//    | equals "3:       PROGRAM-ID.     ALA04600.                                        00000300" | verify-true
+
+
+get-view Search | get-tree 
+    | get-item "XDEVREG.COMPEDIT.SOURCE/CWXGDATE \\(1 records, 1 occurrences\\)/   2:       PROGRAM-ID.  CWXGDATE.                                                   " 
+    | get-property caption | equals "2:       PROGRAM-ID.  CWXGDATE." | verify-true
+    
+get-view Search | get-button "Open Related Search" | click
+get-window Search | get-link "<a>Preferences...</a>" | click
+with [get-window Preferences] {
+    get-button "Show record numbers in results" | uncheck
+    get-button OK | click
+}
+
+get-window Search | get-button Search | click
+get-window "Search Results" | get-button OK | click
+
+//get-view Search | get-tree 
+//    | get-item "XDEVREG.SEARCH.COBOL/ALA04600 \\(1 records, 1 occurrences\\)/       PROGRAM-ID.     ALA04600.                                        00000300"
+//    | get-property "getText()" 
+//    | equals "PROGRAM-ID.     ALA04600.                                        00000300" | verify-true
+
+get-view Search | get-tree 
+    | get-item "XDEVREG.COMPEDIT.SOURCE/CWXGDATE \\(1 records, 1 occurrences\\)/       PROGRAM-ID.  CWXGDATE.                                                   " 
+    | get-property caption | equals "PROGRAM-ID.  CWXGDATE." | verify-true
+    
+get-view Search | get-button "Open Related Search" | click
+get-window Search | get-link "<a>Preferences...</a>" | click
+with [get-window Preferences] {
+    get-button "Show record numbers in results" | check
+    get-button OK | click
+}
+
+get-window Search | get-button Cancel | click
+        
+// Test Re-execution of Search
+get-view Search | get-button "Run the Current Search Again (F5)" | click
+
+get-window "Search Results" | get-button OK | click
+
+get-view Search | get-button "Open Related Search" | click
+
+with [get-window Search] {
+    get-combo -after [get-label "Search for text:"] | set-text "program-id"
+    get-link "<a>Preferences...</a>" | click-link
+}
+with [get-window Preferences] {
+    get-editbox -after [get-label "Limit number of records returned to:"] | set-text 10000
+    get-button OK | click
+}
+get-window Search | get-button Search | click
+
+// Test Previous Searches / Search History
+get-view Search | get-button "Show Previous Searches" | get-property enablement | equals true | verify-true
+
+get-view Search | get-button "Show Previous Searches" | click -arrow
+
+get-menu [format "'program' - 1091 records, 1132 occurrences, Host: %s:%s" $HOST $PORT] | click
+get-view Search | get-link [format "'program' - 1091 records, 1132 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'program' - 1091 records, 1132 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+// Test that we can change the view type from tree to list etc.
+
+get-button "View Menu" | click
+get-view Search | get-menu "Show as List" | click
+get-button "View Menu" | click
+get-view Search | get-menu "Show as Tree" | click
+
+get-view Search | close
+
+restore-search-defaults
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

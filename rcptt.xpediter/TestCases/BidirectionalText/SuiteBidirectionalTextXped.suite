@@ -1,0 +1,16 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteBidirectionalTextXped
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _d4nZIBryEeeLrZD9rw5kPA
+Runtime-Version: 2.2.0.201703262316
+Save-Time: 4/6/17 1:57 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_ENRd8A5dEeeqcLs0Ht7rNg	// kind: 'test' name: 'HebrewViewJcl' path: '../LaunchConfiguration/HebrewViewJcl.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

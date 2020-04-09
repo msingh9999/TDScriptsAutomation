@@ -1,0 +1,55 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: NoApplicationOwningRegionsError
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Taew8L1pEeaZErGdSeIX8Q
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 7:11 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val configName "NoApplicationOwningRegions"]
+
+add-host -hostName $HOST -portNum $PORT_16196
+open-xpediter-perspective
+close-cheatsheet
+
+get-menu "Run/Debug Configurations..." | click
+get-window "Debug Configurations" | get-tree | select "Xpediter CICS Debug Session" | get-menu New | click
+with [get-window "Debug Configurations"] 
+{
+    with [get-editbox -after [get-label "Name:"]] 
+    {
+        set-text $configName
+    }
+    with [get-group "Target system"] 
+    {
+        select-host -hostName $HOST -portNum $PORT_16196
+        get-combo -after [get-label "CICS region:"] | select "CICS-H01AC013-CW01 "
+    }
+    with [get-group "Program to debug"] 
+    {
+        get-editbox -after [get-label "Load Module:"] | set-text CWDEMCB2
+        with [get-editbox -after [get-label "CSECT:"]] 
+        {
+            set-text CWDEMCB2
+        }
+    }
+    get-button Debug | click
+}
+
+handle-login-dialog
+get-window "Xpediter/Eclipse" 
+    | get-label "No debugging session could be started because you have attempted to connect to a CICS region which is considered to be a Terminal Owning Region and no associated Application Owning Regions were found in which to start the Xpediter/CICS debugging session." 
+    | get-property caption 
+    | equals "No debugging session could be started because you have attempted to connect to a CICS region which is considered to be a Terminal Owning Region and no associated Application Owning Regions were found in which to start the Xpediter/CICS debugging session." 
+    | verify-true
+get-window "Xpediter/Eclipse" | get-button OK | click
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

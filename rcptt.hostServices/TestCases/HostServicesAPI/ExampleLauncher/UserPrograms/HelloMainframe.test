@@ -1,0 +1,33 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wvcyALzIEearCfJIpjdCZQ,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: HelloMainframe
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _VmNVgMCGEearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 1:38 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/User Programs/Hello Mainframe"]
+global [val resultDialogTitle "Hello Mainframe Results"]
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+execute-example -exampleDirectory $exampleDirectory
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Launched user program.\n"
++"Sent \"Hello Mainframe!\".\n"
++"Received \"HELLO WORKSTATION!\"."
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

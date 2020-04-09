@@ -1,0 +1,113 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _QgUBwEULEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q,_IQ4-sEUKEeamKrg04Gqe-Q,_IRCIoEUKEeamKrg04Gqe-Q,_QgF_UEULEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: ClistRexxCommands
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _XW7wwEUKEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/8/16 9:58 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val clistNoAuthority "exec 'com1.noauth.test.clist(smplrx)'"]
+global [val clistNoAuthorityOutput "PHASE 1 PROCESSING OF CLIST OR REXX EXEC ENDED ABNORMALLY +\nABEND CODE: S913    REASON CODE: 0038\nREADY\nEND"]
+global [val clistInteractive "exec 'xdevreg.tso.cmds.clist(intractv)'"]
+global [val clistInteractiveOutput "'ENTER HLQ: '\nREAD ENT_VAL\nTHE READ STATEMENT IS NOT SUPPORTED FOR BACKGROUND PROCESSING\nREADY\nEND"]
+global [val rexxLargeOutput "exec 'xdevreg.tso.cmds.clist(largerx)'"]
+global [val clistHelloWorld "exec 'xdevreg.tso.cmds.clist(smplcl)'"]
+global [val clistHelloWorldOutput "HELLO WORLD! THIS IS CLIST FOR YOU!\nREADY\nEND"]
+global [val rexxHelloWorld "exec 'xdevreg.tso.cmds.clist(smplrx)'"]
+global [val rexxHelloWorldOutput "Hello world! This is REXX for you!\nREADY\nEND"]
+global [val timeCommand "time"]
+global [val rexxReadCommand "exec 'xdevreg.tso.cmds.clist(readmbr)'"]
+global [val rexxReadCommandOutput "/* REXX simple script */\nSay \"Hello world! This is REXX for you!\";\nREADY\nEND"]
+global [val clistCurrentDate "exec 'xdevreg.tso.cmds.clist(curdate)'"]
+global [val clistParms "EX 'xdevreg.tso.cmds.clist(parmscl)' 'XDEVREG'"]
+global [val clistParmsOutput "HELLO XDEVREG\nREADY\nEND"]
+global [val clistXML "EX 'xdevreg.tso.cmds.clist(parmscl)' '<mytestxml/>'"]
+global [val clistXMLOutput "HELLO <MYTESTXML/>\nREADY\nEND"]
+global [val clistCalc "EX 'xdevreg.tso.cmds.clist(calc)' '4 * 5'"]
+global [val clistCalcOutput "4*5 = 20\nREADY\nEND"]
+global [val pingCommmand "ping cw01"]
+global [val pingCommmandOutput "Pinging host cw01.compuware.com"]
+
+log "---------------------------------------------- ClistRexxCommands ----------------------------------------------"
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu "1 TSO Commands Console" | click
+get-view Console | get-label [format "TSO Commands Console - %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "TSO Commands Console - %s:%s" $HOST $PORT] | verify-true
+
+// Test executing CLIST that xdevreg user does not have authority to execute
+execute-tso-command -commandString $clistNoAuthority
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistNoAuthority $clistNoAuthority $clistNoAuthorityOutput] | verify-true
+clear-tso-console
+
+// Test a CLIST containing interactive prompts
+execute-tso-command -commandString $clistInteractive
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistInteractive $clistInteractive $clistInteractiveOutput] | verify-true
+clear-tso-console
+
+// Test a REXX command that produces 33000 lines of output
+execute-tso-command -commandString $rexxLargeOutput
+verify-tso-command-output-line-count -numberOfLines 33005 | verify-true
+clear-tso-console
+
+// Test a simple Hello World CLIST
+execute-tso-command -commandString $clistHelloWorld
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistHelloWorld $clistHelloWorld $clistHelloWorldOutput] | verify-true
+clear-tso-console
+
+// Test a simple Hello World REXX script
+execute-tso-command -commandString $rexxHelloWorld
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $rexxHelloWorld $rexxHelloWorld $rexxHelloWorldOutput] | verify-true
+clear-tso-console
+
+// Test a REXX script that reads/dumps a member
+execute-tso-command -commandString $rexxReadCommand
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $rexxReadCommand $rexxReadCommand $rexxReadCommandOutput] | verify-true
+clear-tso-console
+
+// Test a CLIST passing a parameter
+execute-tso-command -commandString $clistParms
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistParms $clistParms $clistParmsOutput] | verify-true
+clear-tso-console
+
+// Test a CLIST passing an XML fragment as a parameter - make sure XML is escaped on request/response
+execute-tso-command -commandString $clistXML
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistXML $clistXML $clistXMLOutput] | verify-true
+clear-tso-console
+
+// Test a CLIST doing simple math calculation passing parameters
+execute-tso-command -commandString $clistCalc
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistCalc $clistCalc $clistCalcOutput] | verify-true
+clear-tso-console
+
+// Test a PING command
+execute-tso-command -commandString $pingCommmand
+verify-tso-command-output-contains $pingCommmandOutput| verify-true
+clear-tso-console
+
+// Test a TIME command
+let [val verboseDateFormat [get-time | format-time -format "MMMM d,yyyy" | str]]
+{
+	log [format "%S" $verboseDateFormat]
+	execute-tso-command -commandString $timeCommand
+	verify-tso-command-output-contains [format "%S" $verboseDateFormat] | verify-true
+	clear-tso-console
+}
+
+// Test a CLIST that outputs the current system date
+let [val currentDate [get-time | format-time -format "MM/dd/yy" | str]]
+{
+  log $currentDate
+  execute-tso-command -commandString $clistCurrentDate
+  verify-tso-command-output [format "> %s\n%S\n%s\n>" $clistCurrentDate $clistCurrentDate [format "%s\nREADY\nEND" $currentDate]] | verify-true
+  clear-tso-console
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

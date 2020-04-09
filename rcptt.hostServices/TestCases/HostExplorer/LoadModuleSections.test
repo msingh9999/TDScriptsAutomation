@@ -1,0 +1,83 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: LoadModuleSections
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _N4WykMOzEeaIsKwF5dRmlg
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 8/21/17 3:53 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- LoadModuleSections ----------------------------------------------" 
+global [val pdseLoadLib "XDEVREG.PDSE.EMBED.SRC.LOAD"]
+global [val nonPdseLoadLib "XDEVREG.HS.LOADLIB"]
+global [val pdsDataset "XDEVREG.HS.JCL"]
+
+add-host -portNum $PORT
+login-from-host -port $PORT
+
+add-filter $FILTER_XDEVREG -portNum $PORT
+
+//verify the load module sections are displayed
+get-view "Host Explorer" | get-tree 
+	| get-item [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s" $PORT $FILTER_XDEVREG $pdseLoadLib] | expand
+get-view "Host Explorer" | get-tree 
+	| get-item  [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/CB52MAIN" $PORT $FILTER_XDEVREG $pdseLoadLib] | expand
+get-view "Host Explorer" | get-tree 
+	| select [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/CB52MAIN/CB52MAIN" $PORT $FILTER_XDEVREG $pdseLoadLib]
+get-view "Host Explorer" | get-tree 
+	| select [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/CB52MAIN/CB52SUB1" $PORT $FILTER_XDEVREG $pdseLoadLib]
+get-view "Host Explorer" | get-tree 
+	| select [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/CB52MAIN/CB52SUB2" $PORT $FILTER_XDEVREG $pdseLoadLib]
+	
+// Verify right-click context menu items
+with [get-view "Host Explorer" | get-tree 
+	| select [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/CB52MAIN/CB52MAIN" $PORT $FILTER_XDEVREG $pdseLoadLib]]
+{
+	get-menu "Browse"
+	get-menu "Browse With"
+	get-menu "Refresh"		
+	get-menu "Properties"
+	verify-error { get-menu "Allocate Like..." }
+	verify-error { get-menu "Assign File Extension..." }
+	verify-error { get-menu "Delete" }
+	verify-error { get-menu "Rename..." }
+	verify-error { get-menu "Add to Copybook Concatenation List" }
+	verify-error { get-menu "Compress" }
+	verify-error { get-menu "Uncatalog" }
+	verify-error { get-menu "Add Files to Project..." }
+	verify-error { get-menu "New Member..." }
+	verify-error { get-menu "Show Contents" }		
+	verify-error { get-menu "Cut" }
+	verify-error { get-menu "Copy To..." }
+	verify-error { get-menu "Lock" }
+	verify-error { get-menu "Unlock" }
+	verify-error { get-menu "Search..." }		
+}
+
+//verify the load module sections are not expandable
+get-view "Host Explorer" | get-tree 
+    | get-item [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/CB52MAIN/CB52SUB2" $PORT $FILTER_XDEVREG $pdseLoadLib]
+    | get-property "getData().isExpandable()" | equals false | verify-true
+
+//verify regular load lib members are not expandable
+get-view "Host Explorer" | get-tree 
+	| get-item [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s" $PORT $FILTER_XDEVREG $nonPdseLoadLib] | expand
+get-view "Host Explorer" | get-tree 
+    | get-item [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/DISPTM" $PORT $FILTER_XDEVREG $nonPdseLoadLib] 
+    | get-property "getData().isExpandable()" | equals false | verify-true
+
+//verify regular PDS members are not expandable    
+get-view "Host Explorer" | get-tree 
+	| get-item [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s" $PORT $FILTER_XDEVREG $pdsDataset] | expand
+get-view "Host Explorer" | get-tree 
+    | get-item [format "Hosts/cw01:%s/z\\/OS Datasets/%s/%s/ABEND1" $PORT $FILTER_XDEVREG $pdsDataset] 
+    | get-property "getData().isExpandable()" | equals false | verify-true
+
+	
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

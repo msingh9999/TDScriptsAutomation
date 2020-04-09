@@ -1,0 +1,113 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_KsdzsHT2Eeao6LAbRG4SEA,_uGGawHT2Eeao6LAbRG4SEA,_vZ3AoJ-TEeaqXcq-JvSnkA,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: SubProgramInitialAndExitBreakpoints
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _ySZwgN8MEea2SeJaJsG74g
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:36 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the adding of initial and exit breakpoints on the main program and a sub program and that resuming after the breakpoint(s) works.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val configName BATCOB08]
+global [val step1Pgm CWXTCOB]
+
+add-filter $FILTER_XDEVREG 
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button "Enable Xpediter/TSO exit breakpoints" | check
+    get-button OK | click
+}
+
+get-view $HOST_EXPLORER | get-tree 
+	| select [get-pds-member-path -dataset "XDEVREG.XPED.JCL" -member $configName -filter $FILTER_XDEVREG]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+    
+with [get-window "Debug Configurations"] 
+{
+
+	//select multiple steps to debug
+    with [get-group "Debug criteria" | get-table] {
+        get-item STEP1 | check
+    }
+	    
+    //add DDIO
+    get-tab-folder | get-tab-item DDIO | click
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        get-editbox | set-text "XDEVREG.XPED.DDIO"
+        get-button OK | click
+    }
+    
+    get-button Debug | click
+}
+
+handle-login-dialog
+//login
+
+wait-for-perspective-switch-msg
+
+wait-for-source -lmName $step1Pgm -pgmName $step1Pgm
+
+with [get-view "Open DDIO"] 
+{
+    with [get-editbox -after [get-label "Load Module:"]] {
+        set-text CWXTDATE
+        key-type Enter
+    }
+    get-table | select CWXTDATE | get-menu "Set Initial and Exit Breakpoints" | click
+}
+
+get-view Breakpoints | get-tree | get-item "CWXTDATE \\[CWXTDATE\\] \\[line: 57\\]" | get-property caption 
+    | equals "CWXTDATE [CWXTDATE] [line: 57]" | verify-true
+    
+get-view Breakpoints | get-tree | get-item "CWXTDATE \\[CWXTDATE\\] \\[line: 67\\]" | get-property caption 
+    | equals "CWXTDATE [CWXTDATE] [line: 67]" | verify-true
+    
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "BATCOB08 [Xpediter Batch Debug Session]/.*/Thread [CWXTCOB, Step: STEP1] (Suspended (breakpoint))/CWXTDATE [CWXTDATE] (procedure: 0000-MAINLINE line: 57)"
+
+get-view Breakpoints | get-tree | get-item "CWXTDATE \\[CWXTDATE\\] \\[line: 57\\]" | uncheck
+
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "BATCOB08 [Xpediter Batch Debug Session]/.*/Thread [CWXTCOB, Step: STEP1] (Suspended (breakpoint))/CWXTDATE [CWXTDATE] (procedure: 0000-MAINLINE line: 67)"
+
+get-view Breakpoints | get-tree | get-item "CWXTDATE \\[CWXTDATE\\] \\[line: 67\\]" | uncheck
+
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "BATCOB08 [Xpediter Batch Debug Session]/.*/Thread [CWXTCOB, Step: STEP1] (Suspended (breakpoint))/CWXTCOB [CWXTCOB] (procedure: 0000-MAINLINE line: 361)"
+
+get-button "Resume (F8)" | click
+
+wait-for-batch-terminated -configName $configName
+
+//close the Log, Visualizer and any other editors that may have been left open
+close-all-editors
+
+// Reset preferences
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button "Enable Xpediter/TSO exit breakpoints" | uncheck
+    get-button OK | click
+}
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

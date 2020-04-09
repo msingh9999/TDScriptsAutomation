@@ -1,0 +1,106 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: AliasMenus
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _hNjPEJRzEeao1evQwM79aA
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 8/21/17 3:44 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- AliasMenus ----------------------------------------------"
+
+global [val cobolAlias "XDEVREG.COBOL.ALIAS"]
+global [val jclAlias "XDEVREG.HS.JCL.ALIAS"]
+global [val sequentialAlias "XDEVREG.SEQ.JCL.TEST1.ALIAS"]
+global [val ddioAlias "XDEVREG.DDIO.TEST.ALIAS"]
+global [val vsamAlias "XDEVREG.HS.API.TEST.KSDS.ALIAS"]
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+with [get-view $HOST_EXPLORER | get-tree]
+{
+	with [select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclAlias]]
+	{
+		verify-error { get-menu "Allocate Like..." }
+		verify-error { get-menu "Delete" }
+		verify-error { get-menu "Rename..." }
+		verify-error { get-menu "Add to Copybook Concatenation List" }
+		verify-error { get-menu "Compress" }
+		verify-error { get-menu "Uncatalog" }
+		verify-error { get-menu "Add Files to Project..." }
+		verify-error { get-menu "New Member..." }
+		verify-error { get-menu "Show Contents" }		
+		verify-error { get-menu "Cut" }
+		verify-error { get-menu "Copy To..." }
+		verify-error { get-menu "Search..." }
+		verify-error { get-menu "Assign File Extension..." }
+		get-menu "Refresh"		
+		get-menu "Properties"
+	}
+	
+	with [select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $cobolAlias]]
+	{
+		verify-error { get-menu "Allocate Like..." }
+		verify-error { get-menu "Delete" }
+		verify-error { get-menu "Rename..." }
+		verify-error { get-menu "Add to Copybook Concatenation List" }
+		verify-error { get-menu "Compress" }
+		verify-error { get-menu "Uncatalog" }
+		verify-error { get-menu "Add Files to Project..." }
+		verify-error { get-menu "New Member..." }
+        verify-error { get-menu "Show Contents" }		
+		verify-error { get-menu "Cut" }
+		verify-error { get-menu "Copy To..." }
+		verify-error { get-menu "Search..." }
+		verify-error { get-menu "Assign File Extension..." }
+		get-menu "Refresh"
+		get-menu "Properties"
+	}
+	
+	with [select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sequentialAlias]]
+	{
+		verify-error {get-menu "Cut" }
+		verify-error {get-menu "Search..." }
+		verify-error {get-menu "Submit" }
+		verify-error {get-menu "Submit Compile" }
+		verify-error {get-menu "Assign File Extension..." }
+		verify-error { get-menu "Delete" }
+		verify-error { get-menu "Rename..." }
+		verify-error { get-menu "Debug As" }
+		verify-error { get-menu "Compress" }
+		verify-error { get-menu "Uncatalog" }
+		verify-error { get-menu "Add Files to Project..." }
+		get-menu "Refresh"
+		get-menu "Properties"
+	}	
+	
+	with [select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $ddioAlias]]
+    {
+        
+        get-menu "Refresh"
+        get-menu "Properties"
+        verify-error { get-menu "Assign File Extension..." }
+        verify-error { get-menu "Delete" }
+        verify-error { get-menu "Allocate Like..." }
+    }   
+    
+    with [select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $vsamAlias]]
+    {
+        verify-error { get-menu "Cut" }
+        verify-error { get-menu "Copy To..." }
+        verify-error { get-menu "Delete" }
+        verify-error { get-menu "Allocate Like..." }
+        get-menu "Refresh"
+        get-menu "Properties"
+    }
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

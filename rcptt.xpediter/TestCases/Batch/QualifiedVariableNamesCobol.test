@@ -1,0 +1,81 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_5ugIEN1_EeaztMqS69d-Iw,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: QualifiedVariableNamesCobol
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _b5Z5kP6aEeaVnozrU55lPw
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:29 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "BATCOB05"]
+
+add-filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+  
+//wait-for-debug-config-dialog
+    
+with [get-window "Debug Configurations"] 
+{
+    get-button Debug | click
+}
+
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+
+close-view "Cheat Sheets"
+
+get-editor "CWXTCOB [CWXTCOB]" | get-editbox | get-menu "Add Watch Variables..." | click
+with [get-window Watch] {
+    get-button "On current line" | click
+    get-button "By name:" | click
+    with [get-table] {
+        get-item "HOLD-HIRE-DD" | check
+        get-item "HOLD-HIRE-MM" | check
+        get-item "HOLD-HIRE-YY" | check
+    }
+    get-button OK | click
+}
+with [get-view Variables | get-tree] {
+    get-item "HOLD-HIRE-YY" | get-property "columns[0]" | equals "HOLD-HIRE-YY" | verify-true
+    get-item "HOLD-HIRE-YY" | get-property "columns[1]" | equals "Array [4, 20]" | verify-true
+    get-item "HOLD-HIRE-DD" | get-property "columns[0]" | equals "HOLD-HIRE-DD" | verify-true
+    get-item "HOLD-HIRE-DD" | get-property "columns[1]" | equals "Array [4, 20]" | verify-true
+    get-item "HOLD-HIRE-MM" | get-property "columns[0]" | equals "HOLD-HIRE-MM" | verify-true
+    get-item "HOLD-HIRE-MM" | get-property "columns[1]" | equals "Array [4, 20]" | verify-true
+}
+get-view Variables | click
+get-button "View Menu" -index 2 | click
+get-view Variables | get-menu "Xpediter/Show Qualified Variable Names" | click
+with [get-view Variables | get-tree] {
+    get-item "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-YY" | get-property "columns[0]" 
+        | equals "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-YY" | verify-true
+    get-item "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-YY" | get-property "columns[1]" 
+        | equals "Array [4, 20]" | verify-true
+    get-item "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-DD" | get-property "columns[0]" 
+        | equals "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-DD" | verify-true
+    get-item "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-DD" | get-property "columns[1]" 
+        | equals "Array [4, 20]" | verify-true
+    get-item "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-MM" | get-property "columns[0]" 
+        | equals "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-MM" | verify-true
+    get-item "HOLD-TABLE.HOLD-AREA.HOLD-LINE.HOLD-HIRE-DATE.HOLD-HIRE-MM" | get-property "columns[1]" 
+        | equals "Array [4, 20]" | verify-true
+}
+get-button "View Menu" -index 2 | click
+get-view Variables | get-menu "Xpediter/Show Qualified Variable Names" | click
+get-view Debug | get-tree | select "BATCOB05 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

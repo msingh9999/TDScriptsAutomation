@@ -1,0 +1,108 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_Cjmk4KzKEearpKw8qQl8DQ,_FO6L8K_oEeaI5LAUP6iy4A,_xtFvMKzTEearpKw8qQl8DQ,_T7dv4K_8EeaI5LAUP6iy4A
+Element-Name: AnalyzeCobolProgramNoCopybooks
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _PfPn0Ky9EearpKw8qQl8DQ
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 4/5/18 10:19 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that opening a COBOL program (without copybooks) from an online project is successfully analyzed by SonarLint.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- AnalyzeCobolProgramNoCopybooks ----------------------------------------------"
+
+get-view Console | get-button "Open Console" | click -arrow
+get-new-console "SonarLint Console" | click
+
+with [get-view Console] {
+    click
+    get-button "Clear Console" | click
+}
+
+get-view "Project Explorer" | get-tree 
+    | select [format "%3$s [%1$s:%2$s]/Source/XDEVREG.PROJECT.COBOL.SOURCE [%1$s:%2$s]/PDAB01.cbl [XDEVREG.PROJECT.COBOL.SOURCE on %1$s:%2$s]" $HOST $PORT $SONAR_LINT_PROJECT]
+    | get-menu "Open With/Compuware Editor powered by SlickEdit" | click
+
+get-view Console | get-text-viewer | get-property text | contains "PDAB01.cbl" | verify-true
+//wait-for-console-text -text "Found 764 issue(s)" | verify-true
+wait-for-console-text -text "Found 739 issue(s)" | verify-true
+
+get-menu "Window/Show View/Other..." | click
+with [get-window "Show View"] {
+    get-tree | select "General/Problems"
+    get-button OK | click
+}
+
+//global [val infoNodeText "Infos \\(100 of 764 items\\)"]
+global [val infoNodeText "Infos \\(100 of 739 items\\)"]
+with [get-view Problems | get-tree] {
+	// First click Resource column to prevent changing the sort direction on Location, when clicking on Location.:
+    get-column-header Resource | click
+    get-column-header Location | click
+
+	let [val desc "Program has a complexity of 374 which is greater than 100 authorized."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDAB01.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 1" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+
+	let [val desc "This data item block \"INPUT-CRDB2-REC\" is unused and so should be removed."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDAB01.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 100" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+
+	let [val desc "Rename variable \"PDA-COMMENT\" so that the first 3 chars are \"FIL\"."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDAB01.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 398" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+
+	let [val desc "Avoid using REDEFINES clause"] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDAB01.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 378" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+}
+
+get-editor "PDAB01.cbl" | close
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

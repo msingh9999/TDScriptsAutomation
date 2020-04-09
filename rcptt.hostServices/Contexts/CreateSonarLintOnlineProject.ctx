@@ -1,0 +1,54 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: CreateSonarLintOnlineProject
+Element-Type: context
+Element-Version: 2.0
+Id: _FO6L8K_oEeaI5LAUP6iy4A
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 11/21/16 7:46 AM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Creates an online project for SonarLint testing, if not already created.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+global [val projectNodeText [format "%s \\[%s:%s\\]" $SONAR_LINT_PROJECT $HOST $PORT]]
+
+get-view "Project Explorer" | click
+try -command
+{
+	get-view "Project Explorer" | get-tree | get-item $projectNodeText
+}
+-catch
+{
+	get-menu "File/New/Compuware Mainframe Project" | click
+	with [get-window "New Compuware Mainframe Project"] {
+	    get-editbox -after [get-label "Project name:"] | set-text $SONAR_LINT_PROJECT
+	    get-button Finish | click
+	}
+	
+	get-view "Project Explorer" | get-tree | select $projectNodeText | get-menu "Add Source..." | click
+	with [get-window "Project Source"] {
+	    get-editbox | set-text "XDEVREG.PROJECT.COBOL.SOURCE"
+	    get-button OK | click
+	}
+	
+	get-view "Project Explorer" | get-tree | select $projectNodeText
+	    | get-menu "Configure Copybook Concatenation List..." | click
+	with [get-window "Properties for SonarLintOnline"] {
+	    get-button "Add..." | click
+	    with [get-window Datasets] {
+	        get-editbox | set-text "XDEVREG.PROJECT.COBOL.COPYLIB"
+	        get-button OK | click
+	    }
+	    get-button OK | click
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

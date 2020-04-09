@@ -1,0 +1,90 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _UrIe0ER7EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_rRRHUMuhEeeMV-oFXOCR1A,_urTgQEU4EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_DIm2ALsyEeem0fyxENOpag,_uGGawHT2Eeao6LAbRG4SEA
+Element-Name: NewReportRequestNoHostsDefined
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _auQccM4cEeexiaQdS5Mm_A
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 11/21/17 3:08 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- NewReportRequestNoHostsDefined ----------------------------------------------"
+
+global [val reportName "NewReport"]
+global [val repositoryName "XDEVREG.CC.REPOSIT"]
+
+
+delete-report $reportName
+
+get-view "Code Coverage" | get-tree | select "Report Requests" | get-menu "New..." | click
+
+with [get-window "Code Coverage Report Request"] 
+{
+    get-button Run | get-property enablement | equals false | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+
+	get-editbox -after [get-label "Code Coverage Report Request"] | get-property text | equals "Specify the criteria for the Code Coverage report request." | verify-true
+    
+	get-editbox -after [get-label "Report request name:"] | set-text $reportName
+
+	get-editbox -after [get-label "Code Coverage Report Request"] | get-property text | equals "Select or configure a host." | verify-true
+    
+    get-button Run | get-property enablement | equals false | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+
+    get-button "Configure..." | click
+    
+    with [get-window "Preferences (Filtered)"] 
+    {
+        get-button "Add..." | click
+        with [get-window "Host Connections"] 
+        {
+            with [get-editbox -after [get-label "Host:"]] 
+            {
+                set-text $HOST
+            }
+            with [get-editbox -after [get-label "Port:"]] 
+            {
+                set-text $PORT
+            }
+            get-button OK | click
+        }
+        get-button OK | click
+    }
+}
+with [get-window "Code Coverage Report Request"] 
+{
+    get-button "Browse..." | click
+    with [get-window "Code Coverage"] 
+    {
+        with [get-section Repositories] 
+        {
+            get-editbox -after [get-label "Name:"] | set-text "XDEVREG.**.REPOSIT"
+            get-button List | click
+        }
+        
+        handle-login-dialog
+
+        get-section Repositories | get-table | select $repositoryName
+        get-button OK | click
+    }
+    
+    get-button Run | get-property enablement | equals true | verify-true
+    get-button OK | get-property enablement | equals true | verify-true
+    
+    get-button OK | click
+}
+
+get-view "Code Coverage" | get-tree | select [format "Report Requests/%s" $reportName]
+
+delete-report $reportName
+remove-cc-repository $repositoryName
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

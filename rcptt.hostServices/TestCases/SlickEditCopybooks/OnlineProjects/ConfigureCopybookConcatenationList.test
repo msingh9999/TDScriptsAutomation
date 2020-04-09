@@ -1,0 +1,255 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_CdHz0LfKEeaZj-_yDyxeGA,_XnPvkEUIEeamKrg04Gqe-Q
+Element-Name: ConfigureCopybookConcatenationList
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _zB9ukLfjEeaZj-_yDyxeGA
+Runtime-Version: 2.0.2.201511100828
+Save-Time: 12/2/16 10:42 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test Online Project Copybook Concatenation List Configuration
+    - Test creation of project from selection within Host Explorer
+    - Test Add button
+    - Test Edit button
+    - Test Remove button
+    - Test Move Up button
+    - Test Move Down button
+    - Test Validate button
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName [format "OnlineTest%s" [get-time | format-time -format "mmssSSS"]]]
+global [val datasetName1 "XDEVREG.HS.API.TEST.COBOL.COPYLIB"]
+global [val datasetName2 "XDEVREG.HS.API.TEST.COBOL.SOURCE"]
+global [val datasetName3 "XDEVREG.OLPDLT.CPYLIB"]
+global [val datasetName4 "XDEVREG.PROJECT.COBOL.COPYLIB"]
+global [val invalidDatasetName "A.B.C"]
+
+add-filter -filter $FILTER_XDEVREG
+
+// Test creation of online project from selection within Host Explorer
+
+with [get-view "Host Explorer" | get-tree] { 
+   	select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetName1]
+   		| get-menu "Add Files to Project..." | click
+}
+
+with [get-window "Add Files To Project"] {
+    get-button "New Compuware Mainframe Project..." | click
+    with [get-window "New Compuware Mainframe Project"] {
+        get-group "Project type" | get-button "Online. Keep resources on mainframe." | click
+        get-editbox -after [get-label "Project name:"] | set-text $projectName
+        get-button Finish | click
+    }
+    get-button Finish | click
+}
+
+get-tab-folder | get-tab-item "Project Explorer" | click
+get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]" $projectName $HOST $PORT] | get-menu "Configure Copybook Concatenation List..." 
+	| click
+    
+with [get-window [format "Properties for %s" $projectName]] {
+
+	// Validate initial enablement / disablement of controls
+
+    get-button "Add..." | get-property enablement | equals true | verify-true
+    get-button "Edit..." | get-property enablement | equals false | verify-true
+    get-button Remove | get-property enablement | equals false | verify-true
+    get-button "Move Up" | get-property enablement | equals false | verify-true
+    get-button "Move Down" | get-property enablement | equals false | verify-true
+    get-button Validate | get-property enablement | equals false | verify-true
+	
+    // Test addition to concatenation list
+    
+    get-button "Add..." | click
+    with [get-window Datasets] {
+        get-button "Browse..." | click
+        with [get-window "Dataset Selection"] {
+            with [get-section Datasets] {
+                with [get-editbox -after [get-label "Name:"]] {
+                    set-text $FILTER_XDEVREG
+                    key-type Enter
+                }
+                get-table | select $datasetName1 $datasetName2 $datasetName4
+            }
+            get-button OK | click
+        }
+        get-button OK | click
+    }
+
+    // Validate addition actually occurred
+
+	with [get-table] {
+    	get-property "getItemCount()" | equals 3 | verify-true
+    	get-property "getItems().TableItem[0].getText()" 
+        	| equals $datasetName1 | verify-true
+    	get-property "getItems().TableItem[1].getText()" 
+        	| equals $datasetName2 | verify-true
+    	get-property "getItems().TableItem[2].getText()" 
+        	| equals $datasetName4 | verify-true
+	}    
+
+    // Test editing of the concatenation list
+    
+    get-table | select $datasetName2
+    get-button "Edit..." | click
+    with [get-window "Datasets"] {
+        get-editbox | set-text [format "%s" $datasetName3]
+        get-button OK | click
+    }
+
+    // Validate editing is reflected in listing
+    
+    with [get-table] {
+    	get-property "getItemCount()" | equals 3 | verify-true
+    	get-property "getItems().TableItem[0].getText()" 
+        	| equals $datasetName1 | verify-true
+    	get-property "getItems().TableItem[1].getText()" 
+        	| equals $datasetName3 | verify-true
+    	get-property "getItems().TableItem[2].getText()" 
+        	| equals $datasetName4 | verify-true
+	}
+    
+	// Validate at least one dataset must be entered when specifying concatenation list dataset(s)
+	
+    get-button "Add..." | click
+    with [get-window "Datasets"] {
+    	get-editbox | set-text A
+    	get-editbox | set-text ""
+        get-editbox -after [get-label "Add Datasets"] | get-property "getText()" 
+        	| equals "No datasets entered." | verify-true
+        get-editbox | get-property text | equals "" | verify-true
+        get-button OK | get-property enablement | equals false | verify-true
+        
+        // Validate entering of invalid dataset is accepted
+        
+        get-editbox | set-text $invalidDatasetName
+        
+        get-editbox -after [get-label "Add Datasets"] | get-property "getText()" 
+        	| equals "No datasets entered." | verify-false
+        
+        get-button OK | click
+    }
+    
+    // Test ordering of concatenation listing using Move Up button
+    
+    get-table | select [format "%s" $datasetName4]
+    get-button "Move Up" | click | click
+    
+    // Validate ordering shows dataset was moved to first position in the concatenation list
+    
+	with [get-table] {
+    	get-property "getItems().TableItem[0].getText()" 
+        	| equals $datasetName4 | verify-true
+    	get-property "getItems().TableItem[1].getText()" 
+        	| equals $datasetName1 | verify-true
+    	get-property "getItems().TableItem[2].getText()" 
+        	| equals $datasetName3 | verify-true
+	}    
+    
+    // Test ordering of concatenation listing using Move Down button
+    
+    get-table | select [format "%s" $datasetName1]
+    get-button "Move Down" | click
+    
+    // Validate ordering shows dataset was moved to last position in the concatenation list
+
+	with [get-table] {
+    	get-property "getItems().TableItem[0].getText()" 
+        	| equals $datasetName4 | verify-true
+    	get-property "getItems().TableItem[1].getText()" 
+        	| equals $datasetName3 | verify-true
+    	get-property "getItems().TableItem[2].getText()" 
+        	| equals $datasetName1 | verify-true
+    	get-property "getItems().TableItem[3].getText()" 
+        	| equals $invalidDatasetName | verify-true
+	}    
+
+	// Test validation of concatenation list having invalid / non-existent dataset(s)
+	    
+    get-button Validate | click
+
+	with [get-window [format "Properties for %s" $projectName] | get-window "Copybook Concatenation List Validation"] {
+		get-table | get-item $invalidDatasetName | getProperty "values['Reason']" | equals "Not found" | verify-true
+    	get-button Close | click
+    }
+    
+    // Remove the invalid dataset
+    
+	get-table | select $invalidDatasetName
+	get-button Remove | click
+ 
+ 	// Validate the removal actually occurred
+	
+	with [get-table] {
+    	get-property "getItemCount()" | equals 3 | verify-true
+    	get-property "getItems().TableItem[0].getText()" 
+        	| equals $invalidDatasetName | verify-false
+    	get-property "getItems().TableItem[1].getText()" 
+        	| equals $invalidDatasetName | verify-false
+    	get-property "getItems().TableItem[2].getText()" 
+        	| equals $invalidDatasetName | verify-false
+ 	}    
+    
+    // Test validation of valid concatenation list
+    
+    get-button Validate | click
+    
+    with [get-window [format "Properties for %s" $projectName] | get-window "Copybook Concatenation List"] {
+    	get-label "All copybook datasets were successfully validated." | get-property "getText()" 
+    		| equals "All copybook datasets were successfully validated." | verify-true
+    	get-button OK | click
+    }
+    	
+    // Validate selection of a single concatenation list and disablement of ordering buttons
+    // NOTE: Enablement validation of other buttons was handled implicitely due to testing their actions above
+    
+	get-table | select $datasetName4
+    get-button "Move Up" | get-property enablement | equals false | verify-true
+    get-button "Move Down" | get-property enablement | equals true | verify-true
+	
+	get-table | select $datasetName3
+    get-button "Move Up" | get-property enablement | equals true | verify-true
+    get-button "Move Down" | get-property enablement | equals true | verify-true
+	
+	get-table | select $datasetName1
+    get-button "Move Up" | get-property enablement | equals true | verify-true
+    get-button "Move Down" | get-property enablement | equals false | verify-true
+	
+    // Validate selection of multiple datasets and enablement / disablement
+    
+	get-table | select $datasetName4 $datasetName3
+    get-button "Add..." | get-property enablement | equals true | verify-true
+   	get-button "Edit..." | get-property enablement | equals false | verify-true
+   	get-button Remove | get-property enablement | equals true | verify-true
+   	get-button "Move Up" | get-property enablement | equals false | verify-true
+   	get-button "Move Down" | get-property enablement | equals false | verify-true
+   	get-button Validate | get-property enablement | equals true | verify-true
+ 	   
+    // Test removal of multiple datasets
+    
+   	get-table | select $datasetName1 $datasetName3 $datasetName4
+   	get-button Remove | click
+
+	// Validate the removal actually occurred
+	
+	get-table | get-property "getItemCount()" | equals 0 | verify-true
+        
+    get-button OK | click
+}
+
+// Perform any cleanup
+
+delete-online-project -projectName $projectName
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

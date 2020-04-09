@@ -1,0 +1,24 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsXpediter
+Element-Type: context
+Element-Version: 2.0
+Id: _O_X24ERwEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 9/16/16 8:22 AM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Fri Sep 16 08:22:39 EDT 2016
+XPEDITER=Xpediter
+XPED_BATCH_DEBUG_SESSION=Xpediter Batch Debug Session
+XPED_TSO_DEBUG_SESSION=Xpediter TSO Debug Session
+XPED_IMS_DEBUG_SESSION=Xpediter IMS MPP Debug Session
+XPED_DB2_DEBUG_SESSION=Xpediter DB2 SP Debug Session
+XDEVREG.XPED.DDIO=XDEVREG.XPED.DDIO
+XPED_CICS_DEBUG_SESSION=Xpediter CICS Debug Session
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

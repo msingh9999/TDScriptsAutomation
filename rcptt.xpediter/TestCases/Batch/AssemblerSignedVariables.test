@@ -1,0 +1,92 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: AssemblerSignedVariables
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _jdlusJwsEeaiiqUfzPUFZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/24/17 10:37 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "TESTDFP"]
+global [val loadLib "XT.R090200.S2.LOADLIB"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $jclMember] 
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text $loadLib
+        get-button OK | click
+    }
+    get-tab-folder | get-tab-item DDIO | click
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text "XDEVREG.XPED.DDIO"
+        get-button OK | click
+    }
+    get-button Debug | click
+}
+
+handle-login-dialog
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+// Remove existing breakpoint if it exists
+
+try -command
+{
+    get-view Breakpoints | get-tree | select "DFPTEST6 [DFPTEST6] [line: 319]" | get-menu Remove | click
+}
+-catch
+{
+}
+
+get-editor "DFPTEST6 [DFPTEST6]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 319
+
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "TESTDFP [Xpediter Batch Debug Session]/.*/Thread [DFPTEST6] (Suspended (breakpoint))/DFPTEST6 [DFPTEST6] (procedure: DFPTEST6 line: 319)"
+wait-for-variable DECPOS
+
+get-view Variables | get-tree | select DECPOS | get-menu "Change Value..." | click
+with [get-window "Set Value"] {
+    get-editbox -after [get-label "Enter a new value for DECPOS:"] | set-text "-004"
+    get-button OK | click
+}
+
+//wait for the chnge value to occur
+wait -ms 2000
+wait-for-variable SIGNIFI
+
+get-view Variables | get-tree | select SIGNIFI | get-menu "Change Value..." | click
+with [get-window "Set Value"] {
+    get-editbox -after [get-label "Enter a new value for SIGNIFI:"] | set-text "+0000010"
+    get-button OK | click
+}
+
+//wait for the chnge value to occur
+wait -ms 2000
+wait-for-variable DECPOS
+
+with [get-view Variables | get-tree] {
+    get-item DECPOS | get-property "columns[0]" | equals DECPOS | verify-true
+    get-item DECPOS | get-property "columns[1]" | equals "-004" | verify-true
+    get-item SIGNIFI | get-property "columns[0]" | equals SIGNIFI | verify-true
+    get-item SIGNIFI | get-property "columns[1]" | equals "+0000010" | verify-true
+}
+get-view Debug | get-tree | select "TESTDFP [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

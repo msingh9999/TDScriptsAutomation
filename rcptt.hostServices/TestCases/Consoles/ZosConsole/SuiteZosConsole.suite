@@ -1,0 +1,23 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteZosConsole
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _XP2eEIl2EeaOKusaXEFUkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 1/24/17 9:23 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_PQ1E8EUNEeamKrg04Gqe-Q	// kind: 'test' name: 'ConnectToHost' path: 'ConnectToHost.test'
+_PQrT8EUNEeamKrg04Gqe-Q	// kind: 'test' name: 'CommandHistory' path: 'CommandHistory.test'
+_PRGKsEUNEeamKrg04Gqe-Q	// kind: 'test' name: 'ZOSandTSOConsole' path: 'ZOSandTSOConsole.test'
+_dykkEIr-Eeaum6QWtlCXVw	// kind: 'test' name: 'GetActiveSystemLog' path: 'GetActiveSystemLog.test'
+_8Soa0IsDEeaum6QWtlCXVw	// kind: 'test' name: 'OpenSystemLogs' path: 'OpenSystemLogs.test'
+_PQ9AwEUNEeamKrg04Gqe-Q	// kind: 'test' name: 'IssueZOSConsoleCommand' path: 'IssueZOSConsoleCommand.test'
+_J-aUsIsMEeaum6QWtlCXVw	// kind: 'test' name: 'SystemLogOptions' path: 'SystemLogOptions.test'
+_fhu8MOJAEea0fKRa6ukjqQ	// kind: 'test' name: 'DoubleClickLogFile' path: 'DoubleClickLogFile.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

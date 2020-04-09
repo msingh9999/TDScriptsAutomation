@@ -1,0 +1,100 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_inZboBZAEeeh9I0ITUmrtQ
+Element-Name: JdbcConnectionsPreference
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _WJEaEBY9Eeeh9I0ITUmrtQ
+Runtime-Version: 2.2.0.201703262316
+Save-Time: 4/3/17 1:12 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+//create the initial connection
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tab-folder | get-tab-item JDBC | click
+    get-button "Add..." | click
+    with [get-window "Database Connection"]
+    {
+        get-combo -after [get-label "Database Type:"] | select "Microsoft SQL Server"
+        get-editbox -after [get-label "Database Host:"] | set-text dbhost1
+        get-editbox -after [get-label "Database/Location/SID:"] | set-text db1
+        get-button OK | click
+    }
+    get-button OK | click
+}
+
+//verify the original connection exists
+with [get-view "Host Explorer"]
+{
+    get-tree | select Hosts
+    get-button Refresh | click
+    get-tree | select "Hosts/dbhost1\\/db1"
+}
+
+//create a second connection but close the preference dialog with the "X"
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tab-folder | get-tab-item JDBC | click
+    get-button "Add..." | click
+    with [get-window "Database Connection"]
+    {
+        get-combo -after [get-label "Database Type:"] | select "Microsoft SQL Server"
+        get-editbox -after [get-label "Database Host:"] | set-text dbhost2
+        get-editbox -after [get-label "Database/Location/SID:"] | set-text db2
+        get-button OK | click
+    }
+    close
+}
+
+//verify the original connection still exists
+with [get-view "Host Explorer"]
+{
+    get-tree | select Hosts
+    get-button Refresh | click
+    get-tree | select "Hosts/dbhost1\\/db1"
+}
+
+//create a second connection but close the preference dialog with the cancel button
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tab-folder | get-tab-item JDBC | click
+    get-button "Add..." | click
+    with [get-window "Database Connection"]
+    {
+        get-combo -after [get-label "Database Type:"] | select "Microsoft SQL Server"
+        get-editbox -after [get-label "Database Host:"] | set-text dbhost2
+        get-editbox -after [get-label "Database/Location/SID:"] | set-text db2
+        get-button OK | click
+    }
+    get-button Cancel | click
+}
+
+//verify the original connection still exists
+with [get-view "Host Explorer"]
+{
+    get-tree | select Hosts
+    get-button Refresh | click
+    get-tree | select "Hosts/dbhost1\\/db1"
+} 
+
+//remove the original connection
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tab-folder | get-tab-item JDBC | click
+    get-table | select dbhost1
+    get-button Remove | click
+    get-window "Remove Database Configuration" | get-button OK | click
+    get-button OK | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

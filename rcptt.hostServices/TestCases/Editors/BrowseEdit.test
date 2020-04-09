@@ -1,0 +1,167 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _gJI9gIl3Eeaf8rtXp2pZyA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: BrowseEdit
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _mlPAsBCOEeeDhrFE_fB3pw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/31/17 3:41 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val sourceDataset "XDEVREG.BROWSE.EDIT.TEST"]
+global [val targetDataset1 [format "XDEVREG.BROWSE.EDIT.TEST.T%S" [get-time | format-time -format mmssSSS]]]
+global [val testMember1 "DRA00410"]
+global [val testMember2 "DRA0041X"]
+global [val testMember3 "DRA0041Y"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+copy-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -sourcePDS $sourceDataset -targetPDS $targetDataset1
+
+// Change default dataset open mode to Browse
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer"
+    get-group "Default dataset open mode" | get-button Browse | click
+    get-button OK | click
+}
+
+// Verify Browse with default Slickedit editor via double click
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] | double-click
+get-editor [format "%S.data" $testMember1] | get-label [format "Browsing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] 
+    | get-property caption | equals [format "Browsing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1] | close
+
+// Verify Browse using right click Browse menu
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] | get-menu Browse | click
+get-editor [format "%S.data" $testMember1] | get-label [format "Browsing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] 
+    | get-property caption | equals [format "Browsing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1]| close
+
+// Verify Browse with Compuware Editor
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] 
+    | get-menu "Browse With/Compuware Editor" | click
+get-editor [format "%S.data" $testMember1] | get-label [format "Browsing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT]
+    | get-property caption | equals [format "Browsing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1] | close
+
+// Change default dataset open mode to Edit
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-group "Default dataset open mode" | get-button Edit | click
+    get-button OK | click
+}
+
+// Verify Edit with Right Click Edit with Slickedit menu
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor powered by SlickEdit" | click
+get-editor [format "%S.data" $testMember1] | get-label [format "Editing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT]
+    | get-property caption | equals [format "Editing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1] | close
+
+// Verify SlickEdit radio button is active
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor powered by SlickEdit" | get-property selection | equals true| verify-true
+
+// Verify Edit with default editor Slickedit via double click
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] | double-click
+get-editor [format "%S.data" $testMember1] | get-label [format "Editing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT]
+    | get-property caption | equals [format "Editing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1] | close
+
+// Verify SlickEdit radio button is active
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor powered by SlickEdit" | get-property selection | equals true| verify-true
+
+// Verify Edit with Right Click Edit With Compuware Editor
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1]
+    | get-menu "Edit With/Compuware Editor" | click
+get-editor [format "%S.data" $testMember1] | get-label [format "Editing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT]
+    | get-property caption | equals [format "Editing: %S(%S) on %s:%s" $targetDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1] | close
+
+// Verify Compuware Editor radio button is active
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor" | get-property selection | equals true| verify-true
+
+// Test editing/saving/save as
+
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1]
+    | get-menu "Edit With/Compuware Editor" | click
+with [get-editor [format "%S.data" $testMember1] | get-text-viewer] {
+    set-caret-pos 5 35
+    select-range 5 40 5 35
+    key-type BackSpace
+    key-type "M1+s"
+    set-caret-pos 6 36
+    key-type BackSpace
+    type-text 1
+}
+get-button "Save (M1+S)" | click
+with [get-editor [format "%S.data" $testMember1] | get-text-viewer] {
+    set-caret-pos 4 33
+    key-type BackSpace
+}
+get-editor [format "%S.data" $testMember1] | close
+get-window $HOST_EXPLORER | get-button Yes | click
+
+// Edit and  Save As to a different member in the same test PDS
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1]
+    | get-menu "Edit With/Compuware Editor" | click
+get-menu "File/Save As..." | click
+with [get-window "Save As"] {
+    get-editbox -after [get-label "Member:"] | set-text $testMember2
+    get-editbox -after [get-label "Dataset:"] | set-text $targetDataset1
+    get-button OK | click
+}
+get-editor [format "%S.data" $testMember2] | close
+
+// Edit and  Save As same mmember in the original copied PDS
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $targetDataset1 -member $testMember1]
+    | get-menu "Edit With/Compuware Editor" | click
+get-menu "File/Save As..." | click
+
+//get-window $HOST_EXPLORER | get-button OK | click
+//get-menu "File/Save As..." | click
+with [get-window "Save As"] {
+    get-editbox -after [get-label "Member:"] | set-text $testMember3
+    get-editbox -after [get-label "Dataset:"] | set-text $sourceDataset
+    get-button OK | click
+}
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceDataset] | get-menu Refresh | click
+}
+get-editor [format "%S.data" $testMember3] | close
+
+// Delete the member we did a save as back in the original source dataset
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceDataset -member $testMember3] | get-menu Delete | click
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+
+// JIRA CWE-88609 mentions performing a Save As to a PDS on the same LPAR with a different PORT - unsure if this is supposed to be supported or not? Does not seem to be a valid option
+
+// clean up temporary PDS
+delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $targetDataset1
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

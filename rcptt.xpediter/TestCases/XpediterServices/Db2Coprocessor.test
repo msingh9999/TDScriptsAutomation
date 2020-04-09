@@ -1,0 +1,130 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_KsdzsHT2Eeao6LAbRG4SEA,_vZ3AoJ-TEeaqXcq-JvSnkA,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_uGGawHT2Eeao6LAbRG4SEA,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: Db2Coprocessor
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _7CrtgOy5EeaJFfr7b3zF8A
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 3/23/18 1:46 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests Xpediter collection of Db2 statements that were compiled using the Db2 Coprocessor used for Total Test.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- Db2Preprocessor ----------------------------------------------"
+
+global [val configName DB2COPS5]
+global [val step1Pgm KTSAMP5]
+global [val ddioDsName XDEVREG.XPED.DDIO]
+
+add-filter $FILTER_XDEVREG 
+
+// Reset preferences
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button "Enable Xpediter/TSO exit breakpoints" | check
+    get-button OK | click
+}
+
+get-view $HOST_EXPLORER | get-tree 
+	| select [get-pds-member-path -dataset "XDEVREG.XPED.JCL" -member $configName -filter $FILTER_XDEVREG]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+    
+with [get-window "Debug Configurations"] 
+{
+    with [get-group "Debug criteria" | get-table] {
+        get-item RUNSAMP1 | check
+    }
+    
+    //add test loadlib with DB2 support
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        get-editbox | set-text "XT.R170000.SMPE.SLXTLOAD"
+        get-button OK | click
+    }
+    
+    get-button Debug | click
+}
+
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+
+wait-for-source -lmName $step1Pgm -pgmName $step1Pgm
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args "EXEC" -args 15
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetDdioDatasetName" -args $ddioDsName -args "DDIO"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "createDb2Listener"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "addDb2Listeners"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testIsDb2Ims" -args true -args false
+
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "DB2COPS5 \\[Xpediter Batch Debug Session\\]/.*/Thread \\[KTSAMP5, Step: RUNDBTST.RUNSAMP1\\] \\(Suspended \\(breakpoint\\)\\)/KTSAMP5 \\[KTSAMP5\\] \\(procedure: KTSAMP5 line: 224\\)"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateNonExecutedDb2Source" -args "EXEC SQL DECLARE TEMPL_CURSORA CURSOR FOR               SELECT EMPNO, LASTNAME               FROM KT_SAMPEMP1               WHERE EMPNO  > :WS-EMPNO               END-EXEC." -args 156
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateNonExecutedDb2Source" -args "EXEC SQL DECLARE TEMPL_CURSORB CURSOR FOR               SELECT *               FROM KT_SAMPEMP1               WHERE EMPNO  > :WS-EMPNO               END-EXEC." -args 163
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateNonExecutedDb2Source" -args "EXEC SQL DECLARE TEMPL_CURSOR1 CURSOR FOR               SELECT EMPNO, LASTNAME               FROM KT_SAMPEMP1               WHERE EMPNO  > :WS-EMPNO               END-EXEC." -args 179
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateNonExecutedDb2Source" -args "EXEC SQL DECLARE TEMPL_CURSOR2 CURSOR FOR               SELECT *               FROM KT_SAMPEMP1               WHERE EMPNO  > :WS-EMPNO               END-EXEC." -args 188
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2Source" -args "EXEC SQL OPEN TEMPL_CURSOR1 END-EXEC." -args 193
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2InputVariableCount" -args 1 -args 193
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2OutputVariableCount" -args 0 -args 193
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "assertNonNullDb2Metadata" -args 193
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2Source" -args "EXEC SQL OPEN TEMPL_CURSOR2 END-EXEC." -args 201
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2InputVariableCount" -args 1 -args 201
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2OutputVariableCount" -args 0 -args 201
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "assertNonNullDb2Metadata" -args 201
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2Source" -args "EXEC SQL CLOSE TEMPL_CURSOR END-EXEC." -args 214
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2InputVariableCount" -args 1 -args 214
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2OutputVariableCount" -args 0 -args 214
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "assertNonNullDb2Metadata" -args 214
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2Source" -args "EXEC SQL FETCH TEMPL_CURSOR1 INTO               :EMPNO, :LASTNAME           END-EXEC." -args 230
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2InputVariableCount" -args 0 -args 230
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2OutputVariableCount" -args 2 -args 230
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "assertNonNullDb2Metadata" -args 230
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2Source" -args "EXEC SQL FETCH TEMPL_CURSOR2 INTO               :DCLKT-KTSAMP1           END-EXEC." -args 244
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2InputVariableCount" -args 0 -args 244
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateDb2OutputVariableCount" -args 14 -args 244
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "assertNonNullDb2Metadata" -args 244
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "removeDb2Listeners"
+
+get-view Debug | get-tree | select "DB2COPS5 \\[Xpediter Batch Debug Session\\]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+//close the Log and any other editors that may have been left open
+close-all-editors
+
+// Reset preferences
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button "Enable Xpediter/TSO exit breakpoints" | uncheck
+    get-button OK | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,158 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_gJI9gIl3Eeaf8rtXp2pZyA,_l8aZYER7EeamKrg04Gqe-Q
+Element-Name: BackslashToYen
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _sYDL0CdKEeagVqWYu0g_bg
+Runtime-Version: 2.2.0.201609202322
+Save-Time: 2/9/17 1:31 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// This single test case was intended to replace two existing SWTBot test cases, CompuwareEditorBackslashToYenSymbolTest and EditingPropertiesBackslashToYenTest
+
+global [val testDataset "XDEVREG.YENTEST"]
+global [val backslashToYenPreferenceLabel "Convert backslash characters into yen signs"]
+global [val testMember1 [format "T%S" [get-time | format-time -format mmssSSS]]]
+global [val codepage930 "930 - Japanese (Katakana-Kanji)"]
+global [val filterXdevregUpper "XDEVREG"]
+global [val dataExtension ".data"]
+
+// Add default host and log in, but use code page 930 Japanese/Katana
+// Note: Filters become case sensitive with this code page so xdevreg filter needs to be XDEVREG
+
+add-host -hostName $HOST -portNum $PORT
+
+login-from-host -hostName $HOST -port $PORT -codePage $codepage930
+add-filter -hostName $HOST -portNum $PORT -filter $filterXdevregUpper
+
+// Turn on preference to convert backslash character to yen symbol
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer"
+    get-group Editing | get-button $backslashToYenPreferenceLabel | check
+    get-button OK | click
+}
+
+// create test member
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregUpper -dataset $testDataset] 
+    | get-menu "New Member..." | click
+with [get-window "New Member"] {
+    get-editbox -after [get-label "Member name:"] | set-text $testMember1
+    get-button OK | click
+}
+
+// close the default Slickedit editor
+get-editor [concat $testMember1 ".data"] | close
+
+// Open again with the Compuware editor, enter some backslashes and verify they are converted to Yen symbols
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $filterXdevregUpper -dataset $testDataset -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor" | click
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | type-text "\\\\\\"
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | get-property text | equals "¥¥¥" | verify-true
+get-editor [concat $testMember1 $dataExtension] | close
+get-window $HOST_EXPLORER | get-button No | click
+
+// Turn off preference to convert backslash character to yen symbol
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-group Editing | get-button $backslashToYenPreferenceLabel | uncheck
+    get-button OK | click
+}
+
+// Open again with the Compuware editor, enter some backslashes and verify they remain backslash symbols
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $filterXdevregUpper -dataset $testDataset -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor" | click
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | type-text "\\\\\\"
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | get-property text | equals "\\\\\\" | verify-true
+get-editor [concat $testMember1 $dataExtension] | close
+get-window $HOST_EXPLORER | get-button No | click
+
+// Delete the temporary member
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $filterXdevregUpper -dataset $testDataset -member $testMember1]
+    get-menu Delete | click
+}
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+
+// Logout, remove the default host with code page 930 and add it back and login using the default 1047 code page
+
+logout
+remove-host -hostName $HOST -portNum $PORT
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+
+// re-create the test member
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset] 
+    | get-menu "New Member..." | click
+with [get-window "New Member"] {
+    get-editbox -after [get-label "Member name:"] | set-text $testMember1
+    get-button OK | click
+}
+// close the default Slickedit editor
+get-editor [concat $testMember1 $dataExtension] | close
+
+// Turn on preference to convert backslash character to yen symbol
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer"
+    get-group Editing | get-button $backslashToYenPreferenceLabel | check
+    get-button OK | click
+}
+
+// Open again with the Compuware editor, enter some backslashes and verify they remain backslash symbols
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor" | click
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | type-text "\\\\\\"
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | get-property text | equals "\\\\\\" | verify-true
+get-editor [concat $testMember1 $dataExtension] | close
+get-window $HOST_EXPLORER | get-button No | click
+
+// Turn off preference to convert backslash character to yen symbol
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-group Editing | get-button $backslashToYenPreferenceLabel | uncheck
+    get-button OK | click
+}
+
+// Open again with the Compuware editor, enter some backslashes and verify they remain backslash symbols
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor" | click
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | type-text "\\\\\\"
+get-editor [concat $testMember1 $dataExtension] | get-text-viewer | get-property text | equals "\\\\\\" | verify-true
+get-editor [concat $testMember1 $dataExtension] | close
+get-window $HOST_EXPLORER | get-button No | click
+
+// Delete the temporary member
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset -member $testMember1]
+    get-menu Delete | click
+}
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+
+remove-filter -hostName $HOST -port $PORT -filter $filterXdevregUpper
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

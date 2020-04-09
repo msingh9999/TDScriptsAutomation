@@ -1,0 +1,48 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: TitleShowsWorkspace
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _m55YUOMLEeaO0oZBXy4WsQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 1/25/17 10:33 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Verify title bar is showing the product name - cannot test -showlocation command line parameter as
+// while this can be added to our RCPTT launch, it would not be present in the automated nightly tests
+// against an install
+
+get-button "Host Explorer" | get-property "getParent().getParent().getShell().getText()" 
+    	| contains "Topaz Workbench" | verify-true
+
+// Set the workspace name preference
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "General/Workspace"
+    get-editbox -after [get-label "Workspace name (shown in window title):"] | set-text "RCPTT Host Services"
+    get-button OK | click
+}
+
+// Verify the title bar now shows the workspace name preference that was entered
+get-button "Host Explorer" | get-property "getParent().getParent().getShell().getText()" 
+    	| equals "RCPTT Host Services - Topaz Workbench" | verify-true
+
+    
+// clear out the workspace name preference
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "General/Workspace"
+    get-editbox -after [get-label "Workspace name (shown in window title):"] | set-text ""
+    get-button OK | click
+}
+
+// Verify title bar is showing the product name
+
+get-button "Host Explorer" | get-property "getParent().getParent().getShell().getText()" 
+    	| contains "Topaz Workbench" | verify-true
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

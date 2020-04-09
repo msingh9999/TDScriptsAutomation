@@ -1,0 +1,159 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _QgUBwEULEeamKrg04Gqe-Q,_R9YAMEUMEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q,_IQ4-sEUKEeamKrg04Gqe-Q,_IRCIoEUKEeamKrg04Gqe-Q,_QgF_UEULEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: ConnectToHost
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _XXNdkEUKEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/9/17 9:57 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the "Connect to Host" button on the TSO Command Console view. Use cases to test:
+*	Single host defined:
+	*	Should be disabled (tested as part of IssueTSOConsoleCommand)
+*	Multiple hosts defined:
+	*	Should bring up host selection dialog
+	*	Selecting new/different host should update label of the console view.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val TSOTestCommandOutput1 "> test command\nTEST COMMAND\nDATA SET XDEVREG.COMMAND.LOAD NOT IN CATALOG OR CATALOG CAN NOT BE ACCESSED"]
+
+// Test connect with single host defined
+// Setup Assumptions: 
+//    All extra hosts removed no hosts definedand only one default host defined, not logged in
+// Test Expectations:
+//    1. Should not be prompted with a host selection window
+//    2. Should be prompted with a login window
+
+add-host
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu "1 TSO Commands Console" | click
+
+handle-login-dialog
+
+get-view Console | get-button $CONNECT_BUTTON | get-property enablement | equals false | verify-true
+
+get-view Console | get-label [format "TSO Commands Console - %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "TSO Commands Console - %s:%s" $HOST $PORT] | verify-true
+get-view Console | get-button $CloseConsole | click
+
+// Test connect with single host defined
+// Setup Assumptions: 
+//    All extra hosts removed and only one default host defined, logged in
+// Test Expectations:
+//    1. Should not be prompted with a host selection window
+//    2. Should not be prompted with a login window
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu "1 TSO Commands Console" | click
+
+get-view Console | get-button $CONNECT_BUTTON | get-property enablement | equals false | verify-true
+
+get-view Console | get-label [format "TSO Commands Console - %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "TSO Commands Console - %s:%s" $HOST $PORT] | verify-true
+get-view Console | get-button $CloseConsole | click
+
+// Test connect with multiple hosts defined
+// Setup Assumptions: 
+//    All extra hosts removed and only one default host defined, logged in, and another host defined, not logged in
+// Test Expectations:
+//    1. Should be prompted with a host selection window
+//    2. Should be prompted with a login window
+
+add-host $HOST_CW09 $PORT_16196
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu "1 TSO Commands Console" | click
+
+with [get-window $HOST_EXPLORER] {
+    get-table | select [format "%s:%s" $HOST $PORT]
+    get-button OK | click
+}
+
+handle-login-dialog
+
+get-view Console | get-button $CONNECT_BUTTON | get-property enablement | equals true | verify-true
+get-view Console | get-button $CONNECT_BUTTON | click
+get-window $HOST_EXPLORER | get-label "Select a Host" | get-property caption | equals "Select a Host" | verify-true
+with [get-window $HOST_EXPLORER] {
+    get-table | select [format "%s:%s" $HOST $PORT]
+    get-button OK | click
+}
+get-view Console | get-label [format "TSO Commands Console - %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "TSO Commands Console - %s:%s" $HOST $PORT] | verify-true
+
+// Test connect with multiple hosts defined, selecting same host previously selected
+// Setup Assumptions: 
+//    All extra hosts removed and only one default host defined, logged in, and another host defined, logged in
+//    Previous TSO Commands Console is still active
+//     *** NOTE: Previous test does not close the TSO Commands Console ***
+// Test Expectations:
+//    1. Should be prompted with a host selection window
+//    2. Should not be prompted with login window
+
+get-view Console | get-button $CONNECT_BUTTON | click
+get-window $HOST_EXPLORER | get-label "Select a Host" | get-property caption | equals "Select a Host" | verify-true
+with [get-window $HOST_EXPLORER] {
+    get-table | select [format "%s:%s" $HOST $PORT]
+    get-button OK | click
+}
+get-view Console | get-label [format "TSO Commands Console - %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "TSO Commands Console - %s:%s" $HOST $PORT] | verify-true
+get-view Console | get-button $CloseConsole | click
+
+// Test disconnect and reconnect
+// Setup Assumptions: 
+//    All extra hosts removed and only one default host defined, logged in, and another host defined, logged in
+// Test Expectations:
+//    1. Should be prompted with a host selection window
+//    2. Should not be prompted with login window
+//    3. Issuing of a command should prompt with login window
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu "1 TSO Commands Console" | click
+
+with [get-window $HOST_EXPLORER] {
+    get-table | select [format "%s:%s" $HOST $PORT]
+    get-button OK | click
+}
+
+with [get-view Console | get-text-viewer] {
+    set-caret-pos 1 3
+}
+
+
+
+exec-with-options -disableJobWaiting -command {
+
+	logout -hostName $HOST -port $PORT
+	
+	execute-tso-command -commandString $TSOTestCommand
+	
+	with [get-window $HOST_EXPLORER] {
+	    get-table | select [format "%s:%s" $HOST $PORT]
+	    get-button OK | click
+	}
+	
+	handle-login-dialog
+
+}
+
+get-view Console | get-label [format "TSO Commands Console - %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "TSO Commands Console - %s:%s" $HOST $PORT] | verify-true
+
+verify-tso-command-output-contains -commandOutput $TSOTestCommandOutput1 | verify-true
+
+get-view Console | get-button $CloseConsole | click
+
+    
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

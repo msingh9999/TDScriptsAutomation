@@ -1,0 +1,91 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresTsoConsole
+Element-Type: context
+Element-Version: 2.0
+Id: _IRCIoEUKEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/8/16 8:48 AM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+/**
+	Tests the enablement of the cancel button. 
+   	enabled = the expected enablemnt. 
+   	attempts = the number of attempts to retry the enablement. Delay is 100ms per attempt. 
+**/
+proc "test-cancel-button" [val enabled] [val attempts 15]
+{
+	try -times $attempts -delay 100 -command
+	{
+		get-view Console | get-button $TSOCancelButton | get-property enablement -raw true | equals $enabled | verify-true
+		bool true
+	}
+	-catch
+	{
+		bool false
+	}
+}
+
+proc "clear-tso-console"
+{
+    with [get-view Console] {
+        get-button $ClearConsole | click
+        get-text-viewer | set-caret-pos 1 1
+    }
+}
+
+proc "execute-tso-command" [val commandString] [val delayMilliseconds 1]
+{
+    with [get-view Console | get-text-viewer] {
+        set-caret-pos 1 3
+        type-text $commandString
+        key-type Enter
+        set-caret-pos 3 3
+    }
+
+    wait -ms $delayMilliseconds
+}
+
+proc "verify-tso-command-output" [val commandOutput] [val attempts 30]
+{
+    try -times $attempts -delay 10 -command
+    {
+        get-view Console | get-text-viewer | get-property text | equals $commandOutput | verify-true 
+        bool true
+    }
+    -catch
+    {
+        bool false
+    }  
+}
+
+proc "verify-tso-command-output-contains" [val commandOutput] [val attempts 30]
+{
+    try -times $attempts -delay 10 -command
+    {
+        get-view Console | get-text-viewer | get-property text | contains $commandOutput | verify-true 
+        bool true
+    }
+    -catch
+    {
+        bool false
+    }  
+}
+
+proc "verify-tso-command-output-line-count" [val numberOfLines] [val attempts 60]
+{
+    try -times $attempts -delay 10 -command
+    {
+        get-view Console | get-text-viewer | get-property "getLineCount()" | equals $numberOfLines | verify-true
+        bool true
+    }
+    -catch
+    {
+        bool false
+    }  
+}
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

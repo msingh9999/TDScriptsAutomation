@@ -1,0 +1,92 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _QgUBwEULEeamKrg04Gqe-Q,_IQ4-sEUKEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q,_QgF_UEULEeamKrg04Gqe-Q,_IRCIoEUKEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_IQtYgEUKEeamKrg04Gqe-Q
+Element-Name: CommandHistory
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _XXDskEUKEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/8/16 11:28 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the Command History for the TSO Command Console.
+
+Use cases to test:
+* Button brings up the command history dialog
+* Command history contains accurate history of entered commands
+* Correct command is executed from command history dialog
+* Command history is retained when console is re-opened
+* Order of commands is correct (most recent command on top)
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val defaultCommandOutput "API is not in place yet!"]
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu "1 TSO Commands Console" | click
+with [get-view Console] {
+    get-text-viewer | set-caret-pos 1 3
+    get-button "Recent TSO Commands Console commands" | click
+}
+with [get-window $TSOCommandsConsoleTitle] {
+    get-group "Recent TSO Commands Console commands" | get-list | get-property "getItems().length" | equals 0 
+        | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+    get-label "Issue recent TSO Commands Console command" | get-property caption 
+        | equals "Issue recent TSO Commands Console command" | verify-true
+}
+
+get-window $TSOCommandsConsoleTitle | get-button Cancel | click
+
+// Execute 3 commands and wait for the default reply for each one
+// otherwise multithreading can cause RCPTT to perform its verify before the console output is written.
+// TODO: Change default commands and expected output when TSO API is in place
+
+execute-tso-command -commandString $TSOCommand1
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $TSOCommand1 $TSOCommand1 $defaultCommandOutput]
+execute-tso-command -commandString $TSOCommand2
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $TSOCommand2 $TSOCommand2 $defaultCommandOutput]
+execute-tso-command -commandString $TSOCommand3
+verify-tso-command-output [format "> %s\n%S\n%s\n>" $TSOCommand3 $TSOCommand3 $defaultCommandOutput]
+
+
+with [get-view Console] {
+    get-button "Recent TSO Commands Console commands" | click
+}
+
+with [get-window $TSOCommandsConsoleTitle | get-group "Recent TSO Commands Console commands" | get-list] {
+    get-property "getItems().length" | equals 3 | verify-true
+    get-property "getItems().String[0]" | equals $TSOCommand3 | verify-true
+    get-property "getItems().String[1]" | equals $TSOCommand2 | verify-true
+    get-property "getItems().String[2]" | equals $TSOCommand1 | verify-true
+}
+with [get-window $TSOCommandsConsoleTitle] {
+    get-group "Recent TSO Commands Console commands" | get-list | select $TSOCommand2
+    get-button OK | click
+}
+    
+verify-tso-command-output [format "> %s\n%S\n%s\n> %s\n%S\n%s\n> %s\n%S\n%s\n> %S\n%s\n>" $TSOCommand1 $TSOCommand1 $defaultCommandOutput $TSOCommand2 $TSOCommand2 $defaultCommandOutput $TSOCommand3 $TSOCommand3 $defaultCommandOutput $TSOCommand2 $defaultCommandOutput]
+    
+get-view Console | get-button $CloseConsole | click
+get-view Console | get-button $OpenConsole | click -arrow
+get-new-console "TSO Commands Console" | click
+with [get-view Console] {
+    get-text-viewer | set-caret-pos 1 3
+    get-button "Recent TSO Commands Console commands" | click
+}
+with [get-window $TSOCommandsConsoleTitle | get-group "Recent TSO Commands Console commands" | get-list] {
+    get-property "getItems().length" | equals 3 | verify-true
+    get-property "getItems().String[0]" | equals $TSOCommand2 | verify-true
+    get-property "getItems().String[1]" | equals $TSOCommand3 | verify-true
+    get-property "getItems().String[2]" | equals $TSOCommand1 | verify-true
+}
+get-window $TSOCommandsConsoleTitle | get-button Cancel | click
+get-view Console | get-button $CloseConsole | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

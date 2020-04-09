@@ -1,0 +1,108 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: TsoLaunchConfig
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _SJFqYJxsEee5T_BDt0pU3g
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/20/18 11:41 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to validate Xpediter TSO Launch Configuration context sensitive help
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "------------------------------------------------ TsoLaunchConfig ------------------------------------------------"
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] {
+	get-tree | select "Xpediter TSO Debug Session"
+	get-button "New launch configuration" | click
+	get-group "Program to debug" | get-editbox -after [get-label "Program:"] | click-text
+	validate-context-help "tab of a TSO configuration allows you to define the program, TSO logon parameters, and the" +
+		" connection for your debug session"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item Scripting | click
+	get-group "Initial script" | get-editbox | click-text
+	validate-context-help "tab of a TSO configuration allows you to define an initial script to use with your session"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item "Load Libraries" | click
+	get-group "Load libraries" | get-table | key-type TRAVERSE_TAB_NEXT
+	validate-context-help "tab of a TSO configuration allows you to define the load libraries to be concatenated to t" +
+		"he STEPLIB DD in your JCL"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item DDIO | click
+	get-group "DDIO (Compuware source listing files)" | get-table | key-type TRAVERSE_TAB_NEXT
+	validate-context-help "Multiple methods exist for defining the source listing files to be included in the debug s" +
+		"ession. The simplest way is to set up DDIO rules so DDIO members are automatically found, as described in th" +
+		"e <span style=\"font-style: italic;\"><i>Xpediter/TSO and Xpediter/IMS Installation and Configuration Guide'" +
+		"s</i></span> section about using the run-time parameter CTLASSD. If this is not set up at your site, an erro" +
+		"r message will indicate that no DDIO was found when the debug session is launched. If that occurs, use one o" +
+		"f the following methods to define the source listing to be included in the debug session"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item "User Files" | click
+	get-group "Files to allocate" | get-table | key-type TRAVERSE_TAB_NEXT
+	validate-context-help "tab of a TSO configuration allows you to define input and output files for your program"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-group "Files to allocate" | get-button "Add..." | click
+	with [get-window "File Specifications"] {
+		validate-context-help "tab of a TSO configuration allows you to define input and output files for your program"
+	}
+}
+
+with [get-window "Debug Configurations" | get-window "File Specifications"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+with [get-window "Debug Configurations"] {
+	get-tab-folder | get-tab-item Log | click
+	get-group "Log dataset allocation" | get-editbox -after [get-label "Data class:"] | click-text
+	validate-context-help "tab allows you to define the Xpediter log dataset options for your session"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item "Work Files" | click
+	get-group "Xpediter TSO work files" | get-editbox -after [get-label "Unit:"] | click-text
+	validate-context-help "tab to define the allocation parameters to use for Xpediter TSO work files on the mainframe"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item "Code Coverage" | click
+	get-button "Collect Code Coverage" | check
+	validate-context-help "An Xpediter session can optionally be "
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-button "Delete selected launch configuration(s)" | click
+	get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+	get-button Close | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

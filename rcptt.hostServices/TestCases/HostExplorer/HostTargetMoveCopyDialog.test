@@ -1,0 +1,52 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_kRiL8ER7EeamKrg04Gqe-Q
+Element-Name: HostTargetMoveCopyDialog
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _yzOJECi2Eeawwty1Y0abzw
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/9/17 9:39 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val testDataset1 "XDEVREG.HS.API.TEST.SEQ"]
+global [val testDataset2 "XDEVREG.HS.API.TEST.SEQ.JCL"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+add-filter -hostName $HOST_CW09 -portNum $PORT -filter $FILTER_XDEVREG
+
+HE-recall-dataset -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -dataset $testDataset1
+HE-recall-dataset -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -dataset $testDataset2
+
+// When selecting one resource and clicking the "Copy to..." menu the resulting dialog should have the resource's host selected by default
+
+get-view $HOST_EXPLORER| get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1] 
+    | get-menu "Copy To..." | click
+with [get-window Copy] {
+    get-combo -after [get-label "Target host:"] | get-property selection | equals [format "%s:%s" $HOST $PORT] | verify-true
+    get-editbox -after [get-label "Copy to Host"] | get-property text 
+        | equals "Datasets cannot be copied to themselves. Either change the target host or rename the target dataset." 
+        | verify-true
+}
+get-window Copy | get-button Close | click
+
+// When select a resource from two different hosts and clicking the "Copy to..." menu, the resulting dialog should not have a default host
+// selected but should contain the hosts associated with the selected resources
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1] [get-pds-path -hostName $HOST_CW09 -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2]
+    get-menu "Copy To..." | click
+}
+with [get-window Copy | get-combo -after [get-label "Target host:"]] {
+    get-property selection | equals "" | verify-true
+    get-property "getItemCount()" | equals 2 | verify-true
+}
+get-window Copy | get-button Close | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

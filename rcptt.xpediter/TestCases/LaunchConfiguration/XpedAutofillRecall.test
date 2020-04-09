@@ -1,0 +1,81 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: XpedAutofillRecall
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _hgVykH6vEeeKdogbi4OGzg
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:44 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test Xpediter auto fill proclibs are prompted for recall if in migrated state.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- XpedAutofillRecall ----------------------------------------------"
+
+global [val proclibDataset "XDEVREG.XPED.VALIDATE.RECALL.PROCLIB"]
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "APPRCPR5"]
+
+proc "dataset-wait-for-migration" [val seconds 30] [val filter] [val dataset] [val hostname $HOST] [val portNum $PORT]
+{
+    try -delay 1000 -times $seconds -command 
+    {
+        get-tab-folder | get-tab-item $HOST_EXPLORER | click
+        with [get-view $HOST_EXPLORER | get-tree] {
+            select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filter -dataset $dataset] | get-menu Refresh | click
+        }          
+        get-view $HOST_EXPLORER | get-tree | get-item [get-pds-path -hostName $HOST -portNUM $PORT -filter $filter -dataset $dataset] | get-property "image.path" -raw | equals $IMAGE_DIR_MIGRATED
+    }
+    -catch 
+    {
+        log  [format "Waited %s seconds and could not detect image path %s" $seconds $IMAGE_DIR_MIGRATED]
+    }
+}
+
+add-filter -filter $FILTER_XDEVREG
+
+// Make sure the proclib dataset is migrated:
+select-pds $proclibDataset | get-menu "Refresh" | click
+if [get-dataset-node $proclibDataset | has-menu "Recall" | not]
+{
+	submit-job -dataset "XDEVREG.HS.JCL" -member "MIGRAT11" -jobName "XDVMIG11"
+}
+
+dataset-wait-for-migration -hostname $HOST -portNum $PORT -filter $FILTER_XDEVREG -dataset $proclibDataset
+
+get-preferences-menu | click
+with [get-window Preferences] {
+	get-tree | select "Compuware/Xpediter/Autofill"
+	get-button "Add..." | click
+	with [get-window Datasets] {
+		get-editbox | set-text $proclibDataset
+		get-button OK | click
+	}
+	get-button OK | click
+}
+
+get-view $HOST_EXPLORER | get-tree | select-pds-member -dataset $jclDataset -member $jclMember
+	-filter $FILTER_XDEVREG -hostName $HOST -portNum $PORT | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+get-window "Autofill Validation" | get-button "Recall All" | get-property enablement | equals true | verify-true
+get-window "Autofill Validation" | get-button Cancel | click
+get-window "Debug Configurations" | get-button Close | click
+
+get-preferences-menu | click
+with [get-window Preferences] {
+	get-tree | select "Compuware/Xpediter/Autofill"
+	get-table | select $proclibDataset
+	get-button Remove | click
+	get-button OK | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

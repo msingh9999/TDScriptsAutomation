@@ -1,0 +1,87 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_KsdzsHT2Eeao6LAbRG4SEA
+Element-Name: CodeCoverageTDOSection
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _VPL1UM7EEeeaRfBnZ17kwg
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 11/22/17 11:38 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test case for testing the expansion state of the Code Coverage TDO section in an Xpediter launch configuration.  State should be saved with a launch configuration.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Create a new launch configuration - the TDO section should be collapsed by default
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"]
+{
+    get-tree | select "Xpediter Batch Debug Session"
+    get-button "New launch configuration" | click
+    get-editbox -after [get-label "Name:"] | set-text Launch1
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | click
+}
+get-window "Debug Configurations" | get-section "Test Data Optimization" | get-property "isExpanded()" | equals false | verify-true
+
+// Reopen the launch configuration, turn on the TDO option, and save it
+with [get-window "Debug Configurations"]
+{
+    get-section "Test Data Optimization" | click
+    get-button "Enable Test Data Optimization (TDO)" | click
+    get-button Apply | click
+    get-button Close | click
+}
+
+// Reopen the launch configuration - the TDO section should be expanded because the TDO option was turned on in the previous step
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"]
+{
+    get-tree | select "Xpediter Batch Debug Session/Launch1"
+    get-tab-folder | get-tab-item "Code Coverage" | click
+}
+get-window "Debug Configurations" | get-section "Test Data Optimization" | get-property "isExpanded()" | equals true | verify-true
+    
+// Unexpanding the TDO section should not enable the Apply and Revert buttons
+get-window "Debug Configurations" | get-section "Test Data Optimization" | click
+with [get-window "Debug Configurations"]
+{
+    get-button Apply | get-property enablement | equals false | verify-true
+    get-button Revert | get-property enablement | equals false | verify-true
+}
+
+// Expand the TDO section again, turn off the TDO option, and close
+with [get-window "Debug Configurations"]
+{
+	get-section "Test Data Optimization" | click
+	get-button "Enable Test Data Optimization (TDO)" | click
+    get-button Apply | click
+    get-button Close | click
+}
+
+// Verify when reopening the launch that the TDO section is still expanded (last left it expanded during a save)
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"]
+{
+    get-tree | select "Xpediter Batch Debug Session/Launch1"
+    get-tab-folder | get-tab-item "Code Coverage" | click
+}
+get-window "Debug Configurations" | get-section "Test Data Optimization" | get-property "isExpanded()" | equals true | verify-true
+    
+// Delete the launch config    
+with [get-window "Debug Configurations"]
+{
+    get-tree | select "Xpediter Batch Debug Session/Launch1"
+    get-button "Delete selected launch configuration(s)" | click
+    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+    get-button Close | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

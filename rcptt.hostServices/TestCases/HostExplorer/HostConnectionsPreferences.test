@@ -1,0 +1,324 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wdXLMCqfEeeBwLfWkzSZ3Q,_l8aZYER7EeamKrg04Gqe-Q
+Element-Name: HostConnectionsPreferences
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _UzpTgFolEeadDfq-N81CBA
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/9/17 9:39 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- HostConnectionsPreferences ----------------------------------------------"
+
+proc "test-invalid-host" [val hostName] {
+	get-view $HOST_EXPLORER | get-button "Host Explorer Preferences" | click
+	with [get-window "Preferences (Filtered)"] {
+		get-button "Add..." | click
+		with [get-window "Host Connections"] {
+			get-editbox -after [get-label "Description:"] | key-type TRAVERSE_TAB_NEXT
+			get-editbox -after [get-label "Host:"] | set-text $hostName
+			get-editbox -after [get-label "Port:"] | set-text $PORT_20947
+			get-window "Preferences (Filtered)" | get-window "Host Connections" | get-editbox -after [get-label
+				"New Host Connection"] | get-property text | equals [format "Host \"%s\" is invalid." $hostName]
+				| verify-true
+			get-button OK | get-property enablement | equals false | verify-true
+		}
+	}
+	with [get-window "Preferences (Filtered)"] {
+		get-window "Host Connections" | get-button Cancel | click
+		get-button OK | click
+	}
+}
+
+proc "test-invalid-port" [val port] {
+	get-view $HOST_EXPLORER | get-button "Host Explorer Preferences" | click
+	with [get-window "Preferences (Filtered)"] {
+		get-button "Add..." | click
+		with [get-window "Host Connections"] {
+			get-editbox -after [get-label "Description:"] | key-type TRAVERSE_TAB_NEXT
+			get-editbox -after [get-label "Host:"] | set-text $HOST
+			get-editbox -after [get-label "Port:"] | set-text $port
+			get-window "Preferences (Filtered)" | get-window "Host Connections" | get-editbox -after [get-label
+				"New Host Connection"] | get-property text | equals [format "%s is an invalid port number." $port]
+				| verify-true
+			get-button OK | get-property enablement | equals false | verify-true
+		}
+	}
+	with [get-window "Preferences (Filtered)"] {
+		get-window "Host Connections" | get-button Cancel | click
+		get-button OK | click
+	}
+}
+
+// Test invalid hosts and verify error messages are shown
+
+test-invalid-host "#"
+test-invalid-host "_"
+test-invalid-host "?"
+test-invalid-host "/"
+test-invalid-host "host1#.mydomain.com"
+test-invalid-host "192.#-!.123.1"
+test-invalid-host "-cw01"
+test-invalid-host "cw01-"
+
+// End testing invalid hosts
+
+// Test invalid ports and verify error messages are shown
+
+test-invalid-port "#"
+test-invalid-port "_"
+test-invalid-port "?"
+test-invalid-port "/"
+test-invalid-port "111111"
+test-invalid-port "cw01"
+test-invalid-port "-0"
+test-invalid-port "+0"
+test-invalid-port "-4000"
+test-invalid-port "+"
+test-invalid-port "80-"
+test-invalid-port "80+"
+test-invalid-port "0"
+
+// End testing invalid ports
+
+add-host -hostName $HOST -portNum $PORT
+
+// Check combinations of incorrect and correct host and port
+get-view "Host Explorer" | get-tree | select [format "Hosts/cw01:%s" $PORT] | get-menu "Edit..." | click
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Edit the host connection sett" +
+		"ings" | verify-true
+	get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text ""
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "A host must be specified."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text $HOST
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Edit the host connection sett" +
+		"ings" | verify-true
+	get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text ""
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "A port number must be specifi" +
+		"ed." | verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text $PORT
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Edit the host connection sett" +
+		"ings" | verify-true
+	get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text 209470
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "209470 is an invalid port num" +
+		"ber." | verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text ""
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "A host must be specified."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text $HOST
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "209470 is an invalid port num" +
+		"ber." | verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text $PORT
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Edit the host connection sett" +
+		"ings" | verify-true
+	get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text "#"
+get-window "Host Connections" | get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals
+	"Host \"#\" is invalid." | verify-true
+get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text ""
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Host \"#\" is invalid."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text $PORT
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Host \"#\" is invalid."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text $HOST
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Edit the host connection sett" +
+		"ings" | verify-true
+	get-button OK | get-property enablement | equals true | verify-true
+}
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Port:"] | set-text 209470
+	get-editbox -after [get-label "Host:"] | set-text "#"
+}
+with [get-window "Host Connections"] {
+	get-editbox -after [get-label "Edit Host Connection"] | get-property text | equals "Host \"#\" is invalid."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+
+get-window "Host Connections" | get-button Cancel | click
+
+// Check adding host from empty fields
+get-view "Host Explorer" | get-tree | select Hosts | get-menu Configure | click
+get-window "Preferences (Filtered)" | get-button "Add..." | click
+with [get-window "Preferences (Filtered)" | get-window "Host Connections"] {
+	get-editbox -after [get-label "New Host Connection"] | get-property text | equals "A host must be specified."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Preferences (Filtered)" | get-window "Host Connections" | get-editbox -after [get-label "Host:"] | set-text $HOST
+with [get-window "Preferences (Filtered)" | get-window "Host Connections"] {
+	get-editbox -after [get-label "New Host Connection"] | get-property text | equals "A port number must be specified."
+		| verify-true
+	get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Preferences (Filtered)" | get-window "Host Connections" | get-editbox -after [get-label "Port:"] | set-text $PORT
+with [get-window "Preferences (Filtered)" | get-window "Host Connections"] {
+	get-editbox -after [get-label "New Host Connection"] | get-property text | equals "Create a new host connection"
+		| verify-true
+	get-button OK | get-property enablement | equals true | verify-true
+}
+with [get-window "Preferences (Filtered)"] {
+	get-window "Host Connections" | get-button Cancel | click
+	get-button Cancel | click
+}
+// End testing on editing
+
+// Add valid hosts
+
+remove-all-hosts-native
+
+get-view $HOST_EXPLORER | get-button "Host Explorer Preferences" | click
+with [get-window "Preferences (Filtered)"] {
+	get-button "Add..." | click
+	with [get-window "Host Connections"] {
+		with [get-editbox -after [get-label "Description:"]] {
+			set-text [format "%s - %s" $HOST $PORT_20947]
+		}
+		with [get-editbox -after [get-label "Host:"]] {
+			set-text $HOST
+		}
+		get-editbox -after [get-label "Port:"] | set-text $PORT_20947
+		get-button OK | click
+	}
+	get-button "Add..." | click
+	with [get-window "Host Connections"] {
+		with [get-editbox -after [get-label "Description:"]] {
+			set-text [format "%s - %s" $HOST $PORT]
+		}
+		with [get-editbox -after [get-label "Host:"]] {
+			set-text $HOST
+		}
+		get-editbox -after [get-label "Port:"] | set-text $PORT
+		get-button OK | click
+	}
+	get-button "Add..." | click
+	with [get-window "Host Connections"] {
+		with [get-editbox -after [get-label "Description:"]] {
+			set-text [format "%s - %s" $HOST Secure]
+		}
+		with [get-editbox -after [get-label "Host:"]] {
+			set-text $HOST
+		}
+		get-editbox -after [get-label "Port:"] | set-text 46806
+		get-combo -after [get-label "Encryption protocol:"] | select "TLSv1.2"
+		get-button OK | click
+	}
+	get-button "Add..." | click
+	with [get-window "Host Connections"] {
+		with [get-editbox -after [get-label "Description:"]] {
+			set-text [format "%s - %s" $HOST_CW09 $PORT]
+		}
+		with [get-editbox -after [get-label "Host:"]] {
+			set-text $HOST_CW09
+		}
+		get-editbox -after [get-label "Port:"] | set-text $PORT
+		get-button OK | click
+	}
+	get-button OK | click
+}
+get-view $HOST_EXPLORER | get-button "Host Explorer Preferences" | click
+with [get-window "Preferences (Filtered)" | get-table] {
+	get-item [format "%s - %s" $HOST $PORT_20947] -column Description | get-property "columns[0]" | equals Ungrouped
+		| verify-true
+	get-item [format "%s - %s" $HOST $PORT_20947] -column Description | get-property "columns[1]" | equals [format
+		"%s - %s" $HOST $PORT_20947] | verify-true
+	get-item [format "%s - %s" $HOST $PORT_20947] -column Description | get-property "columns[2]" | equals $HOST
+		| verify-true
+	get-item [format "%s - %s" $HOST $PORT_20947] -column Description | get-property "columns[3]" | equals $PORT_20947
+		| verify-true
+	get-item [format "%s - %s" $HOST $PORT_20947] -column Description | get-property "columns[4]" | equals None
+		| verify-true
+	get-item [format "%s - %s" $HOST $PORT] -column Description | get-property "columns[0]" | equals Ungrouped
+		| verify-true
+	get-item [format "%s - %s" $HOST $PORT] -column Description | get-property "columns[1]" | equals [format "%s - %s" $HOST $PORT] | verify-true
+	get-item [format "%s - %s" $HOST $PORT] -column Description | get-property "columns[2]" | equals $HOST | verify-true
+	get-item [format "%s - %s" $HOST $PORT] -column Description | get-property "columns[3]" | equals $PORT | verify-true
+	get-item [format "%s - %s" $HOST $PORT] -column Description | get-property "columns[4]" | equals None | verify-true
+	get-item [format "%s - %s" $HOST Secure] -column Description | get-property "columns[0]" | equals Ungrouped
+		| verify-true
+	get-item [format "%s - %s" $HOST Secure] -column Description | get-property "columns[1]" | equals [format "%s - %s" $HOST Secure] | verify-true
+	get-item [format "%s - %s" $HOST Secure] -column Description | get-property "columns[2]" | equals $HOST
+		| verify-true
+	get-item [format "%s - %s" $HOST Secure] -column Description | get-property "columns[3]" | equals 46806
+		| verify-true
+	get-item [format "%s - %s" $HOST Secure] -column Description | get-property "columns[4]" | equals "TLSv1.2"
+		| verify-true
+	get-item [format "%s - %s" $HOST_CW09 $PORT] -column Description | get-property "columns[0]" | equals
+		"Ungrouped" | verify-true
+	get-item [format "%s - %s" $HOST_CW09 $PORT] -column Description | get-property "columns[1]" | equals [format
+		"%s - %s" $HOST_CW09 $PORT] | verify-true
+	get-item [format "%s - %s" $HOST_CW09 $PORT] -column Description | get-property "columns[2]" | equals $HOST_CW09 | verify-true
+	get-item [format "%s - %s" $HOST_CW09 $PORT] -column Description | get-property "columns[3]" | equals $PORT | verify-true
+	get-item [format "%s - %s" $HOST_CW09 $PORT] -column Description | get-property "columns[4]" | equals None
+		| verify-true
+}
+get-window "Preferences (Filtered)" | get-button OK | click
+
+// Test editing existing hosts descriptions and verifying the correct host in the list is updated with the new description
+
+get-view $HOST_EXPLORER | get-button "Host Explorer Preferences" | click
+with [get-window "Preferences (Filtered)"] {
+	get-table | select [get-item Ungrouped -index 1]
+	get-button "Edit..." | click
+	with [get-window "Host Connections"] {
+		get-editbox -after [get-label "Description:"] | set-text [format "%s - %s Test" $HOST $PORT]
+		get-button OK | click
+	}
+}
+get-window "Preferences (Filtered)" | get-table | get-item Ungrouped -index 1 | get-property "columns[1]" | equals
+	[format "%s - %s Test" $HOST $PORT] | verify-true
+with [get-window "Preferences (Filtered)"] {
+	get-table | select [get-item Ungrouped -index 3]
+	get-button "Edit..." | click
+	with [get-window "Host Connections"] {
+		get-editbox -after [get-label "Description:"] | set-text [format "%s - %s Test" $HOST_CW09 $PORT]
+		get-editbox -after [get-label "Port:"] | set-text $PORT
+		get-button OK | click
+	}
+}
+get-window "Preferences (Filtered)" | get-table | get-item Ungrouped -index 3 | get-property "columns[1]" | equals
+	[format "%s - %s Test" $HOST_CW09 $PORT] | verify-true
+get-window "Preferences (Filtered)" | get-button OK | click
+
+remove-all-hosts-native
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

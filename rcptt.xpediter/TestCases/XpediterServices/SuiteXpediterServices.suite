@@ -1,0 +1,29 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteXpediterServices
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _6GP10O06EeaJFfr7b3zF8A
+Manually-Ordered: true
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 4/4/18 3:38 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_vOrnoPw_EeeUFrppDB367Q	// kind: 'test' name: 'AcceptStatementVariables' path: 'AcceptStatementVariables.test'
+_X6lbUNqbEeekvq3Ad4U9iQ	// kind: 'test' name: 'CallStatementVariables' path: 'CallStatementVariables.test'
+__-g6kHuhEee_C6KOSf2P3w	// kind: 'test' name: 'CobolWriteToDataset' path: 'CobolWriteToDataset.test'
+_7CrtgOy5EeaJFfr7b3zF8A	// kind: 'test' name: 'Db2Coprocessor' path: 'Db2Coprocessor.test'
+_0fo3QOy5EeaJFfr7b3zF8A	// kind: 'test' name: 'Db2Preprocessor' path: 'Db2Preprocessor.test'
+_s1jisDgMEeivRuG24U3yqw	// kind: 'test' name: 'WriteStatementOdoVariables' path: 'WriteStatementOdoVariables.test'
+_rSkqwOy5EeaJFfr7b3zF8A	// kind: 'test' name: 'XpedServices' path: 'XpedServices.test'
+_Er8b8BCXEeeMrsVon7Bhzg	// kind: 'test' name: 'XpedServicesDb2VersionCheck' path: 'XpedServicesDb2VersionCheck.test'
+_8gG08OyREeaqGusLTWfDAA	// kind: 'test' name: 'XpedServicesVSAMESDSRead' path: 'XpedServicesVSAMESDSRead.test'
+_pPqw8OyPEeaqGusLTWfDAA	// kind: 'test' name: 'XpedServicesVSAMKSDSKeyedRead' path: 'XpedServicesVSAMKSDSKeyedRead.test'
+_bahKkOoUEeaKvoqqMo3PCA	// kind: 'test' name: 'XpedServicesVSAMKSDSSequentialRead' path: 'XpedServicesVSAMKSDSSequentialRead.test'
+_84RhgOyKEeaqGusLTWfDAA	// kind: 'test' name: 'XpedServicesVSAMRRDSWrite' path: 'XpedServicesVSAMRRDSWrite.test'
+_AoNvQOyREeaqGusLTWfDAA	// kind: 'test' name: 'XpedServicesVSAMRSDSRead' path: 'XpedServicesVSAMRSDSRead.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

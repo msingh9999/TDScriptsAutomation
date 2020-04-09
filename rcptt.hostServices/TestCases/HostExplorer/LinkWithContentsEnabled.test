@@ -1,0 +1,21 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: LinkWithContentsEnabled
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _-dMOMJ0oEeaEL9K2GkMuew
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/28/16 12:11 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+with [get-view $HOST_EXPLORER | get-button "Link with Contents view"] {
+    get-property enablement | equals true | verify-true
+    get-property selected | equals true | verify-true
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

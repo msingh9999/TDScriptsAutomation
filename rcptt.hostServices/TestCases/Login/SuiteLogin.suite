@@ -1,0 +1,17 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteLogin
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _g3mmAIl3EeaOKusaXEFUkQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 4/24/17 2:47 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_YlVlAEklEeaHCMJmhjhZHw	// kind: 'test' name: 'Passphrase' path: 'Passphrase.test'
+_6WVTIA8OEee7k-ZmmvHwfA	// kind: 'test' name: 'FailedLoginCredentials' path: 'FailedLoginCredentials.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

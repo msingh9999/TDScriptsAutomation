@@ -1,0 +1,141 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_86UMAHqTEea2J_ZTcwmemQ,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: AutofillPreferencePage
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _2lz6UHqOEea2J_ZTcwmemQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:46 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val xpediterJCLDataset1 "XDEVREG.XPED.JCL"]
+global [val xpediterJCLDataset2 "XDEVREG.HS.JCLPARSE.TEST.JCL"]
+global [val jclOneStep "CWXTJCLC"]
+global [val jclTwoStep "TWOSTEP"]
+global [val jclTestProc "TESTPROC"]
+global [val jclProcLib "XDEVREG.HS.JCLPARSE.TEST.PROCLIB"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+// Test autofill for one step
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $xpediterJCLDataset1 -member $jclOneStep] 
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations" | get-group "Debug criteria" | get-table] {
+    get-item STEP1 | get-property "columns[0]" | equals STEP1 | verify-true
+    get-item STEP1 | get-property "columns[1]" | equals CWXTCOB | verify-true
+    get-item STEP1 | get-property "columns[3]" | equals Autofill | verify-true
+}
+with [get-window "Debug Configurations" | get-group "Debug criteria"] {
+    get-table | select STEP1
+    get-button Remove | click
+}
+get-window "Debug Configurations" | get-group "Debug criteria" | get-table | get-property "getItems().length" 
+    | equals 0 | verify-true
+get-window "Debug Configurations" | get-group "Debug criteria" | get-button Autofill | click
+with [get-window "Debug Configurations" | get-group "Debug criteria" | get-table] {
+    get-item STEP1 | get-property "columns[0]" | equals STEP1 | verify-true
+    get-item STEP1 | get-property "columns[1]" | equals CWXTCOB | verify-true
+    get-item STEP1 | get-property "columns[3]" | equals Autofill | verify-true
+}
+get-window "Debug Configurations" | get-button Close | click
+
+// Test auto fill for multi step
+
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $xpediterJCLDataset2 -member $jclTwoStep]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations" | get-group "Debug criteria" | get-table] {
+    get-item STEP1 | get-property "columns[0]" | equals STEP1 | verify-true
+    get-item STEP1 | get-property "columns[1]" | equals CWXTCOB | verify-true
+    get-item STEP1 | get-property "columns[3]" | equals Autofill | verify-true
+    get-item STEP2 | get-property "columns[0]" | equals STEP2 | verify-true
+    get-item STEP2 | get-property "columns[1]" | equals TRIMAIN | verify-true
+    get-item STEP2 | get-property "columns[3]" | equals Autofill | verify-true
+}
+with [get-window "Debug Configurations" | get-group "Debug criteria"] {
+    with [get-table] {
+        get-column-header Step | click
+        select STEP1 STEP2
+    }
+    get-button Remove | click
+    get-button Autofill | click
+}
+with [get-window "Debug Configurations" | get-group "Debug criteria" | get-table] {
+    get-item STEP1 | get-property "columns[0]" | equals STEP1 | verify-true
+    get-item STEP1 | get-property "columns[1]" | equals CWXTCOB | verify-true
+    get-item STEP1 | get-property "columns[3]" | equals Autofill | verify-true
+    get-item STEP2 | get-property "columns[0]" | equals STEP2 | verify-true
+    get-item STEP2 | get-property "columns[1]" | equals TRIMAIN | verify-true
+    get-item STEP2 | get-property "columns[3]" | equals Autofill | verify-true
+}
+get-window "Debug Configurations" | get-button Close | click
+
+// Test autofill proclib
+
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $xpediterJCLDataset2 -member $jclTestProc]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations" | get-window Autofill 
+    | get-label "Unable to add job name and step information to the launch configuration. Reason: PROC CWXTCOB  not found. You can specify additional proc libraries in the Xpediter Autofill preferences."] {
+    get-property enablement | equals true | verify-true
+    get-property caption 
+        | equals "Unable to add job name and step information to the launch configuration. Reason: PROC CWXTCOB  not found. You can specify additional proc libraries in the Xpediter Autofill preferences." 
+        | verify-true
+}
+with [get-window "Debug Configurations"] {
+    get-window Autofill | get-button OK | click
+    get-button Close | click
+}
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter/Autofill"
+    get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text $jclProcLib
+        get-button OK | click
+    }
+    get-button OK | click
+}
+
+get-menu "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] {
+    get-tree | select "Xpediter Batch Debug Session/TESTPROC"
+    get-button "Delete selected launch configuration(s)" | click
+    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+    get-button Close | click
+}
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $xpediterJCLDataset2 -member $jclTestProc]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations" | get-group "Debug criteria" | get-table] {
+    get-item STEP1 | get-property "columns[0]" | equals STEP1 | verify-true
+    get-item STEP1 | get-property "columns[1]" | equals CWXTCOB | verify-true
+    get-item STEP1 | get-property "columns[3]" | equals Autofill | verify-true
+}
+
+// Clean up debug configurations
+
+get-window "Debug Configurations" | get-button Close | click
+get-menu "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] {
+    get-tree | select "Xpediter Batch Debug Session/CWXTJCLC"
+    get-button "Delete selected launch configuration(s)" | click
+    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+    get-button "Delete selected launch configuration(s)" | click
+    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+    get-tree | select "Xpediter Batch Debug Session/TWOSTEP"
+    get-button "Delete selected launch configuration(s)" | click
+    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+    get-button Close | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

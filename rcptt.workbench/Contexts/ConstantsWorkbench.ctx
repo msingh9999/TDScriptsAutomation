@@ -1,0 +1,54 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsWorkbench
+Element-Type: context
+Element-Version: 2.0
+Id: _UrIe0ER7EeamKrg04Gqe-Q
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 10/16/18 3:01 PM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Tue Oct 16 15:01:54 EDT 2018
+SOURCE=Source
+PORT=30947
+CODEPAGE=1047 - Latin 1 (Open Systems)
+DESCRIPTION_HOST=
+PORT_46806=46806
+IMAGE_DOCUMENT=com.compuware.frameworks.imagerepository/images/obj/document.gif
+XDEVREG.SEQ.COMPARE3=XDEVREG.SEQ.COMPARE3
+XDEVREG.SEQ.COMPARE2=XDEVREG.SEQ.COMPARE2
+XDEVREG.SEQ.COMPARE1=XDEVREG.SEQ.COMPARE1
+TLS_V_1.2=TLSv1.2
+IMAGE_DDIO=com.compuware.frameworks.hostservices.hostexplorer/icons/DDIODataset.gif
+RCPTT_USER=XDEVREG
+HOST_CW11=cw11
+JES_EXPLORER=JES Explorer
+COMPUWARE_ENTERPRISE_SERVICES=Compuware Enterprise Services
+HOST=cw01
+IMAGE_DIR=com.compuware.frameworks.imagerepository/images/obj/directory.gif
+IN_USE_DECORATOR=com.compuware.frameworks.imagerepository/images/ovr/inUseDecorator.gif
+IMAGE_VSAM=com.compuware.frameworks.hostservices.hostexplorer/icons/VSAMDataset.png
+REMOTE_HOST_CONNECTED_IMAGE=com.compuware.frameworks.imagerepository/images/obj/host_remote_connected.gif
+FILTER_XDEVREG=xdevreg
+HOST_CW09=CW09.compuware.com
+HOST_CW06=CW06.compuware.com
+IMAGE_DIR_MIGRATED=com.compuware.frameworks.imagerepository/images/obj/directory_migrated.gif
+XDEVREG.XPED.COBOL.CPYBK=XDEVREG.XPED.COBOL.CPYBK
+CES_URL=http\://10.100.11.13\:48227/compuware/
+PORT_27011=27011
+REMOTE_HOST_IMAGE=com.compuware.frameworks.imagerepository/images/obj/host_remote.gif
+XDEVREG.HS.JCL=XDEVREG.HS.JCL
+PORT_20947=20947
+XDEVREG.COMPARE=XDEVREG.COMPARE
+PORT_16198=16198
+RECALL=Recall
+PORT_16196=16196
+CPYBK_CONCAT=Copybook Concatenation
+LOCAL_DRIVE_PATH=Hosts/.*/Drives
+PORT_17623=17623
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

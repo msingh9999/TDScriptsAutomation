@@ -1,0 +1,266 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _pXfDgHICEee33KwN8W2N2w,_eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: XpedMemoryViewFind
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _mggJ0JVMEea8LsxBCU6CwQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/26/17 3:17 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- XpedMemoryViewFind ----------------------------------------------"
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val pl1Member "PLITYPJ3"]
+global [val ddioDataset "XDEVREG.XPED.DDIO"]
+global [val memoryAddress "3EB425F0"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+/* Fills the given table cell with given text */
+proc "enter-text-cell" [val row] [val column] [val tableIndex] [val text]
+{
+ 	with [get-table -after [get-label Monitors] -index $tableIndex]
+	{
+	    get-cell -row $row -column $column | click
+	    get-canvas | key-type Enter
+	    with [get-editbox]
+	    {
+	        set-text $text
+	        key-type Enter
+	    }
+	}
+}
+
+/* Verify the selected cell changed in both renders */
+proc "verify-selected-cell" [val expectedColumn]
+{
+	try -times 5 -delay 300 -command 
+	{
+		with [get-view Memory]
+		{
+			get-table -index 0 | get-canvas | get-property "getColumn()" | equals $expectedColumn | verify-true
+			get-table -index 1 | get-canvas | get-property "getColumn()" | equals $expectedColumn | verify-true
+		}
+	}
+	-catch
+	{
+		log [format "verify-selected-cell - Error failure to validate expected column, %s, in verify-selected-cell" $expectedColumn]
+	}
+}
+
+/* Verify the find window's caption */
+proc "verify-find-caption" [val expectedCaption]
+{
+	try -times 6 -delay 500 -command 
+	{
+		get-window "Find/Replace" | get-label $expectedCaption | get-property caption | equals $expectedCaption | verify-true
+	}
+	-catch
+	{
+		log [format "verify-find-caption failure to validate find caption: %s" $expectedCaption]
+	}
+}
+
+/* Basic test for a wrapped search */
+proc "test-wrapped-search" [val tableIndex]
+{
+	enter-text-cell -row 0 -column 1 -tableIndex $tableIndex -text "0000"
+	enter-text-cell -row 0 -column 2 -tableIndex $tableIndex -text "ABCD"
+	enter-text-cell -row 0 -column 3 -tableIndex $tableIndex -text "ABCD"
+	enter-text-cell -row 0 -column 4 -tableIndex $tableIndex -text "0000"
+	
+	get-view Memory | get-table -index $tableIndex | get-cell 0 0 | click
+	get-button "Find (M1+F)" | click
+	
+	get-window "Find/Replace" | get-group Options | get-button "Wrap search" | check
+	
+	with [get-window "Find/Replace"] {
+	    get-combo -after [get-label "Find:"] | set-text "ABCD"
+	    get-button Find | click
+	}
+	
+	verify-selected-cell -expectedColumn 2
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 3
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 2
+	verify-find-caption -expectedCaption "Wrapped searchX"
+	
+	get-window "Find/Replace" | get-button Close | click
+}
+
+/* Basic test for an unwrapped search */
+proc "test-unwrapped-search" [val tableIndex]
+{
+	get-view Memory | get-table -index $tableIndex | get-cell 0 0 | click
+	get-button "Find (M1+F)" | click
+	
+	get-window "Find/Replace" | get-group Options | get-button "Wrap search" | uncheck
+	
+	with [get-window "Find/Replace"] {
+	    get-combo -after [get-label "Find:"] | set-text "ABCD"
+	    get-button Find | click
+	}
+	
+	verify-selected-cell -expectedColumn 2
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 3
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 3
+	verify-find-caption -expectedCaption "String Not Found"
+	
+	get-window "Find/Replace" | get-button Close | click
+}
+
+/* Test case when there is no match due to case sensitivity */
+proc "test-case-sensitive" [val tableIndex]
+{
+	get-view Memory | get-table -index $tableIndex | get-cell 0 1 | click
+	get-button "Find (M1+F)" | click
+	
+	get-window "Find/Replace" | get-group Options | get-button "Case sensitive" | check
+		
+	with [get-window "Find/Replace"] {
+	    get-combo -after [get-label "Find:"] | set-text "abcd"
+	    get-button Find | click
+	}
+	
+	verify-selected-cell -expectedColumn 1
+	verify-find-caption -expectedCaption "String Not Found"
+	
+	get-window "Find/Replace" | get-button Close | click
+}
+
+/* Test when there's two matches inside the same cell */
+proc "test-double-cell" [val tableIndex]
+{
+	enter-text-cell -row 0 -column 1 -tableIndex $tableIndex -text "0000"
+	enter-text-cell -row 0 -column 2 -tableIndex $tableIndex -text "ABAB"
+	enter-text-cell -row 0 -column 3 -tableIndex $tableIndex -text "ABCD"
+	enter-text-cell -row 0 -column 4 -tableIndex $tableIndex -text "0000"
+	
+	get-view Memory | get-table -index $tableIndex | get-cell 0 0 | click
+	get-button "Find (M1+F)" | click
+	
+	get-window "Find/Replace" | get-group Options | get-button "Case sensitive" | check
+		
+	with [get-window "Find/Replace"] {
+	    get-combo -after [get-label "Find:"] | set-text "AB"
+	    get-button Find | click
+	}
+	
+	verify-selected-cell -expectedColumn 2
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 2
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 3
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 3
+	verify-find-caption -expectedCaption "String Not Found"
+	
+	get-window "Find/Replace" | get-button Close | click
+}
+
+/* Test when match begins in one cell and finishes in the next */
+proc "test-double-span-cell" [val tableIndex]
+{
+	enter-text-cell -row 0 -column 1 -tableIndex $tableIndex -text "0000"
+	enter-text-cell -row 0 -column 2 -tableIndex $tableIndex -text "00AB"
+	enter-text-cell -row 0 -column 3 -tableIndex $tableIndex -text "CD00"
+	enter-text-cell -row 0 -column 4 -tableIndex $tableIndex -text "0000"
+	
+	get-view Memory | get-table -index $tableIndex | get-cell 0 0 | click
+	get-button "Find (M1+F)" | click
+	
+	get-window "Find/Replace" | get-group Options | get-button "Case sensitive" | check
+		
+	with [get-window "Find/Replace"] {
+	    get-combo -after [get-label "Find:"] | set-text "ABCD"
+	    get-button Find | click
+	}
+	
+	verify-selected-cell -expectedColumn 2
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 2
+	
+	get-window "Find/Replace" | get-button Find | click
+	verify-selected-cell -expectedColumn 2
+	verify-find-caption -expectedCaption "String Not Found"
+	
+	get-window "Find/Replace" | get-button Close | click
+}
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $pl1Member]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-tab-folder | get-tab-item DDIO | click
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text $ddioDataset
+        get-button OK | click
+    }
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+get-view Memory | get-button "Add Memory Monitor" | click
+with [get-window "Monitor Memory"] {
+    get-combo -after [get-label "Enter address or expression to monitor:"] | set-text $memoryAddress
+    get-editbox -after [get-label "Number of bytes:"] | set-text 20
+    get-button OK | click
+}
+
+get-view Memory | get-button "Toggle Split Pane" | click
+
+// Test the EBCIDIC render
+get-view Memory | get-tab-folder -after [get-label Monitors] -index 1 | get-tab-item [format "%s <EBCDIC (037)>" $memoryAddress] | click
+test-wrapped-search -tableIndex 1
+test-unwrapped-search -tableIndex 1
+test-case-sensitive -tableIndex 1
+test-double-cell -tableIndex 1
+test-double-span-cell -tableIndex 1
+
+// Test the ASCII render
+get-tab-folder -after [get-label Monitors] -index 1 | get-tab-item "New Renderings..." | click
+get-list | select ASCII
+get-button "Add Rendering(s)" | click
+get-view Memory | get-tab-folder -after [get-label Monitors] -index 1 | get-tab-item [format "%s <ASCII>" $memoryAddress] | click
+test-wrapped-search -tableIndex 1
+test-unwrapped-search -tableIndex 1
+test-case-sensitive -tableIndex 1
+test-double-cell -tableIndex 1
+test-double-span-cell -tableIndex 1
+get-tab-folder -after [get-label Monitors] -index 1 | get-tab-item [format "%s <ASCII>" $memoryAddress] | close
+
+// Test the Hex render
+get-view Memory | get-tab-folder -after [get-label Monitors] -index 0 | get-tab-item [format "%s <Hex>" $memoryAddress] | click
+test-wrapped-search -tableIndex 0
+test-unwrapped-search -tableIndex 0
+test-case-sensitive -tableIndex 0
+test-double-cell -tableIndex 0
+
+//cleanup
+get-view Memory | get-button "Toggle Split Pane" | click
+get-view Debug | get-tree | select "PLITYPJ3 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

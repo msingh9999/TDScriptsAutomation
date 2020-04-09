@@ -1,0 +1,94 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: SearchMigrated
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _gWnyQMouEeeIU8lrV5Wfag
+Runtime-Version: 2.3.0.201712150019
+Save-Time: 12/18/17 1:07 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val migratedSeq "XDEVREG.OLPMIG.SEQ"]
+global [val migratedPds "XDEVREG.OLPMIG.COBOL"]
+global [val cobolPds "XDEVREG.COBOL"]
+global [val migrateJobName "XDEVMIG2"]
+
+purge-jobs $migrateJobName
+submit-job -dataset "XDEVREG.HS.JCL" -member "MIGRATE2" 
+wait-for-job-completion $migrateJobName
+
+// Search two datasets, both migrated
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -dataset $migratedSeq] [get-pds-path -dataset $migratedPds]
+    get-menu -path "Search..." | click
+}
+with [get-window Search] {
+    get-combo -after [get-label "Search for text:"] | set-text Program
+    get-button Search | click
+}
+with [get-window Search | get-window Search] {
+    get-label "All dataset(s) to search are migrated.  Do you want to recall the migrated dataset(s)?" 
+        | get-property caption 
+        | equals "All dataset(s) to search are migrated.  Do you want to recall the migrated dataset(s)?" | verify-true
+    with [get-button Recall] {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals Recall | verify-true
+    }
+    with [get-button Cancel] {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals Cancel | verify-true
+    }
+    
+    get-button Recall | click
+}
+
+// Recall button should recall both datasets and then search them
+
+with [get-view Search | get-tree] {
+    get-item -path $migratedPds | get-property caption | equals $migratedPds | verify-true
+    get-item -path "XDEVREG.OLPMIG.SEQ \\(46 records, 46 occurrences\\)" | get-property caption 
+        | equals "XDEVREG.OLPMIG.SEQ (46 records, 46 occurrences)" | verify-true
+}
+
+submit-job -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.JCL" -member "MIGRATE2"
+
+HE-dataset-wait-for-migration -hostname $HOST -portNum $PORT -filter $FILTER_XDEVREG -dataset $migratedPds
+
+// Search one migrated, one non-migrated dataset.
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -dataset $cobolPds] [get-pds-path -dataset $migratedPds]
+    get-menu -path "Search..." | click
+}
+get-window Search | get-button Search | click
+with [get-window Search | get-window Search] {
+    get-label "The dataset(s) to search contains 1 migrated dataset(s). Do you want to recall or skip the migrated dataset(s)?" 
+        | get-property caption 
+        | equals "The dataset(s) to search contains 1 migrated dataset(s). Do you want to recall or skip the migrated dataset(s)?" 
+        | verify-true
+    with [get-button Recall] {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals Recall | verify-true
+    }
+    with [get-button Skip] {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals Skip | verify-true
+    }
+    with [get-button Cancel] {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals Cancel | verify-true
+    }
+    
+    get-button Skip | click
+}
+
+get-view Search | get-tree | get-item -path "XDEVREG.COBOL" | get-property caption | equals "XDEVREG.COBOL" 
+    | verify-true
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

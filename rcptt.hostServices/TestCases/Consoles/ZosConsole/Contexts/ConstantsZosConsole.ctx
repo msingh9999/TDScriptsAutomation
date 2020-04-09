@@ -1,0 +1,25 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsZosConsole
+Element-Type: context
+Element-Version: 2.0
+Id: _R9YAMEUMEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/8/16 9:03 AM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Fri Jul 08 09:03:12 EDT 2016
+ZOSRecentCommands=Recent z\\/OS Console Commands
+IssueRecentZOSCommand=Issue recent z/OS Console command
+ZOSCommand2=d a
+ZOSCommand1=d u
+ZOSConsoleMenu=2 z\\/OS Console
+ZOSRecentCommandsGroup=Recent z/OS Console commands
+ZOSConsoleTitle=z\\/OS Console
+ZOSCommand3=$d parmlib
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

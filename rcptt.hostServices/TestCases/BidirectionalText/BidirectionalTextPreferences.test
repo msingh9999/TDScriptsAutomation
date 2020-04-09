@@ -1,0 +1,110 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: BidirectionalTextPreferences
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _NLllsBrzEeeLrZD9rw5kPA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 5/8/17 9:03 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the Bidirectional Text preference options behave correctly.
+* State is preserved when reopening Preferences dialog
+* Enablement of options is set correctly
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val translateHebrewText "Enable bidirectional data flow between the host and workstation for Hebrew text"]
+global [val insertLeftToRightText "Insert left-to-right control characters"]
+
+get-preferences-menu | click
+// Reset preferences to default
+with [get-window Preferences]
+{
+    get-tree | select "Compuware/Host Explorer"
+    get-button "Restore Defaults" | click
+}
+
+// Verify defaults are as expected
+with [get-window Preferences | get-group "Bidirectional Text"]
+{
+    get-button $translateHebrewText | get-property selected | equals true | verify-true
+    with [get-button $insertLeftToRightText]
+    {
+        get-property enablement | equals true | verify-true
+        get-property selected | equals true | verify-true
+    }
+}
+
+// Verify enablement and checked state changes appropriately
+get-window Preferences | get-group "Bidirectional Text" | get-button $translateHebrewText | uncheck
+with [get-window Preferences | get-group "Bidirectional Text" | get-button $insertLeftToRightText]
+{
+    get-property enablement | equals false | verify-true
+    get-property selected | equals true | verify-true
+}
+
+// Verify states are remembered when reopening preferences
+get-window Preferences | get-button OK | click
+get-preferences-menu | click
+with [get-window Preferences | get-group "Bidirectional Text"]
+{
+    get-button $translateHebrewText | get-property selected | equals false | verify-true
+    with [get-button $insertLeftToRightText]
+    {
+        get-property enablement | equals false | verify-true
+        get-property selected | equals true | verify-true
+    }
+}
+
+// Verify enablement and checked state changes appropriately
+get-window Preferences | get-group "Bidirectional Text" | get-button $translateHebrewText | check
+with [get-window Preferences | get-group "Bidirectional Text" | get-button $insertLeftToRightText]
+{
+    get-property enablement | equals true | verify-true
+    get-property selected | equals true | verify-true
+}
+with [get-window Preferences]
+{
+    get-group "Bidirectional Text" | get-button $insertLeftToRightText | uncheck
+    get-button OK | click
+}
+
+// Verify states are remembered when reopening preferences
+get-preferences-menu | click
+with [get-window Preferences | get-group "Bidirectional Text"]
+{
+    get-button $translateHebrewText | get-property selected | equals true | verify-true
+    with [get-button $insertLeftToRightText]
+    {
+        get-property enablement | equals true | verify-true
+        get-property selected | equals false | verify-true
+    }
+}
+
+// Verify Restore Defaults restores modified preferences to appropriate states
+with [get-window Preferences]
+{
+    get-group "Bidirectional Text" | get-button $translateHebrewText | uncheck
+    get-button "Restore Defaults" | click
+}
+with [get-window Preferences | get-group "Bidirectional Text"]
+{
+    get-button $translateHebrewText | get-property selected | equals true | verify-true
+    with [get-button $insertLeftToRightText]
+    {
+        get-property enablement | equals true | verify-true
+        get-property selected | equals true | verify-true
+    }
+}
+
+get-window Preferences | get-button OK | click
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

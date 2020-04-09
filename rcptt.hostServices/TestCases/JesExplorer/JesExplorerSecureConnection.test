@@ -1,0 +1,41 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wdXLMCqfEeeBwLfWkzSZ3Q,_l8aZYER7EeamKrg04Gqe-Q,_La44AA5ZEeeqcLs0Ht7rNg,_curj0DvnEeeWi7symNUhhw
+Element-Name: JesExplorerSecureConnection
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _nDvIIEFCEeeqKrTsStWLSw
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/23/18 2:58 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Use a secure connection to verify that a job can be submitted and the output can be displayed in an editor.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- JesExplorerSecureConnection ----------------------------------------------"
+
+global [val dataset "XDEVREG.HS.JCL"]
+global [val jclMember "CWXTJCLC"]
+global [val jobName "TOPAZSEC"]
+
+set-default-editor "jes" "Compuware Editor"
+
+add-filter -filter $dataset -portNum $PORT_46806
+
+// Verify we can submit a job and open the output using a secure connection
+submit-job $dataset $jclMember -jobName $jobName -portNum $PORT_46806 -filter $dataset
+get-view $JES_EXPLORER | get-table | select $jobName -column $JES_JOB_COLUMN_NAME | get-menu -path Open | click
+get-editor [format "%s_.*.jes" $jobName] | close
+
+remove-filter -filter $dataset -port $PORT_46806
+logout -port $PORT_46806
+remove-host -portNum $PORT_46806
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

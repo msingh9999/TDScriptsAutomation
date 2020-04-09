@@ -1,0 +1,85 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: MoveCopyDialogHostErrorDialog
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _6TUs4KGpEeaeEIh2rZ7i-Q
+Runtime-Version: 2.2.0.201609192323
+Save-Time: 8/16/17 8:42 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val timestamp [format "T%S" [get-time | format-time -format mmssSSS]]]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.SEQ.COMPARE1"] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.SEQ.COMPARE2"] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.SEQ.COMPARE3"]
+    get-menu "Copy To..." | click
+}
+with [get-window Copy] {
+    get-button "Rename All..." | click
+    with [get-window "Rename All"] {
+        with [get-editbox -after [get-label "Find:"]] {
+            set-text "SEQ."
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        get-editbox -after [get-label "Replace with:"] | set-text [format "SEQ.%S." $timestamp]
+        get-button OK | click
+    }
+    get-button Copy | click
+    try -times 5 -delay 200 -command
+    {
+    	get-button Close | click
+	}
+	-catch
+	{
+		log "Unable to get Close button!"
+	}
+}
+
+logout -hostName $HOST -port $PORT
+remove-host -hostName $HOST -portNum $PORT
+
+
+with [get-view "Event History"] {
+    click
+    //get-table | select "11\\/3\\/16 5:46:26 AM EDT" | double-click
+    get-table | get-cell -row 0 -column 0 | double-click
+}
+
+with [get-window $HOST_EXPLORER] {
+    get-label "One or more required hosts were not found.  Click the details button for more information." 
+        | get-property caption 
+        | equals "One or more required hosts were not found.  Click the details button for more information." 
+        | verify-true
+    get-button "Details >>" | get-property enablement | equals true | verify-true
+    get-button OK | get-property enablement | equals true | verify-true
+}
+get-window $HOST_EXPLORER | get-button "Details >>" | click
+get-window $HOST_EXPLORER | get-editbox 
+    -after [get-label "One or more required hosts were not found.  Click the details button for more information."] 
+    | get-property text 
+    | contains [format "No hosts exist with URI hci://%s:%s. Check if a connection is defined for the host, or the host type is selected as a Host Type Filter." $HOST $PORT] | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+get-window Copy | get-button Close | click
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset [format "XDEVREG.SEQ.%S.COMPARE1" $timestamp]] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset [format "XDEVREG.SEQ.%S.COMPARE2" $timestamp]] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset [format "XDEVREG.SEQ.%S.COMPARE3" $timestamp]]
+    get-menu "Delete" | click
+}
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

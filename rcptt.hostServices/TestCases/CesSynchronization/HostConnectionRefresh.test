@@ -1,0 +1,59 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q
+Element-Name: HostConnectionRefresh
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _bTlUIFphEeadDfq-N81CBA
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/8/18 12:11 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val cesSyncUrl "http://10.100.11.13:48227/compuware/"]
+
+// Set the CES URL for CES synchronization
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    with [get-editbox -after [get-label "URL:"]] {
+        set-text $cesSyncUrl
+    }
+    get-button OK | click
+}
+
+// Perform the CES synchronization from the CES Server preference page
+
+get-preferences-menu | click
+with [get-window Preferences] {
+	get-tree | select "Compuware/Enterprise Services"
+    get-group "Central Administration" | get-button "Sync..." | click
+    with [get-window "Compuware Enterprise Services Synchronization"] {
+        get-button "Select All" | click
+        get-button Finish | click
+    }
+    get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+}
+
+// verify that at least one host connection was returned from the sync
+
+get-window Preferences | get-button OK | click
+get-preferences-menu | click
+get-window Preferences | get-tree | select "Compuware/Host Connections"
+get-window Preferences | get-table | get-item cw01 | get-property "getParent().getItems().length" -raw | gt 0 
+    | verify-true
+get-window Preferences | get-button OK | click
+
+// Verify that the Host Explorer tree now contains hosts brought in from CES sync - should be at least more than one host (the local host)
+
+get-view $HOST_EXPLORER | get-tree | get-item Hosts | get-property childCount -raw | gt 1 | verify-true
+
+// Remove all hosts
+
+remove-all-hosts-native
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

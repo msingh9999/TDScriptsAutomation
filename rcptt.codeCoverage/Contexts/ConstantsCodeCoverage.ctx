@@ -1,0 +1,18 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsCodeCoverage
+Element-Type: context
+Element-Version: 2.0
+Id: _rRRHUMuhEeeMV-oFXOCR1A
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 11/17/17 9:15 AM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Fri Nov 17 09:15:06 EST 2017
+TEST_REPORT=Test Report Request
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

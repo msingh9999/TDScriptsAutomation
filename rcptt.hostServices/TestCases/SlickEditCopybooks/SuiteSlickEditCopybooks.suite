@@ -1,0 +1,26 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteSlickEditCopybooks
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _y3yvoLfHEeaZj-_yDyxeGA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 5/5/17 11:51 AM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Suite for executing tests related to SlickEdit Copybook Downloading
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+__7DqkLZnEeaILoYZrimrPw	// kind: 'test' name: 'ConfigureCopybookConcatenationListsPreferences' path: 'HostExplorer/ConfigureCopybookConcatenationListsPreferences.test'
+_SkbggLfIEeaZj-_yDyxeGA	// kind: 'test' name: 'ValidateAddCopybookTime' path: 'OnlineProjects/ValidateAddCopybookTime.test'
+_CwQ4oLfSEeaZj-_yDyxeGA	// kind: 'test' name: 'SpecifyCopybooksIncludes' path: 'OfflineProjects/SpecifyCopybooksIncludes.test'
+_zB9ukLfjEeaZj-_yDyxeGA	// kind: 'test' name: 'ConfigureCopybookConcatenationList' path: 'OnlineProjects/ConfigureCopybookConcatenationList.test'
+_VjmdoDGpEeeQ_Kc4lyDgMQ	// kind: 'test' name: 'LongCopybookName' path: 'HostExplorer/LongCopybookName.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

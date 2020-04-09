@@ -1,0 +1,92 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_kRiL8ER7EeamKrg04Gqe-Q
+Element-Name: CopyTimeout
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _K4dyUCjZEeawwty1Y0abzw
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/9/17 9:35 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val largeDataset "XDEVREG.LARGE.PDS"]
+global [val largeDatasetTarget [format "XDEVREG.LARGE.PDSX.T%S" [get-time | format-time -format mmssSSS]]]
+
+// Sets the timeout value for the default host
+proc "set-default-host-timeout" [val timeout 4]
+{
+	get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s" $HOST $PORT] | get-menu "Edit..." | click
+	with [get-window "Host Connections"] {
+	    get-tab-folder | get-tab-item Advanced | click
+	    get-editbox -after [get-label "Read/write timeout (seconds):"] | set-text $timeout
+	    get-button OK | click
+	}
+	
+	logout -hostName $HOST -port $PORT
+	login-from-host -hostName $HOST -port $PORT  
+}
+
+proc "wait-for-copy-completion" [val seconds 90]
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-window Copy | get-table | get-item Success | get-property caption | equals Success | verify-true
+	}
+	-catch 
+	{
+		log  [format "Waited %s seconds and could not determine copy success" $seconds]
+	}
+}
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+add-filter -hostName $HOST_CW09 -portNum $PORT -filter $FILTER_XDEVREG
+
+// change to a low timeout value
+set-default-host-timeout -timeout 4
+
+// delete the target PDS in case it is still there
+try -command {
+    delete-pds -hostName $HOST_CW09 -portNum $PORT -filter $FILTER_XDEVREG -datasetName $largeDatasetTarget
+} -catch {
+}
+
+// Copy XDEVREG.LARGE.PDS From CW01 to CW09 as XDEVREG.LARGE.PDSX
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $largeDataset] 
+    | get-menu "Copy To..." | click
+with [get-window Copy] {
+    get-combo -after [get-label "Target host:"] | select [format "%s:%s" $HOST_CW09 $PORT]
+    get-table | select $largeDataset -column Source
+    get-button "Rename..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text $largeDatasetTarget
+        get-button OK | click
+    }
+    get-button Copy | click
+}
+
+wait-for-copy-completion
+
+// Check for socket timeout in the copy details
+get-window Copy | get-button "Details..." | click
+get-window Copy | get-window Details | get-editbox -after [get-label "Details:"] | get-property text 
+    | contains "socket timeout" | verify-false
+  
+    
+with [get-window Copy] {
+    get-window Details | get-button Close | click
+    get-button Close | click
+}
+
+// delete the PDS we created via copy
+delete-pds -hostName $HOST_CW09 -portNum $PORT -filter $FILTER_XDEVREG -datasetName $largeDatasetTarget  
+
+// set the default host's timeout back to 90
+set-default-host-timeout -timeout 90
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

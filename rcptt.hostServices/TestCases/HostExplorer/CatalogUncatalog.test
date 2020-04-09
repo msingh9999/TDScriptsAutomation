@@ -1,0 +1,97 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CatalogUncatalog
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _IPEYoL4-EeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/22/17 12:34 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CatalogUncatalog ----------------------------------------------"
+
+global [val testPDS1 [format "XDEVREG.TESTCAT.T%S" [get-time | format-time -format mmssSSS]]]
+global [val volumeSerialNumber "NSM900"]
+log [format "Temporary PDS name is: %S" $testPDS1]
+add-filter $FILTER_XDEVREG
+
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-button Finish | get-property enablement | equals false | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS1
+    }
+    with [get-group "Dataset attributes"] {
+        get-combo -after [get-label "Dataset type:"] | select ""
+        get-combo -after [get-label "Space units:"] | select Blocks
+        get-editbox -after [get-label "Primary quantity:"] | set-text 78
+        get-editbox -after [get-label "Secondary quantity:"] | set-text 0
+        get-combo -after [get-label "Record format:"] | select F
+        get-editbox -after [get-label "Record length:"] | set-text 80
+        get-editbox -after [get-label "Block size:"] | set-text 80
+    }
+    with [get-group "SMS parameters"] {
+        get-editbox -after [get-label "Management class:"] | set-text ""
+        with [get-editbox -after [get-label "Storage class:"]] {
+            set-text "NONSMS"
+        }
+    }
+    get-group "Dataset location" | get-editbox -after [get-label "Volume:"] | set-text ""
+
+	get-button Finish | click
+	get-window "Allocate Dataset" | get-label [format "Dataset %S has been allocated on host %s:%s." $testPDS1 $HOST $PORT] 
+	    | get-property caption | equals [format "Dataset %S has been allocated on host %s:%s." $testPDS1 $HOST $PORT] 
+	    | verify-true
+	get-window "Allocate Dataset" | get-button OK | click
+}
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu Refresh | click
+}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    | get-menu Properties | click
+//get-view Properties | get-tree | get-item "Volume Serial" | get-property "getData().getValues().Object[0]" 
+//    | equals NSM900 | verify-true
+get-view "Host Explorer" | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    | get-menu Uncatalog | click
+with [get-window Uncatalog] {
+    get-table | get-item $testPDS1 | get-property caption | equals $testPDS1
+        | verify-true
+    get-button Uncatalog | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+get-window Uncatalog | get-button Uncatalog | click
+get-window Uncatalog | get-table | get-item $testPDS1 | get-property "getData().getStatusText()" 
+    | equals [format "Dataset %S has been uncataloged." $testPDS1] | verify-true
+get-window Uncatalog | get-button Done | click
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Catalog..." | click
+with [get-window Catalog] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS1
+    }
+    with [get-editbox -after [get-label "Volume serial:"]] {
+        set-text $volumeSerialNumber
+    }
+    get-button OK | click
+}
+get-window "Catalog Dataset" | get-label [format "%S dataset has been cataloged." $testPDS1] | get-property caption 
+    | equals [format "%S dataset has been cataloged." $testPDS1] | verify-true
+get-window "Catalog Dataset" | get-button OK | click
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    get-menu Delete | click
+}
+
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $testPDS1 | get-property "values['Results']" 
+    | equals [format "Resource %s successfully deleted." $testPDS1] | verify-true
+get-window Delete | get-button Done | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

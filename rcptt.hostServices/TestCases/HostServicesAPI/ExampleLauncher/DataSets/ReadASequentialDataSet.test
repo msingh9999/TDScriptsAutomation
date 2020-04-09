@@ -1,0 +1,75 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _wvcyALzIEearCfJIpjdCZQ,_PprFMER9EeamKrg04Gqe-Q,_wdXLMCqfEeeBwLfWkzSZ3Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: ReadASequentialDataSet
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _52gnkL5REearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 1:36 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- ReadASequentialDataSet ----------------------------------------------"
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/Datasets/Read a Sequential Dataset"]
+global [val resultDialogTitle "Read a Sequential Dataset Results"]
+
+/****** Procedures ******/
+
+proc "enter-data-set-in-dialog" [val dsn]
+{
+	with [get-window "Read Sequential Dataset Example"]
+	{
+	    with [get-editbox -after [get-label "Dataset name:"]]
+	    {
+	        set-text $dsn
+	    }
+	    get-button Run | click
+	}
+}
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+// Test a non-existant dataset
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.NOT.FOUND"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Could not find sequential dataset \"XDEVREG.NOT.FOUND\" on host \"cw01:%s\"" $PORT]
+
+// Test a dsn that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.DSNTOOLARGE"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"sequentialDataSetName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.DSNTOOLARGE"
+
+// Test a dsn that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.INVALID!.CHAR"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"sequentialDataSetName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.INVALID!.CHAR"
+
+// Test with a valid Sequential dataset
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.SEQ.JCL"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "//XDEVREGX JOB ('OXTBAS7.6DEV',DTW4W),'WRIGHT, JIM',\n"
++"//      CLASS=A,MSGCLASS=R,NOTIFY=&SYSUID\n"
++"/*JOBPARM S=*\n"
++"//TRIMAIN  EXEC PGM=TRIMAIN,PARM='TEST PARM'\n"
++"//STEPLIB  DD  DISP=SHR,DSN=PFHKJR0.XT.LOADLIB\n"
++"//         DD  DISP=SHR,DSN=CEE.SCEERUN\n"
++"//INFILE   DD  DISP=SHR,DSN=PFHKJR0.XT.DATA\n"
++"//OUTFILE  DD  SYSOUT=*\n"
++"//*XTTRACE  DD  SYSOUT=*\n"
++"//*XP3TRALL DD  SYSOUT=*\n"
++"//SYSUDUMP DD  SYSOUT=*\n"
++"//ABNLIGNR DD  DUMMY\n"
++"//"
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

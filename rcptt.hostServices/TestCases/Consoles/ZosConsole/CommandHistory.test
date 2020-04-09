@@ -1,0 +1,113 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_QgUBwEULEeamKrg04Gqe-Q,_R9YAMEUMEeamKrg04Gqe-Q,_R9NoIEUMEeamKrg04Gqe-Q
+Element-Name: CommandHistory
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _PQrT8EUNEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/19/16 8:48 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the Command History for the TSO Command Console.
+
+Use cases to test:
+* Button brings up the command history dialog
+* Command history contains accurate history of entered commands
+* Correct command is executed from command history dialog
+* Command history is retained when console is re-opened
+* Order of commands is correct (most recent command on top)
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu $ZOSConsoleMenu | click
+with [get-view Console] {
+    get-text-viewer | set-caret-pos 1 3
+    get-button $ZOSRecentCommands | click
+}
+with [get-window $ZOSConsoleTitle] {
+    get-group "Recent z\/OS Console commands" | get-list | get-property "getItems().length" | equals 0 
+        | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+    get-label $IssueRecentZOSCommand | get-property caption 
+        | equals $IssueRecentZOSCommand | verify-true
+}
+get-window $ZOSConsoleTitle | get-button Cancel | click
+with [get-view Console] {
+    with [get-text-viewer] {
+        set-caret-pos 1 3
+        type-text $ZOSCommand1
+        key-type Enter
+        wait 100
+        set-caret-pos 3 3
+        type-text $ZOSCommand2
+        key-type Enter
+        set-caret-pos 5 3
+        wait 100
+        type-text $ZOSCommand3
+        key-type Enter
+        set-caret-pos 7 3
+        wait 100
+    }
+    get-button $ZOSRecentCommands | click
+}
+with [get-window $ZOSConsoleTitle | get-group $ZOSRecentCommandsGroup | get-list] {
+    get-property "getItems().length" | equals 3 | verify-true
+    get-property "getItems().String[0]" | equals $ZOSCommand3 | verify-true
+    get-property "getItems().String[1]" | equals $ZOSCommand2 | verify-true
+    get-property "getItems().String[2]" | equals $ZOSCommand1 | verify-true
+}
+with [get-window $ZOSConsoleTitle] {
+    get-group "Recent z\/OS Console commands" | get-list | select $ZOSCommand2
+    get-button OK | click
+}
+get-view Console | get-text-viewer | set-caret-pos 8 3
+
+get-view Console | get-text-viewer | get-property text | equals "z/OS> d u\n"
++ " D U\n"
++ "z/OS>  IEE457I 13.47.40 UNIT STATUS 343\n"
++ " UNIT TYPE STATUS        VOLSER     VOLSTATE\n"
++ " 0400 3490 OFFLINE                      /REMOV\n"
++ " 0401 3490 OFFLINE                      /REMOV\n"
++ " 0402 3490 OFFLINE                      /REMOV\n"
++ " 0403 3490 OFFLINE                      /REMOV\n"
++ " 0404 3490 OFFLINE                      /REMOV\n"
++ " 0405 3490 OFFLINE                      /REMOV\n"
++ " 0406 3490 OFFLINE                      /REMOV\n"
++ " 0407 3490 OFFLINE                      /REMOV\n"
++ " 0408 3490 OFFLINE                      /REMOV\n"
++ " 0409 3490 OFFLINE                      /REMOV\n"
++ " 040A 3490 OFFLINE                      /REMOV\n"
++ " 040B 3490 OFFLINE                      /REMOV\n"
++ " 040C 3490 OFFLINE                      /REMOV\n"
++ " 040D 3490 OFFLINE                      /REMOV\n"
++ " 040E 3490 OFFLINE                      /REMOV\n"
++ " 040F 3490 OFFLINE                      /REMOV\n"
++ "z/OS> "
+get-view Console | get-button $CloseConsole | click
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu $ZOSConsoleMenu | click
+with [get-view Console] {
+    get-text-viewer | set-caret-pos 1 3
+    get-button $ZOSRecentCommands | click
+}
+with [get-window $ZOSConsoleTitle | get-group $ZOSRecentCommandsGroup | get-list] {
+    get-property "getItems().length" | equals 3 | verify-true
+    get-property "getItems().String[0]" | equals $ZOSCommand2 | verify-true
+    get-property "getItems().String[1]" | equals $ZOSCommand3 | verify-true
+    get-property "getItems().String[2]" | equals $ZOSCommand1 | verify-true
+}
+get-window $ZOSConsoleTitle | get-button Cancel | click
+get-view Console | get-button $CloseConsole | click
+
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

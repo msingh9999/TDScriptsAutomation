@@ -1,0 +1,37 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteOnlineProjects
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _r2risIl3EeaOKusaXEFUkQ
+Manually-Ordered: true
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 3/30/18 12:14 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_BwBdQHFWEeexZ532Kr2WMg	// kind: 'test' name: 'AddInvalidSourceToOnlineProject' path: 'AddInvalidSourceToOnlineProject.test'
+_ShP7MNwbEeajr9LZV8jCbA	// kind: 'test' name: 'BinaryDataWarningOnline' path: 'BinaryDataWarningOnline.test'
+_zg4lYEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'CompareWithEachOther' path: 'CompareWithEachOther.test'
+_VpoksCw5Eeebq6lcYkISuw	// kind: 'test' name: 'CompareWithLocalHistory' path: 'CompareWithLocalHistory.test'
+_zhBIQEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'CreateMember' path: 'CreateMember.test'
+_zhPxwEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'DeleteOnlineProjectWhileLoggedIn' path: 'DeleteOnlineProjectWhileLoggedIn.test'
+_zhWfcEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'DisplayMigratedDatasets' path: 'DisplayMigratedDatasets.test'
+_n7-mkIjyEee3I_Ru_FLJiA	// kind: 'test' name: 'HostExplorerInteractions' path: 'HostExplorerInteractions.test'
+_zhd0MEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'OnlineProjectDelete' path: 'OnlineProjectDelete.test'
+_LSqEMBclEeiB3eY2yYL8qg	// kind: 'test' name: 'OnlineProjectOpenDeletedFile' path: 'OnlineProjectOpenDeletedFile.test'
+_ynhcUPOOEeaYyoBWLrRRHQ	// kind: 'test' name: 'OnlineProjectWithoutHostMenus' path: 'OnlineProjectWithoutHostMenus.test'
+_6RhcAH_9EeahW91r4IViYw	// kind: 'test' name: 'OnlineProjectsMoveDeleteHook' path: 'OnlineProjectsMoveDeleteHook.test'
+_zhkh4EUHEeamKrg04Gqe-Q	// kind: 'test' name: 'OpenSlickeditFromOnlineProject' path: 'OpenSlickeditFromOnlineProject.test'
+_fkT94OPnEea_grol9O9hTA	// kind: 'test' name: 'PL1NotSymbolDisplay' path: 'PL1NotSymbolDisplay.test'
+_zhvhAEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'ProjectMenusTest' path: 'ProjectMenusTest.test'
+_zh4D4EUHEeamKrg04Gqe-Q	// kind: 'test' name: 'Recall' path: 'Recall.test'
+_qpBlgJPQEeeilZt5-jQ8uw	// kind: 'test' name: 'RefreshCopybookDataset' path: 'RefreshCopybookDataset.test'
+_cuVPQEU2EeamKrg04Gqe-Q	// kind: 'test' name: 'TestOpenEditorWithoutConnection' path: 'TestOpenEditorWithoutConnection.test'
+_d4qcADQvEeiwHMn-ztqr8g	// kind: 'test' name: 'DeleteLocalResource' path: 'DeleteLocalResource.test'
+_9lmNADaOEeiFposq7y9hiw	// kind: 'test' name: 'ProjectDecorators' path: 'ProjectDecorators.test'
+_UlleUDd1EeiYoN8cxTV3sQ	// kind: 'test' name: 'RenameSourceFolder' path: 'RenameSourceFolder.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

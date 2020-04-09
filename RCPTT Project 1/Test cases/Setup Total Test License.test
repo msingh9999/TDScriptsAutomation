@@ -1,0 +1,41 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: Setup Total Test License
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _BVCegFH_Eei64ufQzCaZqQ
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 5/8/18 7:54 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+handle-login-dialog
+
+
+close-view "Cheat Sheets"
+
+//step over a read statment and verify that we stop on the next statement
+
+
+//wait-for-batch-terminated -configName $jclMember
+
+//close the Log, and any other editors that may have been left open
+//close-all-editors
+
+get-menu "Help/Topaz Workbench Licensing..." | click
+with [get-window "Topaz Workbench"] {
+    get-button "Preferences..." | click
+    with [get-window "Preferences (Filtered)"] {
+        get-group Licensing | get-button "Use Compuware cloud license service for Topaz Workbench licensing" | check
+        wait 4000 
+        get-button Apply | click
+        get-button OK | click
+    }
+    get-button Close | click
+}
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

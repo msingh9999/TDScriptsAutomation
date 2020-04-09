@@ -1,0 +1,42 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wvcyALzIEearCfJIpjdCZQ,_l8aZYER7EeamKrg04Gqe-Q
+Element-Name: ListHosts
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _PSZcILy3EearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 1:37 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/Hosts/List Hosts"]
+global [val resultDialogTitle "List Hosts Results"]
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+// Test with no host defined
+execute-example -exampleDirectory $exampleDirectory
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "No z/OS hosts defined."
+
+// Test with one host defined
+add-host
+execute-example -exampleDirectory $exampleDirectory
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "cw01:%s" $PORT]
+
+// Test with multiple hosts defined
+add-host -portNum $PORT_16196
+execute-example -exampleDirectory $exampleDirectory
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "cw01:%s\ncw01:%s" $PORT $PORT_16196]
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,144 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_XnPvkEUIEeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: Recall
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _zh4D4EUHEeamKrg04Gqe-Q
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 1/30/17 11:55 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test: 
+	No recall option for:
+		- non-migrated datasets (pds and sequential
+		- members
+		- folders (source, copybook concatenation
+		- Project
+		- multiple selection with one resourc that is not migrated
+	Recall available for
+		- migrated PDS and sequential files (multiple selection also)
+	Validate 
+		- recalled dateset is recalled and recall menu no longer available
+
+
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName "TestRecallProject"]
+global [val XDEVREG.RECALL.TEST.PDS "XDEVREG.RECALL.TEST.PDS"]
+global [val XDEVREG.RECALL.TEST.SEQ "XDEVREG.RECALL.TEST.SEQ"]
+global [val XDEVREG.RECALL.TEST.SEQ.data [format "%s.data" $XDEVREG.RECALL.TEST.SEQ]]
+global [val XDEVREG.RECALL.TEST.CPYBK.PDS "XDEVREG.RECALL.TEST.CPYBK.PDS"]
+
+add-filter -filter $FILTER_XDEVREG
+
+try
+{
+
+	//recall datasets to add to the project 
+	HE-recall-dataset -filter $FILTER_XDEVREG -dataset $XDEVREG.RECALL.TEST.PDS -imagePath $IMAGE_DIR
+	HE-recall-dataset -filter $FILTER_XDEVREG -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -imagePath $IMAGE_DIR
+	HE-recall-dataset -filter $FILTER_XDEVREG -dataset $XDEVREG.RECALL.TEST.SEQ -imagePath $IMAGE_DOCUMENT
+	has-image -view $HOST_EXPLORER -imagePath $IMAGE_DIR
+		-path [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $XDEVREG.RECALL.TEST.PDS] 
+		| verify-true
+	has-image -view $HOST_EXPLORER -imagePath $IMAGE_DIR
+		-path [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $XDEVREG.RECALL.TEST.CPYBK.PDS] 
+		| verify-true
+	has-image -view $HOST_EXPLORER -imagePath $IMAGE_DOCUMENT
+		-path [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $XDEVREG.RECALL.TEST.SEQ] 
+		| verify-true
+		
+	delete-online-project $projectName
+	create-online-project $projectName
+	add-source-online-project -projectName $projectName -datasetName $XDEVREG.COMPARE
+	add-source-online-project -projectName $projectName -datasetName $XDEVREG.SEQ.COMPARE1
+	add-source-online-project -projectName $projectName -datasetName $XDEVREG.RECALL.TEST.PDS
+	add-source-online-project -projectName $projectName -datasetName $XDEVREG.RECALL.TEST.SEQ
+	add-copybook-online-project -project $projectName -copybook $XDEVREG.RECALL.TEST.CPYBK.PDS
+	add-copybook-online-project -project $projectName -copybook $XDEVREG.XPED.COBOL.CPYBK
+
+	//migrate datasets that are now in the project
+	with [get-view $HOST_EXPLORER | get-tree] 
+	{
+		select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $XDEVREG.HS.JCL] 
+		get-menu "Refresh" | click
+    }
+	submit-job -filter $FILTER_XDEVREG -dataset $XDEVREG.HS.JCL -member MIGRATE3
+	PE-dataset-wait-for-migration -project $projectName -dataset $XDEVREG.RECALL.TEST.PDS
+	PE-dataset-wait-for-migration -project $projectName -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -srcType $CPYBK_CONCAT
+	PE-dataset-wait-for-migration -project $projectName -dataset $XDEVREG.RECALL.TEST.SEQ.data
+
+	//recall menu not available for non-migrated PDS
+	PE-dataset-has-menu -project TestRecallProject -dataset $XDEVREG.COMPARE -menuName $RECALL | verify-false
+	PE-dataset-has-menu -project TestRecallProject -dataset $XDEVREG.XPED.COBOL.CPYBK -srcType $CPYBK_CONCAT -menuName $RECALL | verify-false
+	
+	//recall menu not available for non-migrated sequential
+	PE-dataset-has-menu -project TestRecallProject -dataset [format "%s.data" $XDEVREG.SEQ.COMPARE1] -menuName $RECALL | verify-false
+	
+	//recall menu not available for members
+	PE-member-has-menu -project TestRecallProject -dataset $XDEVREG.COMPARE -member "COMPARE1.data" -menuName $RECALL | verify-false
+	
+	//recall menu not available for source folder
+	get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s" $projectName $HOST $PORT $SOURCE]
+		| has-menu -menuName $RECALL | verify-false
+		
+	get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s" $projectName $HOST $PORT $CPYBK_CONCAT]
+		| has-menu -menuName $RECALL | verify-false
+	
+	//recall menu not available for project node	
+	get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]" $projectName $HOST $PORT]
+		| has-menu -menuName $RECALL | verify-false
+		
+	//recall menu not available for multiple selection with one resource that is not migrated
+	get-view $PROJECT_EXPLORER | get-tree 
+		| select [format "%s [%s:%s]/Source/%s [%s:%s]" $projectName $HOST $PORT $XDEVREG.COMPARE $HOST $PORT]
+			[format "%s [%s:%s]/Source/%s [%s:%s]" $projectName $HOST $PORT $XDEVREG.RECALL.TEST.PDS $HOST $PORT]
+		| has-menu -menuName $RECALL | verify-false
+		
+	//recall menu available for migrated datasets
+	PE-dataset-has-menu -project TestRecallProject -dataset $XDEVREG.RECALL.TEST.PDS -menuName $RECALL | verify-true
+	PE-dataset-has-menu -project TestRecallProject -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -srcType $CPYBK_CONCAT -menuName $RECALL | verify-true
+	PE-dataset-has-menu -project TestRecallProject -dataset $XDEVREG.RECALL.TEST.SEQ.data -menuName $RECALL | verify-true
+	
+	//recall migrated datasets, validate text and icon after recall is complete
+	select-pds-in-online-project -projectName $projectName -dataset $XDEVREG.RECALL.TEST.PDS 
+		| get-menu Recall | click
+	PE-wait-for-recall -project $projectName -dataset $XDEVREG.RECALL.TEST.PDS -imagePath $IMAGE_DIR
+	has-image -view $PROJECT_EXPLORER -imagePath $IMAGE_DIR -path [PE-get-dataset-path -projectName $projectName -dataset $XDEVREG.RECALL.TEST.PDS ]
+	PE-has-text -project $projectName -dataset $XDEVREG.RECALL.TEST.PDS 
+		| equals true | verify-true
+		
+	select-pds-in-online-project -projectName $projectName -dataset $XDEVREG.RECALL.TEST.SEQ.data 
+		| get-menu Recall | click
+	PE-wait-for-recall -project $projectName -dataset $XDEVREG.RECALL.TEST.SEQ.data -imagePath $IMAGE_DOCUMENT
+	has-image -view $PROJECT_EXPLORER -imagePath $IMAGE_DOCUMENT -path [PE-get-dataset-path -projectName $projectName -dataset $XDEVREG.RECALL.TEST.SEQ.data ]
+	PE-has-text -project $projectName -dataset $XDEVREG.RECALL.TEST.SEQ.data 
+		| equals true | verify-true
+		
+	//copybook
+	select-pds-in-online-project -projectName $projectName -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -srcType $CPYBK_CONCAT
+		| get-menu Recall | click
+	PE-wait-for-recall -project $projectName -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -srcType $CPYBK_CONCAT -imagePath $IMAGE_DIR
+	has-image -view $PROJECT_EXPLORER -imagePath $IMAGE_DIR -path [PE-get-dataset-path -projectName $projectName -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -srcType $CPYBK_CONCAT]
+	PE-has-text -project $projectName -dataset $XDEVREG.RECALL.TEST.CPYBK.PDS -srcType $CPYBK_CONCAT
+		| equals true | verify-true
+
+}
+
+-finally
+{
+	delete-online-project -projectName $projectName
+}
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

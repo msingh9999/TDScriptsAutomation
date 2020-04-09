@@ -1,0 +1,34 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteCodeCoverage
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _R0MMwLP3EeegJJmwE1A6Xg
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 11/29/17 12:43 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_xS8B0G4KEeewnPydhNCs0A	// kind: 'test' name: 'AnnotationPreferences' path: 'AnnotationPreferences.test'
+_KtuB8OPFEeam-YDlsFNHqg	// kind: 'test' name: 'CodeCoveragePreferences' path: 'CodeCoveragePreferences.test'
+_O5qJkLsvEeem0fyxENOpag	// kind: 'test' name: 'CodeCoverageRepositoriesNode' path: 'CodeCoverageRepositoriesNode.test'
+_9CT2ELjUEeerR_GNBFvSDA	// kind: 'test' name: 'CodeCoverageStartup' path: 'CodeCoverageStartup.test'
+_oN3VAMliEeeuRPE7E3vB_w	// kind: 'test' name: 'CreateReportRequestCheatsheets' path: 'CreateReportRequestCheatsheets.test'
+_iUtIELNPEeegJJmwE1A6Xg	// kind: 'test' name: 'CreateRepository' path: 'CreateRepository.test'
+_wT18IM-NEeeCLsnSKbewlQ	// kind: 'test' name: 'DuplicateReportRequest' path: 'DuplicateReportRequest.test'
+_2G1fsM4zEeexiaQdS5Mm_A	// kind: 'test' name: 'EditReportRequest' path: 'EditReportRequest.test'
+_ynDoYMicEeeFPZG16yD8Fg	// kind: 'test' name: 'MigrateReportRequests' path: 'MigrateReportRequests.test'
+_auQccM4cEeexiaQdS5Mm_A	// kind: 'test' name: 'NewReportRequestNoHostsDefined' path: 'NewReportRequestNoHostsDefined.test'
+_SIy5IMvEEeeMV-oFXOCR1A	// kind: 'test' name: 'RefreshAnnotatedListingsPrompt' path: 'RefreshAnnotatedListingsPrompt.test'
+_BDwk0L_REeeZjPvKldpoFQ	// kind: 'test' name: 'ReportRequestDialog' path: 'ReportRequestDialog.test'
+_1seOAMlIEeeuRPE7E3vB_w	// kind: 'test' name: 'ReportRequestDialogHostAndRepositoryPrefs' path: 'ReportRequestDialogHostAndRepositoryPrefs.test'
+_Lrj10KhrEeeZkd__Sq4alg	// kind: 'test' name: 'RepositoryAllocationMenus' path: 'RepositoryAllocationMenus.test'
+_57WfUNUnEeei2Lz_JYJoJQ	// kind: 'test' name: 'RepositorySelectionDialog' path: 'RepositorySelectionDialog.test'
+_T9MdwMYYEeeRs4atsGOhLg	// kind: 'test' name: 'RepositoryProperties' path: 'RepositoryProperties.test'
+_Qw8pkMO6EeeJGvI7Ba7GKg	// kind: 'test' name: 'RepositorySystemTestIdImportExport' path: 'RepositorySystemTestIdImportExport.test'
+_LjHa4MueEeeMV-oFXOCR1A	// kind: 'test' name: 'ViewPrintStatisticsCheatsheet' path: 'ViewPrintStatisticsCheatsheet.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

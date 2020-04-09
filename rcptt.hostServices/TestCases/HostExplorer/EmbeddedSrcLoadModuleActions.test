@@ -1,0 +1,142 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: EmbeddedSrcLoadModuleActions
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Z1cjAAA1EeeBeM3FsMkDsw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 8/4/17 2:40 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- EmbeddedSrcLoadModuleActions ----------------------------------------------"
+
+global [val noLoadDataSet "XDEVREG.PDSE.EMBED.SRC.LOAD"]
+global [val tempNoLoadDataSet [format "XDEVREG.PDSE.EMBED.SRC.LOAD.T%S" [get-time | format-time -format mmssSSS]]]
+wait 1000
+global [val tempNoLoadDataSet2 [format "XDEVREG.PDSE.EMBED.SRC.LOAD.T%S" [get-time | format-time -format mmssSSS]]]
+global [val pdseEmbedFilter "XDEVREG.PDSE.EMBED"]
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+remove-filter -filter $FILTER_XDEVREG
+add-filter -filter $pdseEmbedFilter -hostName $HOST -portNum $PORT
+
+copy-pds -hostName $HOST -portNum $PORT -filter $pdseEmbedFilter -sourcePDS $noLoadDataSet
+	-targetPDS $tempNoLoadDataSet
+
+copy-pds -hostName $HOST -portNum $PORT -filter $pdseEmbedFilter -sourcePDS $noLoadDataSet
+	-targetPDS $tempNoLoadDataSet2	
+
+// Test Rename of load module inside embedded source PDSE
+
+log -message [format "Resource %s(%s) successfully renamed to %s." $tempNoLoadDataSet "CWXTDATE" "CWXTDAT2"]
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT
+	-filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member CWXTDATE] | get-menu "Rename..." | click
+with [get-window Rename] {
+	get-table | get-editbox | set-text CWXTDAT2
+	get-button Rename | click
+}
+with [get-window Rename | get-table] {
+	get-item CWXTDATE | get-property "columns[0]" | equals CWXTDATE | verify-true
+	get-item CWXTDATE | get-property "columns[1]" | contains "(CWXTDATE) successfully renamed to CWXTDAT2." | verify-true
+}
+get-window Rename | get-button Done | click
+get-view $HOST_EXPLORER | get-tree | get-item [get-pds-member-path -hostName $HOST -portNUM $PORT
+	-filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member CWXTDAT2] | get-property caption | equals CWXTDAT2
+	| verify-true
+
+// Test Delete of load module inside embedded source PDSE
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT
+	-filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member CWXTDAT2] | get-menu Delete | click
+get-window Delete | get-button Delete | click
+with [get-window Delete | get-table] {
+	get-item CWXTDAT2 | get-property "columns[0]" | equals CWXTDAT2 | verify-true
+	get-item CWXTDAT2 | get-property "columns[2]" | contains "(CWXTDAT2) successfully deleted." | verify-true
+}
+get-window Delete | get-button Done | click
+
+verify-error {
+	get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT
+		-filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member CWXTDAT2]
+}
+
+// Test properties view of load module inside embedded source PDSE
+
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member "CWXTCOB"] 
+    | get-menu Properties | click
+with [get-view Properties | get-tree] {
+    // Name is currently the only property populated
+    get-item Name | get-property "columns[1]" | equals CWXTCOB | verify-true
+}
+
+// Test properties view of load module inside embedded source PDSE
+
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member "CWXTCOB"] 
+    | get-menu "Show Contents" | click
+with [get-view Contents | get-table] {
+    // Did not want to test volatile columns, i.e. compile date, return code or language
+    get-item CWXTCOB | get-property "columns[0]" | equals CWXTCOB | verify-true
+    get-item CWXTDATE | get-property "columns[0]" | equals CWXTDATE | verify-true
+    get-item CWXTSUBC | get-property "columns[0]" | equals CWXTSUBC | verify-true
+}
+
+// Test Cut/Paste
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member "CB52MAIN"] | get-menu Cut 
+        | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet2] | get-menu Paste | click
+}
+get-window Move | get-button Move | click
+with [get-window Move | get-table] {
+    get-item Success | get-property "columns[0]" | equals Success | verify-true
+    get-item Success | get-property "columns[1]" | contains "(CB52MAIN)" | verify-true
+    get-item Success | get-property "columns[2]" | contains "(CB52MAIN)" | verify-true
+}
+get-window Move | get-button Close | click
+
+// Test Copy/Paste
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member "CWXTCOB"]  | get-menu Copy 
+        | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet2] | get-menu Paste | click
+}
+get-window Copy | get-button Copy | click
+with [get-window Copy | get-table] {
+    get-item Success | get-property "columns[0]" | equals Success | verify-true
+    get-item Success | get-property "columns[1]" | contains "(CWXTCOB)" | verify-true
+    get-item Success | get-property "columns[2]" | contains "(CWXTCOB)" | verify-true
+}
+get-window Copy | get-button Close | click
+
+// Test right-click menu options
+
+with [get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $pdseEmbedFilter -dataset $tempNoLoadDataSet -member "CWXTCOB"]] {
+    get-menu "Browse"
+    get-menu "Edit" 
+    get-menu "Browse With"
+    get-menu "Edit With"
+    get-menu "Search..."
+    get-menu "Add Files to Project..."
+    get-menu "Refresh"
+    get-menu "Show Contents"
+    get-menu "Properties" 
+}
+
+// Cleanup
+delete-pds -hostName $HOST -portNum $PORT -filter $pdseEmbedFilter -datasetName $tempNoLoadDataSet
+delete-pds -hostName $HOST -portNum $PORT -filter $pdseEmbedFilter -datasetName $tempNoLoadDataSet2
+remove-filter -filter $pdseEmbedFilter
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

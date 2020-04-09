@@ -1,0 +1,82 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: Endevor
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _kjGO8L4-EeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/19/18 12:00 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val endevorEnvironment "C1DEMO"]
+global [val endevorSystem "ENV1"]
+global [val endevorSubSystem "R010000"]
+global [val endevorType "ASM"]
+global [val endevorStage "1"]
+global [val endevorElement "*"]
+global [val testMember1 "PDAS03"]
+global [val testDataset1 "XDEVREG.ENDEVOR.TEST"]
+
+add-host -hostName $HOST_CW11 -portNum $PORT_16196
+login-from-host -hostName $HOST_CW11 -port $PORT_16196
+
+add-filter -hostName $HOST_CW11 -portNum $PORT_16196 -filter $FILTER_XDEVREG
+
+// Delete filter if it already exists and then re-create it
+try -command 
+{
+    get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement] | get-menu Delete | click
+}
+-catch
+{
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor" $HOST_CW11 $PORT_16196] | get-menu "Add Filter..." | click
+with [get-window Filter] {
+    with [get-section "Endevor Filter"] {
+        get-combo -after [get-label "Environment:"] | set-text $endevorEnvironment
+        get-combo -after [get-label "System:"] | set-text $endevorSystem
+        get-combo -after [get-label "Subsystem:"] | set-text $endevorSubSystem
+        get-combo -after [get-label "Type:"] | set-text $endevorType
+        get-combo -after [get-label "Stage:"] | set-text $endevorStage
+        get-editbox -after [get-label "Element:"] | set-text $endevorElement
+    }
+    get-button OK | click
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s/%s.*" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement $testMember1]
+    | get-menu "Checkout..." | click
+with [get-window Checkout] {
+    with [get-section "Checkout Location"] {
+        get-combo -after [get-label "To dataset:"] | set-text $testDataset1
+        with [get-editbox -after [get-label "CCID:"]] {
+            set-text "1047"
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        get-editbox -after [get-label "Comments:"] | set-text TESTING
+    }
+    with [get-section "Endevor Options"] {
+        get-button "Signout element" | check
+        get-button "Replace element if it exists" | check
+    }
+    get-button OK | click
+}
+get-window Checkout | get-label "Checkout successful" | get-property caption | equals "Checkout successful" 
+    | verify-true
+get-window Checkout | get-button OK | click
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s/%s.*" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement $testMember1] 
+    | get-menu "Signin Elements..." | click
+get-window Signin | get-button OK | click
+get-window Signin | get-label "Signin successful" | get-property caption | equals "Signin successful" | verify-true
+get-window Signin | get-button OK | click
+
+logout -hostName $HOST_CW11 -port $PORT_16196
+remove-host -hostName $HOST_CW11 -portNum $PORT_16196
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

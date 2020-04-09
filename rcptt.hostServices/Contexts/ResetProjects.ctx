@@ -1,0 +1,28 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.workspace
+Element-Name: ResetProjects
+Element-Type: context
+Element-Version: 2.0
+Id: _VWD6oEUJEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/11/17 7:37 AM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Clears the workspace, leaving only the HostServices  folder, and .com.compuware.* projects.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.q7.content-3d2e0690-ce48-3609-83e0-c704d49f1eaf
+Content-Type: q7/binary
+Entry-Name: .q7.content
+
+UEsDBBQACAgIAAAAIQAAAAAAAAAAAAAAAAAIAAkALmNvbnRlbnRVVAUAAQAAAACVkE9Lw0AQxe+C32HZ
+Y0l3q4hIaCxYg/8QWovWmyybMW6b7MTZaRO/vZtCehUPA8PM770Z3nTW1ZXYAwWHPpNnaiIFeIuF82Um
+d/w5vpKz69OTKVKpwFauCaDINszKcqdapG1ojIV0PXRz9Awdi6526dH3vPeNl3xI4zyTX8xNqnXbtgrr
+UkVz/f78MCB/3DrKB6aXHzgdOX3kpPCmjvQLBOAF4QYsBylckcmPt/XtJeavjzmY+onKycXdN4yXcVl6
+JChufuYVGFoYZqD4/z0GXgHtnYWQKIt1X82uNQRqlKwqZ7d54TipsIz7gN5Q5Twno0M72hiSMUQhprZP
+x7PuI9X/zTSKfgFQSwcIUXMLEAgBAACwAQAAUEsBAhQAFAAICAgAAAAhAFFzCxAIAQAAsAEAAAgACQAA
+AAAAAAAAAAAAAAAAAC5jb250ZW50VVQFAAEAAAAAUEsFBgAAAAABAAEAPwAAAEcBAAAAAA==
+------=_.q7.content-3d2e0690-ce48-3609-83e0-c704d49f1eaf--

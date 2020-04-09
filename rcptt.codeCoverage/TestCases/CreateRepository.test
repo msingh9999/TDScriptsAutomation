@@ -1,0 +1,100 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _UrIe0ER7EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CreateRepository
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _iUtIELNPEeegJJmwE1A6Xg
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/31/17 3:23 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test creating a CodeCoverage repository
+
+Relies on having an existing dataset under the filter XDEVREG.TEMP.  Without this dataset there are intermittent failures due to error dialogs saying the filter is empty.  Also, login prompts where being issued during the removal of the connection at the end of the test.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CreateRepository ----------------------------------------------"
+
+global [val repoName [format "XDEVREG.TEMP.REPO.%s" [get-generated-dataset-suffix]]]
+global [val filterName "XDEVREG.TEMP"]
+global [val existingDsn "XDEVREG.TEST.INVALID.CC.REPOSIT"]
+global [val existingDsnIndex "XDEVREG.TEST.REPO2.INDEX"]
+global [val existingDsnData "XDEVREG.TEST.REPO3.DATA"]
+
+add-filter -filter $filterName
+
+get-menu "File/New/Xpediter\\/Code Coverage Repository" | click
+
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $repoName
+    get-button Finish | click
+    
+    get-window "Allocate Xpediter/Code Coverage Repository" 
+    | get-button OK | click
+
+}
+
+//test again with the same name and we should get a message that the dataset already exists
+get-menu "File/New/Xpediter\\/Code Coverage Repository" | click
+
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $repoName
+    get-button Finish | click
+    
+    get-editbox -after [get-label "Allocate Xpediter/Code Coverage Repository"] | get-property text 
+    | contains "already exists. A new name must be specified." | verify-true
+    
+     get-button Cancel | click
+}
+
+//test with an index name that already exists
+get-menu "File/New/Xpediter\\/Code Coverage Repository" | click
+
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $existingDsnIndex
+    get-button Finish | click
+    
+    get-editbox -after [get-label "Allocate Xpediter/Code Coverage Repository"] | get-property text 
+    | contains "already exists. A new name must be specified." | verify-true
+    
+     get-button Cancel | click
+}
+
+//test with a data name that already exists
+get-menu "File/New/Xpediter\\/Code Coverage Repository" | click
+
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $existingDsnData
+    get-button Finish | click
+    
+    get-editbox -after [get-label "Allocate Xpediter/Code Coverage Repository"] | get-property text 
+    | contains "already exists. A new name must be specified." | verify-true
+    
+     get-button Cancel | click
+}
+
+delete-pds -filter $filterName -datasetName $repoName
+
+//test a repository allocation failure with job information
+get-menu "File/New/Xpediter\\/Code Coverage Repository" | click
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    get-editbox -after [get-label "Repository dataset name:"] | set-text "AAAAA.AAAA"
+    get-button Finish | click
+    get-window "Allocate Xpediter/Code Coverage Repository" | get-button Yes | click
+    get-window ".*.jes" | get-button Close | click
+    get-button Cancel | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

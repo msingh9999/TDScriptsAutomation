@@ -1,0 +1,37 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_KsdzsHT2Eeao6LAbRG4SEA,_aEjwMLjIEeebSNbxTgM6gQ,_XnPvkEUIEeamKrg04Gqe-Q
+Element-Name: OnlineProjectDebug
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _0bZ40DnEEeilUsX7os_HSg
+Runtime-Version: 2.3.0.201804130857
+Save-Time: 4/13/18 1:46 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName "OnlineProjectDebug"]
+global [val datasetName "XDEVREG.XPED.JCL"]
+global [val memberName "CWXTCOB.jcl"]
+
+open-perspective -perspective $HOST_EXPLORER
+create-online-project -projectName $projectName -hostName $HOST -port $PORT
+add-source-online-project -projectName $projectName -datasetName $datasetName -hostName $HOST -portNum $PORT
+
+get-view "Project Explorer" | get-tree 
+    | select [format "%s [%s:%s]/Source/%s [%s:%s]/%s [%s on %s:%s]" $projectName $HOST $PORT $datasetName $HOST $PORT $memberName $datasetName $HOST $PORT] | get-menu 
+    -path "Debug As/Xpediter Batch Debug Session..." | click
+get-window "Debug Configurations" | get-button Debug | click
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+get-button "Resume (F8)" | click
+open-perspective -perspective $HOST_EXPLORER
+delete-online-project -projectName $projectName -hostName $HOST -port $PORT
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

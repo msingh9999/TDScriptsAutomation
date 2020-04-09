@@ -1,0 +1,168 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: XpedCodeCoverageConfiguration
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _suqwwKOREee41a3BXHVq4g
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/25/17 12:41 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMemberOpt "CWXTDECO"] // Compiled as optional - TRUNC(OPT)
+global [val loadLib "XDEVREG.XPED.LOADLIB"]
+
+proc "create-launch" [val launchType]
+{
+	// Create a new Batch debug configuration named CodeCoverage
+	get-menu "Run/Debug Configurations..." | click
+	with [get-window "Debug Configurations"] 
+	{
+	    get-tree | select $launchType | get-menu New | click
+		get-editbox -after [get-label "Name:"] | set-text CodeCoverage
+		if [$launchType | not-eq "Xpediter TSO Debug Session"]
+		{ 
+			get-editbox -after [get-label "Dataset(member):"] | set-text [format "%s(%s)" $jclDataset $jclMemberOpt]
+		}
+		
+    	get-tab-folder | get-tab-item "Load Libraries" | click
+    	get-group "Load libraries" | get-button "Add..." | click
+    	with [get-window Datasets] 
+    	{
+	        get-editbox | set-text $loadLib
+	        get-button OK | click
+	    }
+        
+		get-button Apply | click
+	    get-tab-folder | get-tab-item "Code Coverage" | click
+    }
+}
+
+proc "remove-launch" [val launchPath]
+{
+	// Remove the launch configuration    
+	with [get-window "Debug Configurations"] 
+	{
+	    get-tree | select $launchPath | get-menu Delete | click
+	    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+	    get-button Close | click
+	}
+}
+
+proc "validate-cc-options" [val launchType]
+{
+	// Create a new Batch debug configuration named CodeCoverage
+	create-launch $launchType
+	
+	// Validate that the option to display a report is set by default
+	get-window "Debug Configurations" | get-button "Display a report after the debug session" | get-property selected | equals true | verify-true
+	    
+	// Clear the display report option, apply and close the launch    
+	with [get-window "Debug Configurations"] 
+	{
+	    get-button "Collect Code Coverage" | check
+	    get-button "Display a report after the debug session" | uncheck
+	    get-button Apply | click
+	    get-button Close | click
+	}
+	
+	// Validate that the display report option was persisted
+	get-menu "Run/Debug Configurations..." | click
+	with [get-window "Debug Configurations"] 
+	{
+	    get-tree | select [concat $launchType "/CodeCoverage"]
+	    get-tab-folder | get-tab-item "Code Coverage" | click
+	}
+	get-window "Debug Configurations" | get-button "Display a report after the debug session" | get-property selected | equals false | verify-true
+	    
+	// Remove the launch configuration    
+	remove-launch [concat $launchType "/CodeCoverage"]
+}
+
+proc "cc-combos-set" [val repositoryName "XDEVREG.CC.REPOSIT"] [val systemName "SYSTEM"] [val testName "TEST"]
+{
+	// Procedure must be invoked within the context of Code Coverage tab of an Xpediter launch configuration
+    get-combo -after [get-label "Repository:"] | set-text $repositoryName
+    get-combo -after [get-label "System:"] | set-text $systemName
+    get-combo -after [get-label "Test ID:"] | set-text $testName
+}
+
+proc "cc-combos-validate-selection" [val repositoryName "XDEVREG.CC.REPOSIT"] [val systemName "SYSTEM"] [val testName "TEST"]
+{
+	with [get-window "Debug Configurations"]
+	{
+	    with [get-combo -after [get-label "Repository:"]]
+	    {
+	        get-property enablement | equals true | verify-true
+	        get-property selection | equals $repositoryName | verify-true
+	    }
+	    with [get-combo -after [get-label "System:"]]
+	    {
+	        get-property enablement | equals true | verify-true
+	        get-property selection | equals $systemName | verify-true
+	    }
+	    with [get-combo -after [get-label "Test ID:"]]
+	    {
+	        get-property enablement | equals true | verify-true
+	        get-property selection | equals $testName | verify-true
+	    }
+    }
+}
+
+//add-host
+//login-from-host
+
+validate-cc-options "Xpediter Batch Debug Session"
+validate-cc-options "Xpediter DB2 SP Debug Session"
+validate-cc-options "Xpediter IMS MPP Debug Session"
+validate-cc-options "Xpediter TSO Debug Session"
+
+// Create a new Batch debug configuration named CodeCoverage
+create-launch "Xpediter Batch Debug Session"
+with [get-window "Debug Configurations"] 
+{
+    get-tab-folder | get-tab-item "Target" | click
+    get-group "Debug criteria" | get-button Autofill | click
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | check
+    
+	// Set some values in the combo fields for Repostitory, System, and Test
+	cc-combos-set
+	get-button Apply | click
+	cc-combos-set "XDEVREG.CC.REPOSIT2" "SYSTEM2" "TEST2"
+	get-button Apply | click
+	cc-combos-set "XDEVREG.CC.BADREPO" "BADSYS" "BADTEST"
+	
+	// Revert the last values set.
+    get-button Revert | click
+	
+	// Validate current selection
+	cc-combos-validate-selection "XDEVREG.CC.REPOSIT2" "SYSTEM2" "TEST2"
+	
+	// Save the configuration
+	with [get-window "Debug Configurations"]
+	{
+	    get-button Apply | get-property enablement | equals false | verify-true
+	    get-button Close | click
+	}
+}
+
+// Reopen the configuration to validate values are persisted
+get-menu "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] 
+{
+    get-tree | select "Xpediter Batch Debug Session/CodeCoverage"
+    get-tab-folder | get-tab-item "Code Coverage" | click
+	
+	// Validate current selection
+	cc-combos-validate-selection "XDEVREG.CC.REPOSIT2" "SYSTEM2" "TEST2"
+}
+
+remove-launch "Xpediter Batch Debug Session/CodeCoverage"
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

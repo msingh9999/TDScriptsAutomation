@@ -1,0 +1,36 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: AnalyzerPreferences
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _XAb3kK2dEeaI5LAUP6iy4A
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 11/22/16 7:03 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that the SonarLint Analyzer preferences have been automatically set.
+
+Note: this test is only valid as long as no other tests have modified these preferences.
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test case for preferences automatically set:
+// Note: this test is only valid as long as no other tests have modified these preferences.
+get-preferences-menu | click
+get-window Preferences | get-tree | select "SonarLint/Analyzer Properties"
+with [get-window Preferences | get-table] {
+    get-item "sonar.cobol.copy.suffixes" | get-property "columns[1]" | equals "cob,cbl,cpy,copy" | verify-true
+    get-item "sonar.cobol.file.suffixes" | get-property "columns[1]" | equals "cob,cbl,cpy,copy" | verify-true
+    get-item "sonar.pli.file.suffixes" | get-property "columns[1]" | equals "pl1,pli,plm" | verify-true
+}
+get-window Preferences | get-button OK | click
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

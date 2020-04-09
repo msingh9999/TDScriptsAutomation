@@ -1,0 +1,174 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _awG7YHplEea5Nqp6_aAnbQ
+Element-Name: HyperlinksPreferencePage
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _R15sECi5Eeawwty1Y0abzw
+Runtime-Version: 2.2.0.201609192323
+Save-Time: 9/21/16 11:52 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+// Verify the default hyperlink preferences:
+// 1. "Only display z/OS dataset hyperlinks for the following file extensions:" box should be checked
+// 2. Textbox should be enabled but should not contain any text
+// 3. "Add" button should be disabled (until text is entered for an extension)
+// 4. "Remove" button should be disabled (until an extension is selected from the list of available extensions)
+// 5. Default extension list should contain "jcl" and "jes" only.
+
+get-preferences-menu | click
+get-window Preferences | get-tree | select "Compuware/Hyperlinks"
+with [get-window Preferences | get-group "File extensions"] {
+    get-button "Only display z/OS dataset hyperlinks for the following file extensions:" | get-property enablement 
+        | equals true | verify-true
+    with [get-editbox] {
+        get-property enablement | equals true | verify-true
+        get-property readOnly | equals false | verify-true
+        get-property text | equals "" | verify-true
+    }
+    get-button Add | get-property enablement | equals false | verify-true
+    get-button Remove | get-property enablement | equals false | verify-true
+    with [get-list] {
+        get-property "getItems().String[0]" | equals jcl | verify-true
+        get-property "getItems().String[1]" | equals jes | verify-true
+    }
+}
+
+// Test adding various invalid extensions
+with [get-window Preferences] {
+    with [get-group "File extensions"] {
+        get-editbox | set-text ".txt"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "tx.t"
+        get-button Add | get-property enablement | equals false | verify-true
+        // expect add button to be disabled as jcl is already populated in the list
+        get-editbox | set-text "jcl"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "\\"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "/"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "?"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text ":"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "*"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "\""
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text ">"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "<"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "|"
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "]"
+        get-button Add | get-property enablement | equals true | verify-true
+        get-editbox | set-text ""
+        get-button Add | get-property enablement | equals false | verify-true
+        get-editbox | set-text "txt"
+        get-button Add | get-property enablement | equals true | verify-true
+    }
+}
+
+
+// Test adding a "txt" extension, unchecking the "Only display z/OS dataset hyperlinks for the following file extensions:" box
+// and saving by clicking the Apply button and then Cancel to exit the preferences window
+
+with [get-window Preferences] {
+    with [get-group "File extensions"] {
+        get-editbox | set-text txt
+        get-button Add | click
+        get-button "Only display z/OS dataset hyperlinks for the following file extensions:" | uncheck
+    }
+    get-button Apply | click
+    get-button Cancel | click
+}
+
+// Verify that preference changes were saved using Apply/Cancel
+get-preferences-menu | click
+get-window Preferences | get-group "File extensions" 
+    | get-button "Only display z/OS dataset hyperlinks for the following file extensions:" | get-property selected 
+    | equals false | verify-true
+get-window Preferences | get-group "File extensions" | get-button Add | get-property enablement | equals false 
+    | verify-true
+with [get-window Preferences | get-group "File extensions" | get-editbox] {
+    get-property enablement | equals false | verify-true
+    get-property text | equals "" | verify-true
+}
+get-window Preferences | get-group "File extensions" | get-button Remove | get-property enablement | equals false 
+    | verify-true
+with [get-window Preferences | get-group "File extensions" | get-list] {
+    get-property "getItems().String[0]" | equals jcl | verify-true
+    get-property "getItems().String[1]" | equals jes | verify-true
+    get-property "getItems().String[2]" | equals txt | verify-true
+}
+
+// Re-check the "Only display z/OS dataset hyperlinks for the following file extensions:" box, remove the "txt"
+// extension and click the OK button to save the preference changes
+with [get-window Preferences] {
+    with [get-group "File extensions"] {
+        get-button "Only display z/OS dataset hyperlinks for the following file extensions:" | check
+        get-list | select txt
+        get-button Remove | click
+    }
+    get-button OK | click
+}
+
+// Verify that the preference changes in the previous step were saved correctly
+get-preferences-menu | click
+get-window Preferences | get-group "File extensions" 
+    | get-button "Only display z/OS dataset hyperlinks for the following file extensions:" | get-property selected 
+    | equals true | verify-true
+with [get-window Preferences | get-group "File extensions" | get-editbox] {
+    get-property enablement | equals true | verify-true
+    get-property readOnly | equals false | verify-true
+    get-property text | equals "" | verify-true
+}
+get-window Preferences | get-group "File extensions" | get-button Add | get-property enablement | equals false 
+    | verify-true
+get-window Preferences | get-group "File extensions" | get-button Remove | get-property enablement | equals false 
+    | verify-true
+with [get-window Preferences | get-group "File extensions" | get-list] {
+    get-property "getItems().String[0]" | equals jcl | verify-true
+    get-property "getItems().String[1]" | equals jes | verify-true
+}
+
+// Want to test using the Enter key here to add an extension, but cannot get this to work in RCPTT.  It records OK, but
+// on playback, it does not add the entry to the list with key-type Enter. Tried many things like making sure focus was
+// set in the editbox, etc, but nothing seems to work.
+
+with [get-window Preferences] {
+    with [get-group "File extensions"] {
+        get-editbox | set-text "txt"
+        get-button Add | click
+    }
+    get-button Apply | click
+}
+
+with [get-window Preferences | get-group "File extensions" | get-list] {
+    get-property "getItems().String[0]" | equals jcl | verify-true
+    get-property "getItems().String[1]" | equals jes | verify-true
+    get-property "getItems().String[2]" | equals txt | verify-true
+}
+// Test selecting an existing extension for removal
+get-window Preferences | get-group "File extensions" | get-list | select txt
+get-window Preferences | get-group "File extensions" | get-button Remove | get-property enablement | equals true 
+    | verify-true
+get-window Preferences | get-group "File extensions" | get-button Remove | click
+with [get-window Preferences | get-group "File extensions" | get-list] {
+    get-property "getItems().String[0]" | equals jcl | verify-true
+    get-property "getItems().String[1]" | equals jes | verify-true
+}
+with [get-window Preferences] {
+    get-button "Restore Defaults" | click
+    get-button OK | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,907 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresHostServices
+Element-Type: context
+Element-Version: 2.0
+Id: _ktRQQER8EeamKrg04Gqe-Q
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 10/26/18 10:17 AM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+/* Add a  filter to the Host Explorer tree. Filter is only added if it does not exist.*/
+proc "add-filter" [val filter $FILTER_XDEVREG] [val hostName $HOST] [val portNum $PORT] {
+	if [has-filter -filter $filter -hostName $hostName -portNum $portNum | equals false] {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $hostName $portNum]
+			| get-menu "Add Filter..." | click
+		with [get-window Filter] {
+			get-editbox -after [get-label "Filter:"] | set-text $filter
+			get-button OK | click
+		}
+	}
+}
+
+/* Add a  filter to the Host Explorer tree. Filter is only added if it does not exist.*/
+proc "add-filter-by-description" [val filter $FILTER_XDEVREG] [val hostName $HOST] [val portNum $PORT] [val descriptionHost $DESCRIPTION_HOST] {
+	if [has-filter-by-description -filter $filter -hostName $hostName -portNum $portNum -descriptionHost $descriptionHost | equals false] {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s/z\\/OS Datasets" $descriptionHost]
+			| get-menu "Add Filter..." | click
+		with [get-window Filter] {
+			get-editbox -after [get-label "Filter:"] | set-text $filter
+			get-button OK | click
+		}
+	}
+}
+
+/* Creates an "Allocate like" on given PDS with a new name on the given host. */
+proc "allocate-like-pds" [val descriptionHost $DESCRIPTION_HOST] [val pdsNameFrom] [val pdsNameTo]
+{
+	get-view "Host Explorer" | get-tree | select [format "Hosts/%s/z\\/OS Datasets/%s/%s" $descriptionHost $pdsNameFrom $pdsNameFrom] |  get-menu "Allocate Like..." | click
+	
+	// Create the target
+	get-window "Allocate Dataset" | get-editbox -after [get-label "Dataset name:"] | set-text [format "%s" $pdsNameTo]
+	get-window "Allocate Dataset" | get-button Finish | click
+	get-window "Allocate Dataset" | get-window "Allocate Dataset" 
+	
+	wait 5000
+	
+	//Verify dataset allocation was successful
+    //| get-label [format "Dataset %s has been allocated on host %s:16196." $pdsNameTo $descriptionHost] | get-property caption 
+    //| contains "has been allocated" | verify-true
+    
+	get-window "Allocate Dataset" | get-window "Allocate Dataset" | get-button OK | click
+}
+
+/* Creates a PDS on the given host. */
+proc "create-pds" [val hostName $HOST] [val portNum $PORT] [val filerName] [val pdsName]
+{
+	get-menu "File/New/PDS or Sequential Dataset" | click
+	
+	with [get-window "Allocate Dataset"]
+	{
+    	with [get-group "Dataset attributes"]
+    	{
+        	get-combo -after [get-label "Dataset type:"] | select PDS
+        	get-editbox -after [get-label "Directory blocks:"] | set-text 1
+        	get-editbox -after [get-label "Record length:"] | set-text 80
+    	}
+    	
+	    with [get-editbox -after [get-label "Dataset name:"]]
+	    {
+	        set-text $pdsName
+	    }
+	    
+	    get-button Finish | click
+		get-window "Allocate Dataset" | get-button OK | click
+	}
+	
+	get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $hostName $portNum $filerName] | get-menu Refresh | click
+	
+	//Verify dataset allocation was successful
+	get-view "Host Explorer" | get-tree | get-item [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filerName $pdsName]
+}
+
+/* Creates a new member for the given PDS. */
+proc "create-pds-member" [val datasetName] [val memberName] [val hostName $HOST] [val portnum $PORT] [val filter $FILTER_XDEVREG]
+{
+	get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portnum $filter $datasetName] | get-menu "New Member..." | click
+	
+	with [get-window "New Member"]
+	{
+	    get-editbox -after [get-label "Member name:"] | set-text $memberName
+	    get-button OK | click
+	}
+
+	// Close the window, if it was left open because the member already exists:
+	if [has-window "New Member"]
+	{
+		with [get-window "New Member"]
+		{
+			if [get-editbox -index 1 | get-property text -raw | matches ".*already exists."]
+			{
+				get-button "Cancel" | click
+			}
+			-else
+			{
+				log -message [format "Did not expect create-pds-member to fail with error: %s"
+					[get-editbox -index 1 | get-property text -raw]]
+			}
+		}
+	}
+}
+
+/**
+ * Checks if the specified PDS member exists.
+ * <p>
+ * This procedure uses the Host Explorer view to check if the PDS member exists.
+ */
+proc "has-pds-member" [val datasetName] [val memberName] [val hostName $HOST] [val portnum $PORT] [val filter $FILTER_XDEVREG]
+{
+	get-view "Host Explorer" | get-tree | has-item [get-pds-member-path -dataset $datasetName -member $memberName
+		-hostName $hostName -portNUM $portnum -filter $filter]
+}
+
+/* Deletes a PDS on the given host */
+proc "delete-pds" [val hostName $HOST] [val portNum $PORT] [val filter $FILTER_XDEVREG] [val datasetName]
+{
+	get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $hostName $portNum $filter]
+	    | get-menu Refresh | click
+	    
+	get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filter $datasetName]
+	    | get-menu Delete | click
+	    
+	with [get-window Delete]
+	{
+	    get-button Delete | click
+	    get-button Done | click
+	}
+	
+	//Verify PDS no longer exists
+	get-view "Host Explorer" | get-tree | verify-error {get-item [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filer $datasetName]}
+}
+
+proc "delete-plugin-project" [val projectName] 
+{
+	try -command
+	{
+		get-view "Package Explorer" | get-tree | select $projectName | get-menu Delete | click
+		with [get-window "Delete Resources"] 
+		{
+		    get-button "Delete project contents on disk (cannot be undone)" | check
+		    get-button OK | click
+		 }
+	}
+	-catch
+	{
+		log [format "delete-plugin-project failed for project %s." $projectName]
+	}
+}
+
+/** Get the text representation of the path for the z/OS datasets node in the Host Explorer tree. */
+proc "get-zos-datasets-path" [val hostName $HOST] [val port $PORT]
+{
+    format "Hosts/%s:%s/z\\/OS Datasets" $hostName $port
+}
+
+/** Selects the z/OS datasets node in the Host Explorer tree. */
+proc "select-zos-datasets" [val hostName $HOST] [val port $PORT]
+{
+    get-view $HOST_EXPLORER | get-tree | select [get-zos-datasets-path $hostName $port]
+}
+
+/** Get the text representation of the path for a z/OS dataset filter in the Host Explorer tree. */
+proc "get-filter-path" [val filter $FILTER_XDEVREG] [val hostName $HOST] [val port $PORT]
+{
+    format "Hosts/%s:%s/z\\/OS Datasets/%s" $hostName $port $filter
+}
+
+/* Get the text representation of the path for a PDS in the Host Explorer tree. */
+proc "get-pds-path" [val dataset] [val hostName $HOST] [val portNUM $PORT] [val filter $FILTER_XDEVREG]
+{
+    format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNUM $filter $dataset
+}
+
+/* Get the text representation of the path for a PDS member in the Host Explorer tree. */
+proc "get-pds-member-path" [val dataset] [val member] [val hostName $HOST] [val portNUM $PORT] [val filter $FILTER_XDEVREG]
+{
+	format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/%s" $hostName $portNUM $filter $dataset $member
+}
+
+/* Get the text representation of the path for a DDIO section in the Host Explorer tree. */
+proc "get-ddio-section-path" [val dataset] [val member] [val section] [val hostName $HOST] [val portNUM $PORT] [val filter $FILTER_XDEVREG]
+{
+	format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/%s/%s" $hostName $portNUM $filter $dataset $member $section
+}
+
+// TODO: This method is specific for online projects - refactor name and description.
+/* Get the text representation of the path for a dataset in the Project Explorer tree. */
+proc "get-project-dataset-path" [val project] [val hostName $HOST] [val portNum $PORT] [val dataset] {
+	format "%s [%s:%s]/Source/%s [%s:%s]" $project $hostName $portNum $dataset $hostName $portNum
+}
+
+// TODO: This method is specific for online projects - refactor name and description.
+/* Get the text representation of the path for a PDS member in the Project Explorer tree. */
+proc "get-project-pds-member-path" [val project] [val hostName $HOST] [val portNum $PORT] [val dataset] [val member] {
+	format "%s [%s:%s]/Source/%s [%s:%s]/%s [%s on %s:%s]" $project $hostName $portNum $dataset $hostName $portNum $member $dataset $hostName $portNum
+}
+
+// TODO: This method is specific for online projects - refactor name and description.
+/* Get the text representation of the path for the source folder in the Project Explorer tree. */
+proc "get-project-source-path" [val project] [val hostName $HOST] [val portNum $PORT] {
+	format "%s [%s:%s]/Source" $project $hostName $portNum
+}
+
+/**
+ * Gets the text path for a copybook member in an online project
+ */
+proc "get-project-copybook-member-path" [val project] [val dataset] [val member] [val hostName $HOST] [val portNum $PORT]
+{
+	format "%s [%s:%s]/Copybook Concatenation/%s [%s:%s]/%s [%s on %s:%s]" $project $hostName $portNum $dataset $hostName $portNum $member $dataset $hostName $portNum
+}
+
+/* Returns true if the specified filter exists in the Host Explorer tree. */
+proc "has-filter" [val filter] [val hostName $HOST] [val portNum $PORT] {
+	try -command {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $hostName $portNum $filter] 
+		bool true
+	} -catch {
+		bool false
+	}
+}
+
+/* Returns true if the specified filter exists in the Host Explorer tree. */
+proc "has-filter-by-description" [val filter] [val hostName $HOST] [val portNum $PORT] [val descriptionHost $DESCRIPTION_HOST] {
+	try -command {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s/z\\/OS Datasets/%s" $descriptionHost $filter] 
+		bool true
+	} -catch {
+		bool false
+	}
+}
+
+/* Returns true if then item in the specified view contains the speciifed decorator.*/
+proc "has-image-decorator" [val view $HOST_EXPLORER] [val path] [val decorName] {
+	try -command {
+		get-view $view | get-tree | get-item $path | get-property "image.decorations[0].path" -raw | equals $decorName
+	} -catch {
+		bool false
+	}
+}
+
+proc "has-image" [val path] [val imagePath] [val view $HOST_EXPLORER] {
+	try -command 
+	{
+		get-view $view | get-tree | get-item $path | get-property "image.path" -raw | equals $imagePath
+	} 
+	-catch 
+	{
+		bool false
+	}
+}
+
+/* Determine if the project name exists in the Project Explorer. */
+proc "has-project" [val projectName] [val hostName $HOST] [val portNum $PORT] {
+	try -command {
+		get-tab-folder | get-tab-item "Project Explorer" | click
+		get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]" $projectName $hostName $portNum] | bool
+			"true"
+	} -catch {
+		bool false
+	}
+}
+
+proc "HE-recall-dataset" [val hostName $HOST][val portNum $PORT] [val filter] [val dataset] [val imagePath]
+{
+	if [get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filter $dataset] | has-menu $RECALL | equals true]
+	{
+		get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filter $dataset] | get-menu $RECALL | click
+		HE-dataset-wait-for-recall -filter $filter -dataset $dataset -imagePath $imagePath
+	}
+	-else
+	{
+		log [format "Recall menu not found for dataset %s." $dataset]
+	}
+}
+
+proc "HE-dataset-wait-for-recall" [val seconds 30] [val filter] [val dataset] [val hostname $HOST] [val portNum $PORT] [val imagePath]
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-tab-folder | get-tab-item $HOST_EXPLORER | click
+		has-image -path [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filter $dataset]
+			-imagePath $imagePath | verify-true
+	}
+	-catch 
+	{
+		log  [format "Waited %s seconds and could not detect image %s" $seconds $imagePath]
+	}
+}
+
+proc "HE-dataset-wait-for-migration" [val seconds 30] [val filter] [val dataset] [val hostname $HOST] [val portNum $PORT]
+{
+    try -delay 1000 -times $seconds -command 
+    {
+        get-tab-folder | get-tab-item $HOST_EXPLORER | click
+        with [get-view $HOST_EXPLORER | get-tree] {
+            select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filter -dataset $dataset] | get-menu Refresh | click
+        }   
+        has-image-decorator -path [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $hostName $portNum $filter $dataset] -decorName $IMAGE_DIR_MIGRATED | verify-true
+    }
+    -catch 
+    {
+        log  [format "Waited %s seconds and could not detect image decorator %s" $seconds $IMAGE_DIR_MIGRATED]
+    }
+}
+
+/* Remove the specified filter from the Host Explorer tree. */ 
+proc "remove-filter" [val hostName $HOST] [val port $PORT] [val filter] 
+{
+	try -command
+	{
+		open-perspective "Host Explorer"
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $hostName $port $filter]
+			| get-menu Delete | click
+		get-window "Delete Filter" | get-button Yes | click
+	}
+	-catch 
+	{
+		log [format "Unable to remove filter %s." $filter]
+	}
+}
+
+/* Selects a PDS member from the Host Explorer tree. */
+proc "select-pds-member" [val dataset] [val member] [val filter $FILTER_XDEVREG] [val hostName $HOST] [val portNum $PORT]
+{
+ 	get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -dataset $dataset -member $member -filter $filter -hostName $hostName -portNUM $portNum]
+}
+
+/* Selects a PDS from the Host Explorer tree. */
+proc "select-pds" [val dataset] [val filter $FILTER_XDEVREG] [val hostName $HOST] [val portNum $PORT]
+{
+    get-view $HOST_EXPLORER | get-tree | select [get-pds-path -dataset $dataset -filter $filter -hostName $hostName -portNUM $portNum]
+}
+
+proc "get-dataset-node" [val dataset] [val filter $FILTER_XDEVREG] [val hostName $HOST] [val portNum $PORT]
+{
+	get-view $HOST_EXPLORER | get-tree | get-item [get-pds-path -dataset $dataset -filter $filter -hostName $hostName -portNUM $portNum]
+}
+
+/* Select the specified filter from the Host Explorer tree. */ 
+proc "select-filter" [val filter] [val hostName $HOST] [val port $PORT]
+{
+    get-view $HOST_EXPLORER | get-tree | select [get-filter-path $filter $hostName $port]
+}
+
+/**
+ * Submits a job.
+ * <p>
+ * This procedure uses the Host Explorer view to submit the specified PDS JCL member.
+ * <p>
+ * If the optional jobName parameter is specified, this procedure will also wait for the successful completion of
+ * this job.
+ * <p>
+ * <b>Note: if specified, it is important that the job name be unique to the job being submitted. Otherwise, other jobs
+ * may be unintentionally purged when calling this method.</b>
+ */
+proc "submit-job" [val dataset] [val member] [val hostName $HOST] [val portNum $PORT] [val filter $FILTER_XDEVREG] [val jobName ""]
+{
+	if [$jobName | equals "" | not]
+	{
+		purge-jobs $jobName
+	}
+
+	get-view $HOST_EXPLORER | get-tree 
+		| select [get-pds-member-path -filter $filter -dataset $dataset -member $member -portNUM $portNum]
+	    | get-menu Submit | click
+	get-window "Submit Resource" | get-button OK | click
+
+	if [$jobName | equals "" | not]
+	{
+		wait-for-job-completion $jobName
+	}
+}
+
+proc "copy-pds" [val sourcePDS] [val targetPDS] [val hostName $HOST] [val portNum $PORT] [val filter $FILTER_XDEVREG]
+{
+    get-view $HOST_EXPLORER | get-tree | select-pds -filter $filter -dataset $sourcePDS -hostName $hostName
+        -portNum $portNum | get-menu "Copy To..." | click
+    with [get-window Copy] {
+        get-table | select $sourcePDS -column Source
+        get-button "Rename..." | click
+        with [get-window Datasets] {
+            with [get-editbox] {
+                key-type Right
+                set-text $targetPDS
+            }
+            get-button OK | click
+        }
+        with [get-group "If the target dataset exists"] {
+            get-button "Copy the data" | click
+            get-button "Copy data even when dataset attributes do not match" | check
+        }
+        get-button Copy | click
+        get-button Close | click
+    }
+}
+
+/**
+ * Copies the specified member using the Host Explorer view.
+ */
+proc "copy-member" [val fromDataset] [val fromMember] [val toDataset] [val toMember] [val hostName $HOST] [val portNum $PORT] [val filter $FILTER_XDEVREG]
+{
+    get-view $HOST_EXPLORER | get-tree | select-pds-member -dataset $fromDataset -member $fromMember -filter $filter
+    	-hostName $hostName -portNum $portNum | get-menu "Copy" | click
+    get-view $HOST_EXPLORER | get-tree | select-pds -dataset $toDataset -filter $filter -hostName $hostName
+    	-portNum $portNum | get-menu "Paste" | click
+    with [get-window Copy]
+    {
+        get-table | select [format "%s(%s)" $fromDataset $fromMember] -column Source
+        get-button "Rename..." | click
+        with [get-window Rename]
+        {
+        	get-editbox -after [get-label "Member name:"] | set-text $toMember
+            get-button OK | click
+        }
+        get-button "Replace existing like-named members" | check
+        get-button "Copy data even when dataset attributes do not match" | check
+        get-button Copy | click
+        get-button Close | click
+    }
+}
+
+/**
+ * Copies the specified member using the Host Explorer view.
+ */
+proc "copy-member-description" [val fromDataset] [val fromMember] [val toDataset] [val toMember] [val hostDescription $DESCRIPTION_HOST]
+{
+    with [get-view "Host Explorer" | get-tree] {
+	    select [format "Hosts/%s/z\\/OS Datasets/%s/%s/%s" $hostDescription $fromDataset $fromDataset $fromMember] 
+    	    | get-menu Copy | click
+    	select [format "Hosts/%s/z\\/OS Datasets/%s/%s" $hostDescription $toDataset $toDataset] | get-menu Paste | click
+	}
+	get-window Copy | get-button Copy | click
+	get-window Copy | get-table | get-item Success | get-property caption | equals Success | verify-true
+	get-window Copy | get-button Close | click
+        
+}
+
+proc "verify-properties-view-caption" [val captionValue]
+{
+    try -command
+    {
+        get-view Properties | get-label $captionValue | get-property caption | equals $captionValue | verify-true
+        bool true
+    }
+    -catch
+    {
+        bool false
+    }
+}
+
+proc "verify-contents-view-caption" [val captionValue]
+{
+    try -command
+    {
+        get-view Contents | get-canvas | get-property "getText()" | equals $captionValue | verify-true
+        bool true
+    }
+    -catch
+    {
+        bool false
+    }
+}
+
+proc "handle-spaces-for-tabs-preference-window" [val answer No]
+{
+    try -command
+    {
+        get-window "Insert Spaces for Tabs?" | get-button $answer | click
+    }
+    -catch
+    {
+    }
+}
+
+/* Adds a Unix Filter to the host explorer tree */
+proc "add-unix-filter" [val host $HOST] [val port $PORT] [val filter]
+{
+    if [has-unix-filter -filter $filter -hostName $host -port $port | equals false] {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS UNIX Files" $host $port] | get-menu "Add Filter..." | click
+		with [get-window Filter] {
+		    with [get-editbox -after [get-label "Filter:"]] {
+		        set-text $filter
+		    }
+		    get-button OK | click
+		}
+	}
+}
+
+/* Returns true if the specified unix filter exists in the Host Explorer tree. */
+proc "has-unix-filter" [val filter] [val hostName $HOST] [val port $PORT] {
+    try -command {
+        get-view "Host Explorer" | get-tree | select [get-unix-filter -hostName $hostName -port $port -filter $filter] 
+        bool true
+    } -catch {
+        bool false
+    }
+}
+
+/* Removes a Unix filter from the Host Explorer tree */
+proc "remove-unix-filter" [val hostName $HOST] [val port $PORT] [val filter]
+{
+  with [get-view "Host Explorer" | get-tree] {
+      select [format "Hosts/%s:%s/z\\/OS UNIX Files" $hostName $port] | get-menu Refresh | click
+      select [get-unix-filter -hostName $hostName -port $port -filter $filter] | get-menu Delete | click
+      get-window "Delete Filter" | get-button Yes | click
+  }
+}
+
+/* Returns the formatted path of a Unix filter */
+proc "get-unix-filter" [val hostName $HOST] [val port $PORT] [val filter] {
+    format "Hosts/%s:%s/z\\/OS UNIX Files%s" $hostName $port $filter
+}
+
+/* Returns the formatted path of a Unix file/folder */
+proc "get-unix-path" [val hostName $HOST] [val port $PORT] [val filter] [val path] {
+    format "Hosts/%s:%s/z\\/OS UNIX Files%s/%s" $hostName $port $filter $path
+}
+
+/**
+ * Performs a Host Explorer Dataset Search on the specified dataset for the specified text.
+ */
+proc "do-search" [val dataset] [val text]
+{
+	get-menu "Search/Search..." | click
+	with [get-window Search]
+	{
+		get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+	    get-combo -after [get-label "Search for text:"] | set-text $text
+	    with [get-group Scope]
+	    {
+	    	if [get-button "Remove All" | get-property enablement -raw | equals true]
+	    	{
+	    		get-button "Remove All" | click
+	    	}
+	    	get-button "Add..." | click
+	    }
+	    with [get-window Datasets]
+	    {
+	        with [get-editbox]
+	        {
+	            set-text $dataset
+	        }
+	        get-button OK | click
+	    }
+	    get-button Search | click
+	}
+}
+
+/**
+ * Purges all jobs with the specified job name.
+ * <p>
+ * This procedure uses the JES view to find all jobs with the specified name, and purge them.
+ * <p>
+ * This procedure does not check the status of the jobs being purged (e.g. if still executing), so it is important
+ * that your job name is unique and will not purge unintended jobs.
+ */
+proc "purge-jobs" [val jobName]
+{
+	connect-jes-explorer
+
+	with [get-view $JES_EXPLORER]
+	{
+	    with [get-editbox -after [get-label "Owner:"]]
+	    {
+	        set-text $RCPTT_USER
+	        key-type Enter
+	    }
+	    with [get-combo -after [get-label "Prefix:"]]
+	    {
+	        set-text $jobName
+	        key-type Enter
+	        select $jobName -column $JES_JOB_COLUMN_NAME
+	    }
+		get-button "Refresh\tF5" | click
+	    with [get-table]
+	    {
+	    	try
+	    	{
+		        select $jobName -all -column $JES_JOB_COLUMN_NAME
+		        key-type Del
+				get-window "Purge Confirmation" | get-button OK | click
+	        }
+	        -catch
+	        {
+	        	// ignore this failure - means not jobs to purge.
+	        }
+	    }
+
+		try -command
+		{
+			get-button "Refresh\tF5" | click
+			get-table | get-property itemCount | equals 0 | verify-true
+		} -times 15 -delay 2000
+	}
+}
+
+proc "refresh-filter" [val hostName $HOST] [val portNum $PORT] [val filter $FILTER_XDEVREG]
+{
+	get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $hostName $portNum $filter]
+	    | get-menu Refresh | click
+}
+
+/**
+ * Waits for a job to complete.
+ * <p>
+ * This procedure uses the JES view to find a job with the specified name, and waits (up to 2 minutes)
+ * for its description to become "Ended normally".
+ * <p>
+ * This procedure does not expect more than one job of the given name to be found, so you should use the
+ * "purge-jobs" command prior to submitting this job.  The job name should also be unique to prevent other
+ * jobs from interfering with this procedure.
+ */
+proc "wait-for-job-completion" [val jobName]
+{
+
+	log "wait-for-job-completion" 
+	connect-jes-explorer
+
+	with [get-view $JES_EXPLORER]
+	{
+	    with [get-combo -after [get-label "Prefix:"]]
+	    {
+	        set-text $jobName
+	    }
+
+		try -times 40 -delay 3000 -command
+		{
+			get-button "Refresh\tF5" | click
+		    get-table | get-item $jobName -column $JES_JOB_COLUMN_NAME | get-property "columns[4]" | equals "Ended normally" | verify-true
+		} 
+		-catch
+		{
+			log [format "Did not get job completion for job %s." $jobName] 
+		}
+		wait 300
+	}
+}
+
+/**
+ * Connect the JES Explorer view to the specified host.
+ * <p>
+ * Note: if there is only one host defined, that host will be the host connected to. It is the responsibility
+ * of the caller to make sure the host is defined prior to calling this method.
+ */
+proc "connect-jes-explorer" [val hostName $HOST] [val portName $PORT]
+{
+	try
+	{
+		with [get-view $JES_EXPLORER]
+		{
+			get-button "Connect...\tF6" | click
+			// Click on the combobox to enble the "refresh" button:
+			get-combo | click
+		}
+	}
+	-catch
+	{
+		// Ignore - means we are already connected.
+	}
+	
+	if [has-window "Host Explorer"]
+	{	
+		log -message "Selction dialog opened"
+
+		with [get-window "Host Explorer"]
+		{
+		    get-table | select [format "%s:%s" $hostName $portName]
+		    get-button OK | click
+		}
+	}
+}
+
+/**
+ * Connect the JES Explorer view to the specified host.
+ * <p>
+ * Note: if there is only one host defined, that host will be the host connected to. It is the responsibility
+ * of the caller to make sure the host is defined prior to calling this method.
+ */
+proc "connect-jes-explorer-description" [val hostDescription $DESCRIPTION_HOST]
+{
+	try
+	{
+		with [get-view $JES_EXPLORER]
+		{
+			get-button "Connect...\tF6" | click
+			// Click on the combobox to enble the "refresh" button:
+			get-combo | click
+		}
+	}
+	-catch
+	{
+		// Ignore - means we are already connected.
+	}
+	
+	if [has-window "Host Explorer"]
+	{	
+		log -message "Selction dialog opened"
+
+		with [get-window "Host Explorer"]
+		{
+		    get-table | select [format "%s" $hostDescription]
+		    get-button OK | click
+		}
+	}
+}
+/**
+ * Recalls the dataset if it is migrated.
+ * <p>
+ * This procedure uses the Host Explorer view to exeucte the Recall context menu action, if the menu option exists.
+ */
+proc "recall-dataset" [val dataset] [val hostName $HOST] [val portNum $PORT] [val filter $FILTER_XDEVREG]
+{
+	with [select-pds -dataset $dataset -hostName $hostName -portNum $portNum -filter $filter]
+	{
+		get-menu Refresh | click
+		if [has-menu Recall]
+		{
+		   	get-menu Recall | click
+		}
+	}
+}
+
+/**
+ * Sets the default editor for the specified extension (do not prefix with "*." - done in this method).
+ * <p>
+ * If there is not currently a file association for this extension and editor, they will be created.
+ */
+proc "set-default-editor" [val extension] [val editor]
+{
+	get-preferences-menu | click
+	with [get-window Preferences]
+	{
+	    get-tree | select "General/Editors/File Associations"
+
+		if [get-table -after [get-label "File types:"] | has-item [format "\*.%s" $extension] | eq false]
+		{
+		    get-tree | select "General/Editors/File Associations"
+		    get-button "Add..." | click
+		    with [get-window "Add File Type"]
+		    {
+		        get-editbox -after [get-label "File type:"] | set-text [format "*.%s" $extension]
+		        get-button OK | click
+		    }
+	    }
+	    -else
+	    {
+	    	get-table -after [get-label "File types:"] | select [format "*.%s" $extension]
+	    }
+
+	    if [get-table -after [get-label "Associated editors:"] | or [has-item [$editor]] [has-item [format "%s \(default\)" $editor]] | eq false]
+	    {
+		    get-button "Add..." -after [get-label "Associated editors:"] | click
+		    with [get-window "Editor Selection"]
+		    {
+		        get-tree | select $editor
+		        get-button OK | click
+		    }
+	    }
+
+    	// If the editor isn't already the default (e.g. it is found without the "(default)" suffix), make it the default:
+		if [get-table -after [get-label "Associated editors:"] | has-item [$editor]]
+		{ 
+	    	get-table -after [get-label "Associated editors:"] | select $editor
+	    	get-button Default | click
+	    }
+
+	    get-button OK | click
+	}
+}
+
+proc "wait-for-console-text" [val text] [val seconds 30]
+{
+    try -delay 1000 -times $seconds -command 
+    {
+    	get-view Console | get-text-viewer | get-property text | contains $text | verify-true
+    	bool true
+    }
+    -catch 
+    {
+        log  [format "Waited %s seconds and could not detect console text: %s" $seconds $text]
+        bool false
+    }
+}
+
+/**
+ * Return true if drive name is a local drive filter.
+ */
+proc "has-drive-filter" [val driveName] {
+    try -command {
+        get-view $HOST_EXPLORER | get-tree | select [format "%s/%s" $LOCAL_DRIVE_PATH $driveName]  
+        bool true
+    } -catch {
+    	bool false
+    }
+}
+
+/**
+ * Verifies that a line in raw text equals the specified value.
+ * <p>
+ * Notes: 
+ * <ul>
+ * <li>The line index is 0 based.</li>
+ * <li>Do not include the new line character "\n" in the expected text.</li>
+ * </ul>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * get-editbox | get-property text -raw | verify-text-line -lineIndex 0 -expectedText "Characteristics for VSAM cluster \"XDEVREG.HS.API.TEST.KSDS\":"
+ * </code>
+ */
+proc "verify-text-line" [val lineIndex] [val expectedText]
+{
+	let [val lineText [split -sep "\n" | to-list | get $lineIndex]]
+	{
+		 $lineText | equals $expectedText | assert-true
+		 	-message [format "Expected line %s to equal <%s> but it actually was <%s>" $lineIndex $expectedText $lineText]
+	}
+}
+
+/**
+ * Verifies that a line in the editor equals the specified value.
+ * <p>
+ * Notes: 
+ * <ul>
+ * <li>The line index is 0 based.</li>
+ * <li>Do not include the new line character "\n" in the expected text.</li>
+ * <li>Trailing spaces typically are truncated by the editor</li>
+ * <li>Leading spaces on the first line appear to get truncated (a bug in RCPTT?)</li>
+ * </ul>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * get-editor "COBPGM.cbl" | verify-editor-line 5 "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENVIRONMENT DIVISION."
+ * </code>
+ */
+proc "verify-editor-line" [val lineIndex] [val expectedText]
+{
+	let [val lineText [get-text-viewer | get-property text -raw | split -sep "\n" | to-list | get $lineIndex]]
+	{
+		 $lineText | equals $expectedText | assert-true
+		 	-message [format "Expected line %s to equal <%s> but it actually was <%s>" $lineIndex $expectedText $lineText]
+	}
+}
+
+/**
+ * Deletes the copybook cache using the SlickEdit Copybooks preference page.
+ */
+proc "delete-copybook-cache"
+{
+	get-preferences-menu | click
+	with [get-window Preferences]
+	{
+	    get-tree | select "Compuware/SlickEdit Copybooks"
+	    get-group "Copybook Cache" | get-button "Delete Now" | click
+	    get-window "SlickEdit Copybook Download" | get-button OK | click
+	    get-button OK | click
+	}
+}
+
+/**
+ * Opens the specified dataset/member for editing from the Host Explorer view.
+ * <p>
+ * Use the "useSlickEdit" parameter to control if the SlickEdit or Compuware editor is used.
+ */
+proc "open-for-edit-from-host-explorer" [val datasetName] [val memberName] [val useSlickEdit]
+{
+	if [$useSlickEdit | eq true]
+	{
+		select-pds-member $datasetName $memberName -filter $filter | get-menu -path "Edit With/Compuware Editor powered by SlickEdit" | click
+	}
+	-else
+	{
+		select-pds-member $datasetName $memberName -filter $filter | get-menu -path "Edit With/Compuware Editor" | click
+	}
+}
+
+/**
+ * Opens the specified dataset/member for browsing from the Host Explorer view.
+ * <p>
+ * Use the "useSlickEdit" parameter to control if the SlickEdit or Compuware editor is used.
+ */
+proc "open-for-browse-from-host-explorer" [val datasetName] [val memberName] [val useSlickEdit]
+{
+	if [$useSlickEdit | eq true]
+	{
+		select-pds-member $datasetName $memberName -filter $filter | get-menu -path "Browse With/Compuware Editor powered by SlickEdit" | click
+	}
+	-else
+	{
+		select-pds-member $datasetName $memberName -filter $filter | get-menu -path "Browse With/Compuware Editor" | click
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

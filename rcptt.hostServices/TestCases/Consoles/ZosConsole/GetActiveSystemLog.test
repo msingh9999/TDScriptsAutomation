@@ -1,0 +1,68 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_QgUBwEULEeamKrg04Gqe-Q,_IQ4-sEUKEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q
+Element-Name: GetActiveSystemLog
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _dykkEIr-Eeaum6QWtlCXVw
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 11/28/17 1:11 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+close-all-consoles
+close-all-editors
+
+// change the file associations preference so that the active syslog opens with the Compuware Editor (can't verify using SlickEdit)
+set-default-editor -extension "jes" -editor "Compuware Editor"
+
+// open the z/OS console and then display the active syslog
+with [get-view Console]
+{
+    click
+    get-button "Open Console" | click -arrow
+}
+get-menu "2 z\\/OS Console" | click
+get-view Console | get-button "Open the Active System Log" | click
+with [get-window "System Log Display"]
+{
+    get-editbox | set-text 100
+    get-button OK | click
+}
+
+// verify that the editor opened the active SYSLOG and set the cursor to the beginning of the last line
+get-editor -index 0 | get-label -index 0 | get-property caption | contains "Browsing: SYSLOG" | verify-true
+try -delay 1000 -times 30 -command
+{
+	log [format "GetActiveSystemLog: waiting for syslog to display..."]
+	get-label "100 :.*" | get-property caption | equals "100 : 1" | verify-true
+	log [format "GetActiveSystemLog: syslog displayed."]
+}
+-catch
+{
+	bool false | assert-true -message "Waited 30 seconds but active syslog didn't display."
+}
+
+// refresh and verify that the cursor moved to the end of the last line
+get-editor -index 0 | get-text-viewer | get-menu "Refresh.*" | click
+try -delay 1000 -times 30 -command
+{
+	log [format "GetActiveSystemLog: waiting for syslog to refresh..."]
+	get-label "100 :.*" | get-property caption | equals "100 : 1" | verify-false
+	log [format "GetActiveSystemLog: syslog refreshed."]
+}
+-catch
+{
+	bool false | assert-true -message "Waited 30 seconds but active syslog didn't refresh."
+}
+
+// close the editor and the z/OS console
+get-editor -index 0 | close
+verify-error {get-editor -index 0}
+get-view Console | get-button "Close Console" | click
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

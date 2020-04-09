@@ -1,0 +1,264 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_gJI9gIl3Eeaf8rtXp2pZyA
+Element-Name: SequentialDatasets
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _B791MHQ3Eeao6LAbRG4SEA
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/22/17 12:53 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val catalogDataset [generate-unique-dataset-name "XDEVREG.SEQ.CATALOG"]]
+global [val volumeSerialNumber "NSM900"]
+global [val testDataset1 [generate-unique-dataset-name "XDEVREG.SEQ.TEST1"]]
+global [val testDataset2 [generate-unique-dataset-name "XDEVREG.SEQ.TEST2"]]
+global [val testDataset1Renamed [generate-unique-dataset-name "XDEVREG.SEQ.TEST1X"]]
+global [val testDataset2Renamed [generate-unique-dataset-name "XDEVREG.SEQ.TEST2X"]]
+global [val pdsSourceName "XDEVREG.RENAME1.COBOL"]
+global [val pdsTargetName [generate-unique-dataset-name "XDEVREG.SEQ.PDS"]]
+global [val jobSequentialDataset "XDEVREG.SEQ.JCL.TEST1"]
+
+add-filter -filter $FILTER_XDEVREG
+
+try -command
+{
+	delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $testDataset1
+}
+-catch
+{
+}
+
+try -command
+{
+	delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $testDataset2
+}
+-catch
+{
+}
+
+try -command
+{
+	delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $testDataset1Renamed
+}
+-catch
+{
+}
+
+try -command
+{
+	delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $testDataset2Renamed
+}
+-catch
+{
+}
+
+copy-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -sourcePDS $pdsSourceName -targetPDS $pdsTargetName
+
+// Test Cataloging and Uncataloging a Sequential Dataset
+
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-button "Allocate Like..." | click
+    with [get-window "Dataset Selection" | get-section Datasets] {
+        get-editbox -after [get-label "Name:"] | set-text "XDEVREG*"
+        get-button List | click
+        get-table | select "XDEVREG.SEQ.COMPARE1" | double-click
+    }
+    get-editbox -after [get-label "Dataset name:"] | set-text $catalogDataset
+    get-group "SMS parameters" | get-editbox -after [get-label "Storage class:"] | set-text NONSMS
+    get-group "Dataset location" | get-editbox -after [get-label "Volume:"] | set-text ""
+    get-group "SMS parameters" | get-editbox -after [get-label "Management class:"] | set-text ""
+    get-button Finish | click
+	get-window "Allocate Dataset" | get-label [format "Dataset %s has been allocated on host %s:%s." $catalogDataset $HOST $PORT] 
+	    | get-property caption | equals [format "Dataset %s has been allocated on host %s:%s." $catalogDataset $HOST $PORT]  | verify-true
+	get-window "Allocate Dataset" | get-button OK | click
+}
+
+with [get-view "Host Explorer" | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $catalogDataset] | get-menu Uncatalog | click
+}
+
+with [get-window Uncatalog] {
+    get-table | get-item $catalogDataset | get-property caption | equals $catalogDataset
+        | verify-true
+    get-button Uncatalog | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+get-window Uncatalog | get-button Uncatalog | click
+get-window Uncatalog | get-table | get-item $catalogDataset | get-property "getData().getStatusText()" 
+    | equals [format "Dataset %S has been uncataloged." $catalogDataset] | verify-true
+get-window Uncatalog | get-button Done | click
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Catalog..." | click
+with [get-window Catalog] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $catalogDataset
+    }
+    with [get-editbox -after [get-label "Volume serial:"]] {
+        set-text $volumeSerialNumber
+    }
+    get-button OK | click
+}
+get-window "Catalog Dataset" | get-label [format "%S dataset has been cataloged." $catalogDataset] | get-property caption 
+    | equals [format "%S dataset has been cataloged." $catalogDataset] | verify-true
+get-window "Catalog Dataset" | get-button OK | click
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $catalogDataset]
+    get-menu Delete | click
+}
+
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $catalogDataset | get-property "values['Results']" 
+    | equals [format "Resource %s successfully deleted." $catalogDataset] | verify-true
+get-window Delete | get-button Done | click
+
+// Allocate two new sequential datasets to test scenarios with
+
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-button "Allocate Like..." | click
+    get-window "Dataset Selection" | get-section Datasets | get-table | select "XDEVREG.SEQ.COMPARE1" | double-click
+    get-editbox -after [get-label "Dataset name:"] | set-text $testDataset1
+    get-button Finish | click
+	get-window "Allocate Dataset" | get-label [format "Dataset %s has been allocated on host %s:%s." $testDataset1 $HOST $PORT]
+	    | get-property caption | equals [format "Dataset %s has been allocated on host %s:%s." $testDataset1 $HOST $PORT] | verify-true
+	get-window "Allocate Dataset" | get-button OK | click
+}
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-button "Allocate Like..." | click
+    get-window "Dataset Selection" | get-section Datasets | get-table | select "XDEVREG.SEQ.COMPARE2" | double-click
+    get-editbox -after [get-label "Dataset name:"] | set-text $testDataset2
+    get-button Finish | click
+	get-window "Allocate Dataset" | get-label [format "Dataset %s has been allocated on host %s:%s." $testDataset2 $HOST $PORT]
+	    | get-property caption | equals [format "Dataset %s has been allocated on host %s:%s." $testDataset2 $HOST $PORT] | verify-true
+	get-window "Allocate Dataset" | get-button OK | click
+}
+
+// Rename the two newly created sequential datasets by appending an "x" to the end of their name
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2]
+    get-menu "Rename..." | click
+}
+with [get-window Rename] {
+    with [get-table] {
+        get-editbox | set-text $testDataset1Renamed
+        select $testDataset2 | get-editbox | set-text $testDataset2Renamed
+    }
+    get-button Rename | click
+}
+with [get-window Rename | get-table] {
+    get-item $testDataset1 | get-property "columns[0]" | equals $testDataset1 | verify-true
+    get-item $testDataset1 | get-property "columns[1]" 
+        | equals [format "Resource %s successfully renamed to %s." $testDataset1 $testDataset1Renamed] | verify-true
+    get-item $testDataset2 | get-property "columns[0]" | equals $testDataset2 | verify-true
+    get-item $testDataset2 | get-property "columns[1]" 
+        | equals [format "Resource %s successfully renamed to %s." $testDataset2 $testDataset2Renamed] | verify-true
+}
+get-window Rename | get-button Done | click
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2Renamed] | get-menu Copy | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1Renamed] | get-menu Paste | click
+}
+get-window Copy | get-button Copy | click
+with [get-window Copy | get-table] {
+    get-item Success | get-property "columns[0]" | equals Success | verify-true
+    get-item Success | get-property "columns[1]" | equals $testDataset2Renamed | verify-true
+    get-item Success | get-property "columns[2]" | equals $testDataset1Renamed | verify-true
+}
+
+// Try selecting both renamed sequential datasets and pasting them into a PDS - should not be allowed
+
+get-window Copy | get-button Close | click
+with [get-view $HOST_EXPLORER| get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1Renamed] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2Renamed]
+    get-menu Copy | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.COBOL"] | verify-error {get-menu Paste}
+}
+
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    // Selecting multiple sequential datasets and attemping to paste them into a PDS should not work
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1Renamed] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2Renamed]
+    get-menu Copy | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $pdsTargetName] | verify-error {get-menu Paste} 
+    // Selecting a single sequential dataset and attempting to paste it over a member SHOULD work
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1Renamed] | get-menu Copy | click
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $pdsTargetName -member "DRA00410"] | get-menu Paste | click
+}
+with [get-window Copy] {
+    get-button "Copy data even when dataset attributes do not match" | check
+    get-button Copy | click
+}
+with [get-window Copy | get-table] {
+    get-item Success | get-property "columns[0]" | equals Success | verify-true
+    get-item Success | get-property "columns[1]" | equals $testDataset1Renamed | verify-true
+    get-item Success | get-property "columns[2]" | equals [format "%s(%s)" $pdsTargetName "DRA00410"] | verify-true
+}
+get-window Copy | get-button Close | click
+
+// Selecting multiple sequential datasets and attempting to paste them into another sequential dataset should not work
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1Renamed] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2Renamed]
+    get-menu Copy | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.SEQ.COMPARE1"] | verify-error {get-menu Paste}
+}
+
+// Test Editing/Saving Sequential Dataset
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1Renamed]
+    | get-menu "Edit With/Compuware Editor" | click
+}
+with [get-editor [format "%S\.((famvs)|(data))" $testDataset1Renamed] | get-text-viewer] {
+    set-text "This is the new editor text"
+    key-type "M1+s"
+}
+with [get-editor [format "%S\.((famvs)|(data))" $testDataset1Renamed] | get-text-viewer] {
+    set-text "This is the new editor text version 2"
+}
+get-button "Save (M1+S)" | click
+
+with [get-editor [format "%S\.((famvs)|(data))" $testDataset1Renamed] | get-text-viewer] {
+    set-text "This is the new editor text version 3"
+}
+get-editor [format "%S\.((famvs)|(data))" $testDataset1Renamed] | close
+get-window $HOST_EXPLORER | get-button Yes | click
+
+// Test Submitting a job from a sequential dataset
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jobSequentialDataset] 
+    | get-menu Submit | click
+
+with [get-window "Submit Resource"] {
+    get-property "getChildren().Control[1].getText()" | contains "The job was successfully submitted." | verify-true
+}
+get-window "Submit Resource" | get-button OK | click
+
+// Submit Job via right click menu in Compuware Editor
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jobSequentialDataset] 
+    | get-menu "Browse With/Compuware Editor" | click
+
+get-editor [format "%S.jcl" $jobSequentialDataset] | get-editbox -after [get-label [format "Browsing: %S on %s:%s" $jobSequentialDataset $HOST $PORT]] 
+    | get-menu Submit | click
+
+with [get-window "Submit Resource"] {
+    get-property "getChildren().Control[1].getText()" | contains "The job was successfully submitted." | verify-true
+}
+
+get-window "Submit Resource" | get-button OK | click
+get-editor [format "%S.jcl" $jobSequentialDataset] | close
+
+delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $pdsTargetName
+delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $testDataset1Renamed
+delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $testDataset2Renamed
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

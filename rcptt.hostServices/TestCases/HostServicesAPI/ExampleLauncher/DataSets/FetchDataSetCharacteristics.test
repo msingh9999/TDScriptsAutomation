@@ -1,0 +1,174 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wvcyALzIEearCfJIpjdCZQ,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: FetchDataSetCharacteristics
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _6fW3oL5OEearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 10:58 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/Datasets/Fetch Dataset Characteristics"]
+global [val resultDialogTitle "Fetch Dataset Characteristics Results"]
+
+/****** Procedures ******/
+
+proc "enter-data-set-in-dialog" [val dsn] [val type "Any"]
+{
+	with [get-window "Fetch Dataset Characteristics Example"]
+	{
+	    with [get-editbox -after [get-label "Dataset name:"]]
+	    {
+	        set-text $dsn
+	    }
+	    with [get-combo -after [get-label "Dataset type:"]]
+	    {
+	        set-value $type
+	    }
+	    get-button Run | click
+	}
+}
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+// Test a non-existant dataset
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.NOT.FOUND"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Could not find dataset named \"XDEVREG.NOT.FOUND\""
+
+// Test a dsn that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.DSNTOOLARGE"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"dataSetName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.DSNTOOLARGE"
+
+// Test a dsn that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.INVALID!.CHAR"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"dataSetName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.INVALID!.CHAR"
+
+// Test with the "Any" type
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.COBOL.COPYLIB"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Characteristics for dataset \"XDEVREG.HS.API.TEST.COBOL.COPYLIB\":\n"
++"  Creation date = Mon Sep 29 00:00:00 EDT 2014\n"
++"  Expiration date = null\n"
++"  Management class = SOURCE@S\n"
++"  Storage class = STDDODFW"
+
+// Test with the "PARTITIONED" type
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -type "PARTITIONED"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Characteristics for partitioned dataset \"XDEVREG.HS.API.TEST.PDS.CNTL\":\n"
++"  Allocation unit = CYLINDERS\n"
++"  Block size = 6160\n"
++"  Creation date = Mon Sep 29 00:00:00 EDT 2014\n"
++"  Dataset organization = PO\n"
++"  Device type = DT_3390\n"
++"  Directory blocks used = 2\n"
++"  Expiration date = null\n"
++"  Extents allocated = 1\n"
++"  Extents used = 1\n"
++"  Last used TTR = 000023\n"
++"  Logical record length = 80\n"
++"  Management class = JCLCTL@S\n"
++"  Maximum directory blocks = 20\n"
++"  Member count = 7\n"
++"  Primary units allocated = 1\n"
++"  Record format = FB\n"
++"  Secondary units allocated = 5\n"
++"  Storage class = STDDODFW\n"
++"  Units allocated = 1\n"
++"  Units used = 0\n"
++"  Volume = PRD925"
+
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.SEQ.MIGRATED" -type "PARTITIONED"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Could not find partitioned dataset named \"XDEVREG.HS.API.TEST.SEQ.MIGRATED\""
+
+// Test with the "SEQUENTIAL" type
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.SEQ" -type "SEQUENTIAL"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Characteristics for sequential dataset \"XDEVREG.HS.API.TEST.SEQ\":\n"
++"  Allocation unit = TRACKS\n"
++"  Block size = 20200\n"
++"  Creation date = Mon Sep 29 00:00:00 EDT 2014\n"
++"  Dataset organization = PS\n"
++"  Device type = DT_3390\n"
++"  Expiration date = null\n"
++"  Extents allocated = 1\n"
++"  Extents used = 1\n"
++"  Last used TTR = 000B02\n"
++"  Logical record length = 202\n"
++"  Management class = @NONSTD@\n"
++"  Primary units allocated = 12\n"
++"  Record format = FB\n"
++"  Secondary units allocated = 1\n"
++"  Storage class = STDNOCSH\n"
++"  Units allocated = 12\n"
++"  Units used = 12\n"
++"  Volume = PRD947"
+
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.COBOL.COPYLIB" -type "SEQUENTIAL"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Could not find sequential dataset named \"XDEVREG.HS.API.TEST.COBOL.COPYLIB\""
+
+// Test with the "VSAM" type
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.KSDS" -type "VSAM"
+
+with [get-window $resultDialogTitle]
+{
+	with [get-editbox | get-property text -raw]
+	{
+		verify-text-line -lineIndex 0 -expectedText "Characteristics for VSAM cluster \"XDEVREG.HS.API.TEST.KSDS\":"
+		verify-text-line -lineIndex 1 -expectedText "  Creation date = Wed Oct 01 00:00:00 EDT 2014"
+		verify-text-line -lineIndex 2 -expectedText "  Expiration date = null"
+		verify-text-line -lineIndex 3 -expectedText "  Management class = @NONSTD@"
+		verify-text-line -lineIndex 4 -expectedText "  Owner ID = "
+		verify-text-line -lineIndex 5 -expectedText "  Storage class = STDNOCSH"
+
+		verify-text-line -lineIndex 7 -expectedText "Data component characteristics:"
+		verify-text-line -lineIndex 8 -expectedText "  Allocation unit = TRACKS"
+		verify-text-line -lineIndex 9 -expectedText "  Average record size = 80"
+
+		verify-text-line -lineIndex 29 -expectedText "Data component statistics:"
+		verify-text-line -lineIndex 30 -expectedText "  Control area split count = 0"
+		verify-text-line -lineIndex 31 -expectedText "  Control intervals per control area = 15"
+
+		verify-text-line -lineIndex 40 -expectedText "Index component characteristics:"
+		verify-text-line -lineIndex 41 -expectedText "  Allocation unit = TRACKS"
+		verify-text-line -lineIndex 42 -expectedText "  Control interval size = 512"
+	}
+	get-button OK | click
+}
+
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.SEQ" -type "VSAM"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Could not find VSAM cluster named \"XDEVREG.HS.API.TEST.SEQ\""
+
+// Test with the "MIGRATED" type
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.SEQ.MIGRATED" -type "MIGRATED"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Dynamic allocation has failed because the dataset XDEVREG.HS.API.TEST.SEQ.MIGRATED is migrated. Please recall the dataset before trying to perform other actions on it."
+
+execute-example -exampleDirectory $exampleDirectory
+enter-data-set-in-dialog -dsn "XDEVREG.HS.API.TEST.KSDS" -type "MIGRATED"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Characteristics for dataset \"XDEVREG.HS.API.TEST.KSDS\":\n"
++"  Creation date = Wed Oct 01 00:00:00 EDT 2014\n"
++"  Expiration date = null\n"
++"  Management class = @NONSTD@\n"
++"  Storage class = STDNOCSH"
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

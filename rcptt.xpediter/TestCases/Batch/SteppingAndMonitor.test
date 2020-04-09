@@ -1,0 +1,469 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_KsdzsHT2Eeao6LAbRG4SEA,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: SteppingAndMonitor
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _gQWN4MMAEearBNxcXL0Jlw
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:34 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val session "TOPAZ40"]
+global [val asmEditor "ASM1 [ASM1]"]
+global [val asm2Editor "ASM2 [ASM1]"]
+global [val cob1Editor "COB1 [COB1]"]
+
+get-button Xpediter | click
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] 
+{
+    get-tree | select "Xpediter Batch Debug Session" | get-menu -path New | click
+    get-editbox -after [get-label "Name:"] | set-text $session
+    with [get-tab-folder] 
+    {
+        get-tab-item DDIO | click
+    }
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        with [get-editbox] 
+        {
+            set-text "ENTQA.XT.XT76.SYST.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB1.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB2.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB3A.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB3B.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB3C.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB4A.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB4B.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB4C.DDIO\n"
+            + "ENTQA.XT.STEPPING.PDSE.DDIO"
+        }
+        get-button OK | click
+    }
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        with [get-editbox] 
+        {
+            set-text "ENTQA.XT.XT76.SYST.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB1.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB2.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB4A.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB4B.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB4C.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB42.LOAD\n"
+            + "ENTQA.XT.STEPPING.PDSE.LOAD"
+        }
+        get-button OK | click
+    }
+    get-tab-folder | get-tab-item Target | click
+    get-group "Job to debug" | get-editbox -after [get-label "Dataset(member):"] 
+        | set-text "XDEVREG.XPED.JCL(BATASM01)"
+    with [get-group "Debug criteria"] 
+    {
+        get-editbox -after [get-label "Job name:"] | set-text $session
+        get-button Autofill | click
+    }
+    get-button Apply | click
+    get-button Debug | click
+}
+
+login
+wait-for-source ASM1 ASM1
+close-view "Cheat Sheets"
+wait 300
+get-view Breakpoints | get-button "Remove All Breakpoints" | click
+get-window "Remove All Breakpoints" | get-button Yes | click
+
+with [get-editor $asmEditor]
+{
+    with [get-left-ruler | get-ruler-column AnnotationColumn] 
+    {
+        double-click-ruler 56
+        wait 300
+        double-click-ruler 71
+        wait 300
+        double-click-ruler 101
+        wait 300
+        double-click-ruler 116
+        wait 300
+        double-click-ruler 131
+    }
+}
+wait 500
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM1 [ASM1] (procedure: ASM1 line: 56)"
+
+get-button "Step Into (F5)" | click
+try -times 20 -delay 300 -command
+{
+	get-editor $asm2Editor | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 38
+}
+
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM2 [ASM1] (line: 38)"
+wait 300
+get-button "Step Return (F7)" | click
+wait 300
+get-button "Resume (F8)" | click
+wait 300
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM1 [ASM1] (procedure: ASM1 line: 71)"
+
+get-button "Step Over (F6)" | click
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM1 [ASM1] (procedure: ASM1 line: 101)"
+
+get-button "Step Into (F5)" | click
+try -times 20 -delay 300 -command
+{
+	get-editor $cob1Editor | get-editbox | get-menu -path Monitor | click
+}
+wait 300
+with [get-button "Step Over (F6)"] {
+    click
+	wait 300
+    click
+}
+wait 300
+get-button "Step Into (F5)" | click
+wait 300
+with [get-button "Step Over (F6)"] 
+{
+    click
+    wait 300
+    click
+}
+wait 500
+with [get-view Variables | get-tree] 
+{
+    get-item -path INT1 | get-property "values['Name']" | equals INT1 | verify-true
+    get-item -path INT1 | get-property "values['Value']" | equals "+1" | verify-true
+}
+with [get-view Debug] 
+{
+    with [get-button "Review Step Backward (M3+F9)"] 
+    {
+        click
+        wait 300
+        click
+        wait 300
+        click
+        wait 300
+    }
+}
+with [get-view Variables | get-tree] 
+{
+    get-item -path INT1 | get-property "values['Name']" | equals INT1 | verify-true
+    get-item -path INT1 | get-property "values['Value']" | equals "+20" | verify-true
+}
+with [get-view Debug] 
+{
+    with [get-button "Review Step Forward (M3+F10)"] 
+    {
+        click
+        wait 300
+        click
+        wait 300
+        click
+        wait 300
+    }
+}
+with [get-view Variables | get-tree] 
+{
+    get-item -path INT1 | get-property "values['Name']" | equals INT1 | verify-true
+    get-item -path INT1 | get-property "values['Value']" | equals "+1" | verify-true
+}
+with [get-button "Resume (F8)"] {
+    click
+}
+/*
+ * Disable this part for now.  Having trouble getting this to be stable.
+ *
+wait 1000
+
+// Back to ASM1 - RCPTT seems to have trouble getting the toolbar at this point
+// Adding an extra click
+with [get-editor $asmEditor] | click
+wait 500
+with [get-button "Resume (F8)"] | click
+wait 500
+get-button "Step Into (F5)" | click
+wait 500
+
+// Now in PL/1
+try -times 10 -delay 500 -command
+{
+	with [get-button "Step Over (F6)"] | click
+    wait 500
+}
+try -times 10 -delay 500 -command
+{
+	with [get-button "Step Over (F6)"] | click
+    wait 500
+}
+get-button "Step Return (F7)" | click
+wait 1000
+
+// Back to ASM1
+get-button "Resume (F8)" | click
+wait 500
+get-button "Step Into (F5)" | click
+wait 1000
+
+// Now in C
+with [get-button "Step Over (F6)"] {
+    click
+    wait 300
+    click
+    wait 300
+}
+get-button "Step Return (F7)" | click
+wait 1000
+
+// Back in ASM1
+get-button "Resume (F8)" | click
+*
+*/
+
+with [get-view Debug] {
+    get-tree | select "TOPAZ40 [Xpediter Batch Debug Session]" 
+        | select "TOPAZ40 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+}
+get-window "Terminate and Remove" | get-button Yes | click
+
+get-button Xpediter | click
+
+delete-batch-debug-session $session
+delete-batch-debug-session "New_configuration"
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] 
+{
+    get-tree | select "Xpediter Batch Debug Session" | get-menu -path New | click
+    get-editbox -after [get-label "Name:"] | set-text $session
+    with [get-tab-folder] 
+    {
+        get-tab-item DDIO | click
+    }
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        with [get-editbox] 
+        {
+            set-text "ENTQA.XT.XT76.SYST.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB1.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB2.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB3A.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB3B.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB3C.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB4A.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB4B.DDIO\n"
+            + "ENTQA.XT.STEPPING.COB4C.DDIO\n"
+            + "ENTQA.XT.STEPPING.PDSE.DDIO"
+        }
+        get-button OK | click
+    }
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        with [get-editbox] 
+        {
+            set-text "ENTQA.XT.XT76.SYST.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB1.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB2.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB4A.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB4B.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB4C.LOAD\n"
+            + "ENTQA.XT.STEPPING.COB42.LOAD\n"
+            + "ENTQA.XT.STEPPING.PDSE.LOAD"
+        }
+        get-button OK | click
+    }
+    get-tab-folder | get-tab-item Target | click
+    get-group "Job to debug" | get-editbox -after [get-label "Dataset(member):"] 
+        | set-text "XDEVREG.XPED.JCL(BATASM01)"
+    with [get-group "Debug criteria"] 
+    {
+        get-editbox -after [get-label "Job name:"] | set-text $session
+        get-button Autofill | click
+    }
+    get-button Apply | click
+    get-button Debug | click
+}
+
+login
+wait-for-source ASM1 ASM1
+close-view "Cheat Sheets"
+wait 300
+get-view Breakpoints | get-button "Remove All Breakpoints" | click
+get-window "Remove All Breakpoints" | get-button Yes | click
+
+with [get-editor $asmEditor]
+{
+    with [get-left-ruler | get-ruler-column AnnotationColumn] 
+    {
+        double-click-ruler 56
+        wait 300
+        double-click-ruler 71
+        wait 300
+        double-click-ruler 101
+        wait 300
+        double-click-ruler 116
+        wait 300
+        double-click-ruler 131
+    }
+}
+wait 500
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM1 [ASM1] (procedure: ASM1 line: 56)"
+
+get-button "Step Into (F5)" | click
+try -times 20 -delay 300 -command
+{
+	get-editor $asm2Editor | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 38
+}
+
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM2 [ASM1] (line: 38)"
+wait 300
+get-button "Step Return (F7)" | click
+wait 300
+get-button "Resume (F8)" | click
+wait 300
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM1 [ASM1] (procedure: ASM1 line: 71)"
+
+get-button "Step Over (F6)" | click
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "TOPAZ40 [Xpediter Batch Debug Session]/.*/Thread [ASM1, Step: STEP1.RUNPROG] (Suspended (breakpoint))/ASM1 [ASM1] (procedure: ASM1 line: 101)"
+
+get-button "Step Into (F5)" | click
+try -times 20 -delay 300 -command
+{
+	get-editor $cob1Editor | get-editbox | get-menu -path Monitor | click
+}
+wait 300
+with [get-button "Step Over (F6)"] {
+    click
+	wait 300
+    click
+}
+wait 300
+get-button "Step Into (F5)" | click
+wait 300
+with [get-button "Step Over (F6)"] 
+{
+    click
+    wait 300
+    click
+}
+wait 500
+with [get-view Variables | get-tree] 
+{
+    get-item -path INT1 | get-property "values['Name']" | equals INT1 | verify-true
+    get-item -path INT1 | get-property "values['Value']" | equals "+1" | verify-true
+}
+with [get-view Debug] 
+{
+    with [get-button "Review Step Backward (M3+F9)"] 
+    {
+        click
+        wait 300
+        click
+        wait 300
+        click
+        wait 300
+    }
+}
+with [get-view Variables | get-tree] 
+{
+    get-item -path INT1 | get-property "values['Name']" | equals INT1 | verify-true
+    get-item -path INT1 | get-property "values['Value']" | equals "+20" | verify-true
+}
+with [get-view Debug] 
+{
+    with [get-button "Review Step Forward (M3+F10)"] 
+    {
+        click
+        wait 300
+        click
+        wait 300
+        click
+        wait 300
+    }
+}
+with [get-view Variables | get-tree] 
+{
+    get-item -path INT1 | get-property "values['Name']" | equals INT1 | verify-true
+    get-item -path INT1 | get-property "values['Value']" | equals "+1" | verify-true
+}
+with [get-button "Resume (F8)"] {
+    click
+}
+/*
+ * Disable this part for now.  Having trouble getting this to be stable.
+ *
+wait 1000
+
+// Back to ASM1 - RCPTT seems to have trouble getting the toolbar at this point
+// Adding an extra click
+with [get-editor $asmEditor] | click
+wait 500
+with [get-button "Resume (F8)"] | click
+wait 500
+get-button "Step Into (F5)" | click
+wait 500
+
+// Now in PL/1
+try -times 10 -delay 500 -command
+{
+	with [get-button "Step Over (F6)"] | click
+    wait 500
+}
+try -times 10 -delay 500 -command
+{
+	with [get-button "Step Over (F6)"] | click
+    wait 500
+}
+get-button "Step Return (F7)" | click
+wait 1000
+
+// Back to ASM1
+get-button "Resume (F8)" | click
+wait 500
+get-button "Step Into (F5)" | click
+wait 1000
+
+// Now in C
+with [get-button "Step Over (F6)"] {
+    click
+    wait 300
+    click
+    wait 300
+}
+get-button "Step Return (F7)" | click
+wait 1000
+
+// Back in ASM1
+get-button "Resume (F8)" | click
+*
+*/
+
+with [get-view Debug] {
+    get-tree | select "TOPAZ40 [Xpediter Batch Debug Session]" 
+        | select "TOPAZ40 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+}
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

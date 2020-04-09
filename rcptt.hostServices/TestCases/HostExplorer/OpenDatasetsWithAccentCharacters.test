@@ -1,0 +1,116 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q
+Element-Name: OpenDatasetsWithAccentCharacters
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _lcFZcCXyEeivuPlmsfKsWw
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 4/4/18 10:21 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test opening PDS members with accent characters from various locations in Topaz such as Host Explorer, Contents View, Online Projects, and Host Services Search Results.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName "TestOnlineProjectAccent"]
+global [val dataSetName "XDEVREG.TEST.ACCENT"]
+global [val memberName "BMFàCSCT"]
+global [val memberNameWithExtension "BMFàCSCT.data"]
+
+add-host -hostName $HOST -portNum $PORT
+logout
+login-from-host -hostName $HOST -port $PORT -codePage "297 - France"
+
+// Test opening from Host Explorer
+add-filter $FILTER_XDEVREG
+
+// Test copying a PDS name into an editor
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $dataSetName -member $memberName]
+}
+
+exec-with-options {
+    get-view $HOST_EXPLORER | get-tree | double-click
+} -allowStatusDialog
+
+exec-with-options {
+    get-editor $memberNameWithExtension | close
+} -allowStatusDialog
+
+// Test opening from Contents View
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $dataSetName]
+}
+
+with [get-view "Contents" | get-table] {
+    select $memberName
+}
+
+exec-with-options {
+    get-view Contents | get-table | double-click
+} -allowStatusDialog
+
+exec-with-options {
+    get-editor $memberNameWithExtension | close
+} -allowStatusDialog
+
+// Test opening from online project
+create-online-project -projectName "TestOnlineProjectAccent" 
+
+add-source-online-project -hostName $HOST -portNum $PORT -projectName "TestOnlineProjectAccent" -datasetName "XDEVREG.TEST.ACCENT"
+
+get-view "Project Explorer" | get-tree
+    | select [format "%s [%s:%s]/Source/%s [%s:%s]/%s [%s on %s:%s]" $projectName $HOST $PORT $dataSetName $HOST $PORT $memberNameWithExtension $dataSetName $HOST $PORT]
+
+exec-with-options {
+    get-view $PROJECT_EXPLORER | get-tree | double-click
+} -allowStatusDialog
+
+exec-with-options {
+    get-editor $memberNameWithExtension | close
+} -allowStatusDialog
+
+delete-online-project -projectName $projectName -hostName $HOST -port $PORT
+
+// Test opening from Search Results
+// TODO: Uncomment once fix is made in HCI to send back proper named results (having accents): see comments for CWE-126414
+/*
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $dataSetName]
+    	| get-menu "Search..." | click
+}
+
+with [get-window Search] {
+    get-tab-folder | get-tab-item "Host Explorer Dataset Search" | click
+    with [get-combo -after [get-label "Search for text:"]] {
+        set-text "mac"
+    }
+    get-button Search | click
+}
+
+get-view Search | get-link [format "'mac' - 1 records, 1 occurrences, Host: %s:%s" $HOST $PORT] | get-property "getText()" 
+    | equals [format "'mac' - 1 records, 1 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+
+get-view Search | get-tree 
+    | select [format "%s/%s \\(1 records, 1 occurrences\\)/   1:         MACRO                                                                  " $dataSetName $memberName]
+
+exec-with-options {
+    get-view $PROJECT_EXPLORER | get-tree | double-click
+} -allowStatusDialog
+
+exec-with-options {
+    get-editor $memberNameWithExtension | close
+} -allowStatusDialog
+
+get-view Search | close
+*/
+logout
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

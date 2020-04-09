@@ -1,0 +1,73 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q
+Element-Name: SourceLink
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _8T6FoC50EeeamY2Z3LV3cw
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/23/18 3:00 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests issue https://agile.compuware.com/browse/CWE-110047, specifically linking from Compile Diagnostics view to source via context menu.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val JOB_NAME "TESTLINK"]
+
+add-filter -filter $FILTER_XDEVREG
+submit-job -filter $FILTER_XDEVREG -dataset $XDEVREG.HS.JCL -member $JOB_NAME -jobName $JOB_NAME
+
+with [get-view $JES_EXPLORER]
+{	
+	get-button "Refresh\tF5" | click
+	get-table | select $JOB_NAME -column $JES_JOB_COLUMN_NAME | get-menu "Show Compile Diagnostics" | click
+}
+
+get-view Problems | get-tree 
+    | select "Errors (18 items)/IGYDS0023-E   The COBOL word starting in column 13 contained more than 30 characters.  The word was truncated to 30 characters. "
+with [get-view Problems | get-tree]
+{
+    get-menu "Go to Source" | get-property caption | equals "Go to Source" | verify-true
+    get-menu "Go to Source" | get-property enablement | equals true | verify-true
+}
+
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tree | select "Compuware/Compile Diagnostics"
+    get-group "Display of previous compile diagnostics" | get-combo -after [get-label "Link problem markers with:"] 
+        | select Source
+    get-button Apply | click
+    get-button OK | click
+}
+
+with [get-view $JES_EXPLORER]
+{
+    click
+    get-table | select $JOB_NAME -column $JES_JOB_COLUMN_NAME | get-menu "Show Compile Diagnostics" | click
+}
+
+get-view Problems | get-tree 
+    | select "Errors (18 items)/IGYDS0023-E   The COBOL word starting in column 13 contained more than 30 characters.  The word was truncated to 30 characters. "
+with [get-view Problems | get-tree]
+{
+    get-menu "Go to Source Listing" | get-property caption | equals "Go to Source Listing" | verify-true
+    get-menu "Go to Source Listing" | get-property enablement | equals true | verify-true
+}
+
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-button "Restore Defaults" | click
+    get-button Apply | click
+    get-button OK | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

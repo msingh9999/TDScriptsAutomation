@@ -1,0 +1,56 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _QgUBwEULEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: Compress
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _JrRQ4L4-EeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/13/17 10:50 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- Compress ----------------------------------------------"
+
+global [val testPDS1 [format "XDEVREG.TESTCOMP.T%S" [get-time | format-time -format mmssSSS]]]
+global [val sourcePDS "XDEVREG.JUBULA.COBOL"]
+global [val filterXdevregTestcomp "XDEVREG.TESTCOMP"]
+
+add-filter $FILTER_XDEVREG
+
+copy-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -sourcePDS $sourcePDS -targetPDS $testPDS1
+
+try -command
+{
+	get-view Console | get-editbox -after [get-label $CompuwareConsole] | get-menu Clear | click
+}
+-catch
+{
+	get-button $DisplaySelectedConsole | click -arrow
+	get-new-console -menuItem $CompuwareConsole
+}
+
+remove-filter -filter $FILTER_XDEVREG
+add-filter $filterXdevregTestcomp
+	
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregTestcomp -dataset $testPDS1]
+    | get-menu Compress | click
+get-view Console | get-text-viewer | get-property text 
+    | contains [format "%S resource has been compressed." $testPDS1] | verify-true
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $filterXdevregTestcomp -dataset $testPDS1]
+    get-menu Delete | click
+}
+
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $testPDS1 | get-property "values['Results']" 
+    | equals [format "Resource %s successfully deleted." $testPDS1] | verify-true
+get-window Delete | get-button Done | click
+
+remove-filter -filter $filterXdevregTestcomp
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

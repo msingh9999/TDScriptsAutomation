@@ -1,0 +1,63 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,__J2YgA15EeeqcLs0Ht7rNg,_J07C0A10EeeqcLs0Ht7rNg,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: HebrewViewJcl
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _ENRd8A5dEeeqcLs0Ht7rNg
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:39 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that Hebrew text is displayed correctly when viewing JCL from a launch configuration.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- HebrewViewJcl ----------------------------------------------"
+global [val configName "Hebrew Test"]
+
+open-xpediter-perspective
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"]
+{
+    get-tree | select "Xpediter Batch Debug Session"
+    get-button "New launch configuration" | click
+    get-editbox -after [get-label "Name:"] | set-text $configName
+    get-button Apply | click
+    with [get-group "Job to debug"]
+    {
+        get-editbox -after [get-label "Dataset(member):"] | set-text "XDEVREG.HEBREW.JCL(HEBPGMR)"
+        get-button "View..." | click
+    }
+
+    with [get-window HEBPGMR | get-text-viewer]
+    {
+        key-type Down -times 2
+        key-type "M2+END"
+        // Note: This validation text contains invisible Left To Right Marks (U+200E)
+		get-property "getSelectionText()" | equals "//* Hebrew: ‎ונועדה לצרכי‎ .0-‎התוכנית מבצעת חלוקה ב" | verify-true
+
+	    key-type Down
+	    key-type Home -times 2
+	    key-type "M2+END"
+        // Note: This validation text contains invisible Left To Right Marks (U+200E)
+		get-property "getSelectionText()" | equals "//* 19/01/2017 - ‎גירסה התחלתית‎ S059 ‎סמי ביתן" | verify-true
+    }
+    get-window HEBPGMR | get-button Close | click
+    get-tree | select [format "Xpediter Batch Debug Session/%s" $configName] | get-menu -path Delete | click
+    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+	get-button Close | click
+}
+
+// Logout to prevent other tests from running with Hebrew code page.
+logout
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

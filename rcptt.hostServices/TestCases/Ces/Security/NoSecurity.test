@@ -1,0 +1,64 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_flHIADsvEeecusG2bnvmdQ
+Element-Name: NoSecurity
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _YaPW4EYeEeegiaPGzUCP4w
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 6/9/17 6:51 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests Compuware Enterprise Services preference page specifically for no security.
+--Test Manage Credentials dialog
+--Test security related controls on the preference page
+--Test synchronization of CES configuration(s)
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val cesUrlNoSecurity "http://10.100.10.121:58230/compuware/"]
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    with [get-editbox -after [get-label "URL:"]] {
+        set-text $cesUrlNoSecurity
+    }
+}
+
+with [get-window Preferences] {
+    get-button "Validate Connection" | click
+    get-window "Validate Connection" | get-button OK | click
+}
+
+get-window Preferences | get-label "CES authentication mode: No authentication is required." | get-property caption 
+    | equals "CES authentication mode: No authentication is required." | verify-true
+
+// Test management of credentials (No Security)    
+with [get-window Preferences] {
+    get-button "Credentials..." | click
+	get-window "Compuware Enterprise Services Credentials" 
+    	| get-label "Authentication mode: No authentication is required." | get-property caption 
+    	| equals "Authentication mode: No authentication is required." | verify-true
+	get-window "Compuware Enterprise Services Credentials" | get-button OK | click
+}
+
+// Test synchronizing
+with [get-window Preferences] {
+    get-group "Central Administration" | get-button "Sync..." | click
+    with [get-window "Compuware Enterprise Services Synchronization"] {
+        get-button Cancel | click
+    }
+}
+
+with [get-window Preferences] {
+	get-button OK | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

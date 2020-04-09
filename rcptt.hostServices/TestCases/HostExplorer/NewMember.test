@@ -1,0 +1,129 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: NewMember
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _UksRgL4-EeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/22/17 9:51 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val testPDS1 [format "XDEVREG.TESTALOC.T%S" [get-time | format-time -format mmssSSS]]]
+global [val testMember1 "MBR1"]
+
+add-filter $FILTER_XDEVREG
+
+// Allocate a new temporary PDS to create some members
+get-menu "File/New/PDS or Sequential Dataset" | click
+
+with [get-window "Allocate Dataset"] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS1
+    }
+    get-button "Allocate Like..." | click
+    with [get-window "Dataset Selection"] {
+        with [get-section Datasets] {
+            with [get-editbox -after [get-label "Name:"]] {
+                set-text "XDEVREG*"
+            }
+            get-button List | click
+            get-table | select "XDEVREG.COBOL"
+        }
+        get-button OK | click
+    }
+    get-button Finish | click
+	get-window "Allocate Dataset" | get-button OK | click
+}
+
+// Create a new member in test PDS named MBR1
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    | get-menu "New Member..." | click
+get-window "New Member" | get-editbox -after [get-label "Member name:"] | set-text $testMember1
+with [get-window "New Member"] {
+    get-button OK | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+get-window "New Member" | get-button OK | click
+
+// Wrap check for this window in try-catch in case this preference has already been enabled
+try -command
+{
+    get-window "Insert Spaces for Tabs?" | get-button No | click
+}
+-catch
+{
+}
+
+get-editor [format "%S.data" $testMember1] | close
+get-view $HOST_EXPLORER | get-tree 
+    | get-item [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1 -member $testMember1] 
+    | get-property "getData().getName()" | equals $testMember1 | verify-true
+    
+// Test empty member name, invalid member name, create member named NULL
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    | get-menu "New Member..." | click
+get-window "New Member" | get-button OK | click
+get-window "New Member" | get-editbox -after [get-label [format "Add a new member to dataset %S" $testPDS1]] 
+    | get-property text | equals "A member name must be specified." | verify-true
+with [get-window "New Member"] {
+    get-editbox -after [get-label "Member name:"] | set-text "  "
+    get-button OK | click
+}
+get-window "New Member" | get-editbox -after [get-label [format "Add a new member to dataset %S" $testPDS1]] 
+    | get-property text | equals "A member name must be specified." | verify-true
+with [get-window "New Member"] {
+    with [get-editbox -after [get-label "Member name:"]] {
+        set-text 12345
+    }
+    get-button OK | click
+}
+get-window "New Member" | get-editbox -after [get-label [format "Add a new member to dataset %S" $testPDS1]] 
+    | get-property text | equals "\"12345\" is an invalid member name." | verify-true
+with [get-window "New Member"] {
+    with [get-editbox -after [get-label "Member name:"]] {
+        set-text NULL
+    }
+    get-button OK | click
+}
+
+// Wrap check for this window in try-catch in case this preference has already been enabled
+try -command
+{
+    get-window "Insert Spaces for Tabs?" | get-button No | click
+}
+-catch
+{
+}
+
+get-editor "NULL.data" | close
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    | get-menu "New Member..." | click
+with [get-window "New Member"] {
+    get-editbox -after [get-label "Member name:"] | set-text $testMember1
+    get-button OK | click
+}
+get-window "New Member" | get-editbox -after [get-label [format "Add a new member to dataset %S" $testPDS1]] 
+    | get-property text 
+    | equals "An error occurred while trying to save to a member. The member name to be added already exists." 
+    | verify-true
+get-window "New Member" | get-button Cancel | click
+
+// clean up test dataset
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $testPDS1 | get-property "values['Results']" 
+    | equals [format "Resource %s successfully deleted." $testPDS1] | verify-true
+get-window Delete | get-button Done | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

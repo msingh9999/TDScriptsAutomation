@@ -1,0 +1,120 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_gJI9gIl3Eeaf8rtXp2pZyA
+Element-Name: UnixFiles
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _HMJv0L5OEeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201703131257
+Save-Time: 3/22/17 10:57 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val unixFilter "/u/xdevreg"]
+global [val unixFilterEscaped "/\\/u\\/xdevreg"]
+global [val hiddenFile ".project"]
+global [val iniFile "test.ini"]
+global [val xmlFile "test.xml"]
+global [val textFile "test.txt"]
+global [val ebcdicFile "GIMPAF.XML"]
+
+
+if [has-unix-filter -filter $unixFilter -hostName $HOST -port $PORT | equals false] {
+    get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS UNIX Files" $HOST $PORT] | get-menu "Add Filter..." | click
+    with [get-window Filter] {
+        with [get-editbox -after [get-label "Filter:"]] {
+            set-text $unixFilter
+        }
+        get-button OK | click
+    }
+}
+
+// Check preference to show hidden files and verify hidden files are shown
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer"
+    get-group Presentation | get-button "Display hidden files" | check
+    get-button OK | click
+}
+
+// Verify that we can open/edit the hidden file named .project
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-unix-filter -hostName $HOST -port $PORT -filter $unixFilterEscaped] | get-menu Refresh | click
+    select [get-unix-path -hostName $HOST -port $PORT -filter $unixFilterEscaped -path $hiddenFile]
+    	 | get-menu -path "Edit With/Compuware Editor" | click
+}
+get-editor $hiddenFile | close
+
+// Uncheck preference to show hidden files and verify hidden files are NOT shown
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer"
+    get-group Presentation | get-button "Display hidden files" | uncheck
+    get-button OK | click
+}
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-unix-filter -hostName $HOST -port $PORT -filter $unixFilterEscaped] | get-menu Refresh | click
+    verify-error {select [get-unix-path -hostName $HOST -port $PORT -filter $unixFilterEscaped -path $hiddenFile]}
+}
+
+
+// Edit/Save an .ini file
+
+get-view $HOST_EXPLORER | get-tree | select [get-unix-path -hostName $HOST -port $PORT -filter $unixFilterEscaped -path $iniFile] 
+    | get-menu "Edit With/Compuware Editor" | click
+with [get-editor $iniFile] {
+    with [get-text-viewer] {
+        set-caret-pos 1 17
+        key-type BackSpace -times 6
+        type-text value1
+        key-type "M1+s"
+    }
+    close
+}
+
+// Edit/Save a text file
+
+get-view $HOST_EXPLORER | get-tree | select [get-unix-path -hostName $HOST -port $PORT -filter $unixFilterEscaped -path $textFile]
+    | get-menu "Edit With/Compuware Editor" | click
+with [get-editor $textFile | get-text-viewer] {
+    set-caret-pos 1 26
+    key-type BackSpace -times 9
+    type-text "text file"
+}
+get-button "Save (M1+S)" | click
+get-editor $textFile | close
+
+// Edit/Save an XML file
+
+get-view $HOST_EXPLORER | get-tree | select [get-unix-path -hostName $HOST -port $PORT -filter $unixFilterEscaped -path $xmlFile]
+    | get-menu "Edit With/Compuware Editor" | click
+
+// Verify that carriage return / line feed is displaying correctly
+get-editor "test.xml" | get-text-viewer | get-property text 
+    | equals "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r<tag1>\r  <tag2></tag2>\r</tag1>" | verify-true
+    
+with [get-editor "test.xml" | get-text-viewer] {
+    set-caret-pos 3 16
+    key-type BackSpace -times 5
+    type-text "tag2>"
+}
+get-editor $xmlFile| close
+get-window $HOST_EXPLORER | get-button Yes | click
+
+// CWE-73858: Create automated UI test for: Browse/Edit of a z/OS Unix file saved in EBCDIC causes an Exception to occur
+get-view $HOST_EXPLORER | get-tree | select [get-unix-path -hostName $HOST -port $PORT -filter $unixFilterEscaped -path $ebcdicFile]
+    | get-menu "Browse With/Compuware Editor" | click
+    
+get-editor $ebcdicFile | close
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.JCL" -member "DISPTMR"] | get-menu "Browse With/Compuware Editor" | click
+get-editor "DISPTMR.jcl" | close
+
+remove-unix-filter -hostName $HOST -port $PORT -filter $unixFilterEscaped    
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

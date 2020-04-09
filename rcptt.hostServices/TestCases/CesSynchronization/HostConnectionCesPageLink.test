@@ -1,0 +1,45 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: HostConnectionCesPageLink
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _1iF7UHBNEea8jK97vfBXMw
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 9/1/16 10:48 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Go to the "Host Connections" preference page and click the "Enterprise Services" link
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Connections"
+    get-link "See <a>'Enterprise Services'</a> to synchronize connections defined on Compuware Enterprise Services (CES)." 
+        | click-link
+}
+
+// Verify that the current page switched to the "Enterprise Services" page
+get-window Preferences | get-label "Enterprise Services" | get-property caption | equals "Enterprise Services" 
+    | verify-true
+
+// Click the "Back" button (left arrow)
+with [get-window Preferences] {
+    get-button "Back to Host Connections" | click
+}
+
+// Verify that the current page switched to the "Host Connections" page
+get-window Preferences | get-label "Host Connections" | get-property caption | equals "Host Connections" | verify-true
+
+// Click the "Forward" button (right arrow)
+get-window Preferences | get-button "Forward to Enterprise Services" | click
+
+// Verify that the current page switched to the "Enterprise Services" page
+get-window Preferences | get-label "Enterprise Services" | get-property caption | equals "Enterprise Services" 
+    | verify-true
+    
+// Close the preferences dialog
+get-window Preferences | get-button Cancel | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

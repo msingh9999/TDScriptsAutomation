@@ -1,0 +1,70 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_5ugIEN1_EeaztMqS69d-Iw,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: QualifiedVariableNamesPli
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _gX76YP6aEeaVnozrU55lPw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/26/17 3:25 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val pl1Member "PLITYPJ5"]
+
+add-filter -filter $FILTER_XDEVREG
+
+// Test PL1 Program Variable Display
+get-view $HOST_EXPLORER | get-tree 
+	| select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $pl1Member]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+    
+get-window "Debug Configurations" |  get-button Debug | click
+
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+
+close-view "Cheat Sheets"
+
+get-editor "PLITYPE1 [PLITYPES]" | get-editbox | get-menu "Add Watch Variables..." | click
+with [get-window Watch] {
+    with [get-table] {
+        get-item G3 | check
+        get-item G3 -index 1 | check
+        get-item G4 | check
+        get-item G4 -index 1 | check
+    }
+    get-button OK | click
+}
+get-editor "PLITYPE1 [PLITYPES]" | get-right-ruler | hover-ruler -line 116
+with [get-view Variables | get-tree] {
+    get-item G3 | get-property "columns[0]" | equals G3 | verify-true
+    get-item G3 | get-property "columns[1]" | equals "Array [3, 5]" | verify-true
+}
+get-view Variables | click
+get-button "View Menu" -index 2 | click
+get-view Variables | get-menu "Xpediter/Show Qualified Variable Names" | click
+with [get-view Variables | get-tree] {
+    get-item "PLITYPE:G.G2.G3" | get-property "columns[0]" | equals "PLITYPE:G.G2.G3" | verify-true
+    get-item "PLITYPE:G.G2.G3" | get-property "columns[1]" | equals "Array [3, 5]" | verify-true
+    get-item "PLITYPE:M.G2.G3" | get-property "columns[0]" | equals "PLITYPE:M.G2.G3" | verify-true
+    get-item "PLITYPE:M.G2.G3" | get-property "columns[1]" | equals "Array [5]" | verify-true
+    get-item "PLITYPE:G.G2.G4" | get-property "columns[0]" | equals "PLITYPE:G.G2.G4" | verify-true
+    get-item "PLITYPE:G.G2.G4" | get-property "columns[1]" | equals "Array [3, 5]" | verify-true
+    get-item "PLITYPE:M.G2.G4" | get-property "columns[0]" | equals "PLITYPE:M.G2.G4" | verify-true
+    get-item "PLITYPE:M.G2.G4" | get-property "columns[1]" | equals "Array [5]" | verify-true
+}
+get-view Debug | get-tree | select "PLITYPJ5 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+get-view Variables | get-menu "Xpediter/Show Qualified Variable Names" | click
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

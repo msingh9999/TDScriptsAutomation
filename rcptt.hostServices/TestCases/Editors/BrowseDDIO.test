@@ -1,0 +1,60 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wdXLMCqfEeeBwLfWkzSZ3Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: BrowseDDIO
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _pxzNEMxjEeaLy6Y3tOzPug
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 5/30/17 8:22 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- BrowseDDIO ----------------------------------------------"
+global [val pdseLoadLib "XDEVREG.PDSE.EMBED.SRC.LOAD"]
+global [val ddioDataset "XDEVREG.XPED.DDIO"]
+global [val pgmxDdioFile "PGMX (48).data"]
+global [val embedSrcDdioFile "CWXTDATE.data"]
+
+proc "wait-for-source" [val editorName] [val seconds 60] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-editor $editorName 
+	}
+	-catch
+	{
+		log  [format "Waited %s seconds and could not detect editor %s." $seconds $editorName]
+	}
+}
+
+//test DDIO with  a list number
+get-view "Host Explorer" | get-tree 
+    | select [format "Hosts/%s:%s/z\\/OS Datasets/xdevreg/XDEVREG.XPED.DDIO/PGMX \\(48\\)" $HOST $PORT] | double-click
+
+wait-for-source -editorName $pgmxDdioFile
+
+get-editor $pgmxDdioFile | get-label [format "Browsing: XDEVREG.XPED.DDIO(48) on %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "Browsing: XDEVREG.XPED.DDIO(.*) on %s:%s" $HOST $PORT] | verify-true
+    
+get-view "Host Explorer" | click
+get-editor $pgmxDdioFile | close
+
+//test PDSE embedded source
+get-view "Host Explorer" | get-tree 
+    | select [format "Hosts/%s:%s/z\\/OS Datasets/xdevreg/XDEVREG.PDSE.EMBED.SRC.LOAD/CWXTCOB/CWXTDATE" $HOST $PORT] | double-click
+
+wait-for-source -editorName $embedSrcDdioFile
+
+get-editor $embedSrcDdioFile | get-label [format "Browsing: XDEVREG.PDSE.EMBED.SRC.LOAD(CWXTCOB) section CWXTDATE on %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "Browsing: XDEVREG.PDSE.EMBED.SRC.LOAD(CWXTCOB) section CWXTDATE on %s:%s" $HOST $PORT] | verify-true
+    
+get-view "Host Explorer" | click
+get-editor $embedSrcDdioFile | close
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

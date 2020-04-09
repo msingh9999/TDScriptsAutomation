@@ -1,0 +1,69 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: RefreshAfterGenerate
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _RKQ6gEUHEeamKrg04Gqe-Q
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 3/21/18 11:44 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// global variables
+global [val today [str[get-time |format-time -format "yyyy MMM dd"]]]
+global [val endevorEnvironment "X2"]
+global [val endevorSystem "TEST"]
+global [val endevorSubSystem "BASE"]
+global [val endevorType "ASM"]
+global [val endevorStage "D"]
+global [val endevorElement "#@*"]
+global [val testMember1 "#@XXXX (01.02)"]
+
+// add Endevor host "CW11:16196"
+add-host -hostName $HOST_CW11 -portNum $PORT_16196
+
+// login to the Endevor host
+login-from-host -hostName $HOST_CW11 -port $PORT_16196
+
+// add an Endevor filter
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "Hosts/%s:%s/Endevor" $HOST_CW11 $PORT_16196] | get-menu "Add Filter..." | click
+}
+with [get-window Filter] {
+    with [get-section "Endevor Filter"] {
+    	get-combo -after [get-label "Environment:"] | set-text $endevorEnvironment
+        get-combo -after [get-label "System:"] | set-text $endevorSystem
+	    get-combo -after [get-label "Subsystem:"] | set-text $endevorSubSystem
+    	get-combo -after [get-label "Type:"] | set-text $endevorType
+   		get-combo -after [get-label "Stage:"] | set-text $endevorStage
+   		get-editbox -after [get-label "Element:"] | set-text $endevorElement
+    }
+    get-button OK | click
+}
+
+// perform a Generate on a member
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s/#@XXXX (01.02)" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement $testMember1]
+    | get-menu "Generate..." | click
+get-window Generate | get-button OK | click
+get-window Generate | get-button OK | click
+
+// compare the last generated date to today's date ("equals" is case-sensitive, so we have to use "matches" instead)
+get-view Properties | get-tree | get-item "Last Generated Date" | get-property "values['Value']" | matches [format "(?i)%s" $today] 
+    | verify-true
+    
+// delete the Endevor filter
+with [get-view $HOST_EXPLORER] {
+    with [get-tree] {
+        select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement] | get-menu Delete | click
+        get-window "Delete Filter" | get-button Yes | click
+    }
+}
+
+// logout of and remove the Endevor host
+remove-host -hostName $HOST_CW11 -portNum $PORT_16196
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

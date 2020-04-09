@@ -1,0 +1,106 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: AddInvalidSourceToOnlineProject
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _BwBdQHFWEeexZ532Kr2WMg
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 4/2/18 1:57 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val migratedPds "XDEVREG.OLPMIG.COBOL"]
+global [val migratedSeq "XDEVREG.OLPMIG.SEQ"]
+global [val vsamDataset "XDEVREG.EMPTY.REPOSIT"]
+global [val validPds "XDEVREG.OLPDLT.COBOL"]
+global [val pdsName "XDEVREG.COBOL"]
+global [val memberName "CHA1"]
+global [val memberFileName [format "%s.cbl" $memberName]]
+global [val pdsAndMember [format "%s(%s)" $pdsName $memberName]]
+global [val projectName "TestAddMigratedSource"]
+global [val jobName "XDEVMIG2"]
+global [val migratedMessageFormat "Dataset \"%s\" is currently migrated. Please recall the dataset before attempting to add it to an online project."]
+global [val illegalTypeSourceMessageFormat "Resource \"%s\" has an invalid type of \"%s\". Only PDS, PDS Member, Sequential, or Load Module are allowed."]
+global [val illegalTypeCopybookMessageFormat "Resource \"%s\" has an invalid type of \"%s\". Only PDS is allowed."]
+
+add-filter -filter $FILTER_XDEVREG -hostName $HOST -portNum $PORT
+
+delete-online-project $projectName
+
+create-online-project $projectName
+
+select-pds $migratedPds | get-menu Refresh | click
+select-pds $migratedSeq | get-menu Refresh | click
+if [or [select-pds $migratedPds | has-menu "Recall" | not] [select-pds $migratedSeq | has-menu "Recall" | not]]
+{
+	submit-job -dataset $XDEVREG.HS.JCL -member "MIGRATE2" -jobName $jobName
+		select-pds $migratedPds | get-menu Refresh | click
+		select-pds $migratedSeq | get-menu Refresh | click
+}
+
+add-source-online-project -projectName $projectName -datasetName $vsamDataset
+get-window $HOST_EXPLORER 
+    | get-label [format $illegalTypeSourceMessageFormat $vsamDataset "VSAM-K"]
+    | get-property caption 
+    | equals [format $illegalTypeSourceMessageFormat $vsamDataset "VSAM-K"]
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+add-source-online-project -projectName $projectName -datasetName $pdsAndMember
+get-view $PROJECT_EXPLORER | get-tree
+    | get-item [get-project-pds-member-path -project $projectName -dataset $pdsName -member $memberFileName]
+    | get-property caption | equals [format "%s [%s on %s:%s]" $memberFileName $pdsName $HOST $PORT] | verify-true
+
+add-source-online-project -projectName $projectName -datasetName $migratedPds
+get-window $HOST_EXPLORER 
+    | get-label [format $migratedMessageFormat $migratedPds]
+    | get-property caption 
+    | equals [format $migratedMessageFormat $migratedPds]
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+add-source-online-project -projectName $projectName -datasetName $migratedSeq
+get-window $HOST_EXPLORER 
+    | get-label [format $migratedMessageFormat $migratedSeq]
+    | get-property caption 
+    | equals [format $migratedMessageFormat $migratedSeq]
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+add-source-online-project -projectName $projectName -datasetName $validPds
+get-view $PROJECT_EXPLORER | get-tree 
+    | get-item [get-project-dataset-path -project $projectName -dataset $validPds]
+    | get-property caption | equals [format "%s [%s:%s]" $validPds $HOST $PORT] | verify-true
+
+add-copybook-online-project -project $projectName -hostName $HOST -portNum $PORT -copybook $vsamDataset -removeOld true
+get-window $HOST_EXPLORER 
+    | get-label [format $illegalTypeCopybookMessageFormat $vsamDataset "VSAM-K"]
+    | get-property caption 
+    | equals [format $illegalTypeCopybookMessageFormat $vsamDataset "VSAM-K"]
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+add-copybook-online-project -project $projectName -hostName $HOST -portNum $PORT -copybook $pdsAndMember -removeOld true
+get-window $HOST_EXPLORER 
+    | get-label [format $illegalTypeCopybookMessageFormat $memberName "PDSMEMBER"]
+    | get-property caption 
+    | equals [format $illegalTypeCopybookMessageFormat $memberName "PDSMEMBER"]
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+add-copybook-online-project -project $projectName -hostName $HOST -portNum $PORT -copybook $migratedPds -removeOld true
+get-window $HOST_EXPLORER 
+    | get-label [format $migratedMessageFormat $migratedPds]
+    | get-property caption 
+    | equals [format $migratedMessageFormat $migratedPds]
+    | verify-true
+get-window $HOST_EXPLORER | get-button OK | click
+
+delete-online-project -projectName $projectName
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

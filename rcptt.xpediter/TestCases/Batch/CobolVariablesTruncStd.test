@@ -1,0 +1,204 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CobolVariablesTruncStd
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _anIVoApcEeesMvJPWcM7uA
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:25 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests Cobol Variables compiled as  standard TRUNC(STD).
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CobolVariablesTruncStd ----------------------------------------------"
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMemberStd "CWXTDECS"] // Compiled as standard - TRUNC(STD)
+global [val loadLib "XDEVREG.XPED.LOADLIB"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+// Test compiled as optional TRUNC(STD)
+
+// Reset preferences
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button "Enable Xpediter/TSO exit breakpoints" | check
+    get-button OK | click
+}
+
+open-perspective $HOST_EXPLORER
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $jclMemberStd] 
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text $loadLib
+        get-button OK | click
+    }
+    get-tab-folder | get-tab-item DDIO | click
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text "XDEVREG.XPED.DDIO"
+        get-button OK | click
+    }
+    get-button Debug | click
+}
+
+handle-login-dialog
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+get-editor "CWXTDECS [CWXTDECS]" | get-editbox | get-menu "Add Watch Variables..." | click
+
+with [get-window Watch] {
+    get-button "By name:" | click
+    get-table | get-item SUEB | check
+    get-table | get-item SUEB3 | check
+    get-table | get-item SUEB5 | check
+    get-table | get-item SUEB7 | check
+    get-table | get-item SGZUT | check
+    get-table | get-item "CTST-1" | check
+    get-table | get-item "CTST-2" | check
+    get-table | get-item "CTST-3" | check
+    get-table | get-item "CTST-4" | check
+    get-button OK | click
+}
+
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 115
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 119
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 122
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 132
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 136
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 137
+get-editor "CWXTDECS [CWXTDECS]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 139
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 115)"
+wait-for-variable "ZW-BINARY2"
+
+with [get-view Variables | get-tree] {
+    get-item "SUEB" | get-property "columns[0]" | equals "SUEB" | verify-true
+    get-item "SUEB" | get-property "columns[1]" | equals "+000000266.73" | verify-true
+    get-item "SUEB3" | get-property "columns[0]" | equals "SUEB3" | verify-true
+    get-item "SUEB3" | get-property "columns[1]" | equals "+266.73" | verify-true
+    get-item "SUEB5" | get-property "columns[0]" | equals "SUEB5" | verify-true
+    get-item "SUEB5" | get-property "columns[1]" | equals "+00266.73" | verify-true
+    get-item "SUEB7" | get-property "columns[0]" | equals "SUEB7" | verify-true
+    get-item "SUEB7" | get-property "columns[1]" | equals "+0000266.73" | verify-true
+    get-item "SGZUT" | get-property "columns[0]" | equals "SGZUT" | verify-true
+    get-item "SGZUT" | get-property "columns[1]" | equals "+00000000000.00" | verify-true
+    get-item "ZW-BINARY2" | get-property "columns[0]" | equals "ZW-BINARY2" | verify-true
+    get-item "ZW-BINARY2" | get-property "columns[1]" | equals "+92" | verify-true
+}
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 119)"
+wait-for-variable "ZW-BINARY4"
+
+with [get-view Variables | get-tree] {
+    get-item "ZW-BINARY2" | get-property "columns[0]" | equals "ZW-BINARY2" | verify-true
+    get-item "ZW-BINARY2" | get-property "columns[1]" | equals "+67" | verify-true
+    get-item "ZW-BINARY4" | get-property "columns[0]" | equals "ZW-BINARY4" | verify-true
+    get-item "ZW-BINARY4" | get-property "columns[1]" | equals "-2768" | verify-true
+}
+
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 122)"
+wait-for-variable "ZW-BINARY5"
+wait -ms 1000
+with [get-view Variables | get-tree] {
+    get-item "ZW-BINARY4" | get-property "columns[0]" | equals "ZW-BINARY4" | verify-true
+    get-item "ZW-BINARY4" | get-property "columns[1]" | equals "+2767" | verify-true
+    get-item "ZW-BINARY5" | get-property "columns[0]" | equals "ZW-BINARY5" | verify-true
+    get-item "ZW-BINARY5" | get-property "columns[1]" | equals "-32768" | verify-true
+}
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 132)"
+wait-for-variable "CTST-1"
+
+with [get-view Variables | get-tree] {
+    get-item "CTST-1" | get-property "columns[0]" | equals "CTST-1" | verify-true
+    get-item "CTST-1" | get-property "columns[1]" | equals "+99.99" | verify-true
+}
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 136)"
+wait-for-variable "CTST-1"
+wait-for-variable "CTST-2"
+wait-for-variable "CTST-3"
+wait-for-variable "CTST-4"
+
+with [get-view Variables | get-tree] {
+    get-item "CTST-1" | get-property "columns[0]" | equals "CTST-1" | verify-true
+    get-item "CTST-1" | get-property "columns[1]" | equals "+9.99" | verify-true
+    get-item "CTST-2" | get-property "columns[0]" | equals "CTST-2" | verify-true
+    get-item "CTST-2" | get-property "columns[1]" | equals "+99.99" | verify-true
+    get-item "CTST-3" | get-property "columns[0]" | equals "CTST-3" | verify-true
+    get-item "CTST-3" | get-property "columns[1]" | equals "+99.98" | verify-true
+    get-item "CTST-4" | get-property "columns[0]" | equals "CTST-4" | verify-true
+    get-item "CTST-4" | get-property "columns[1]" | equals "987" | verify-true
+}
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 137)"
+wait-for-variable "CTST-3"
+
+with [get-view Variables | get-tree] {
+    get-item "CTST-3" | get-property "columns[0]" | equals "CTST-3" | verify-true
+    get-item "CTST-3" | get-property "columns[1]" | equals "+98.90" | verify-true
+}
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 139)"
+wait-for-variable "CTST-2"
+
+with [get-view Variables | get-tree] {
+    get-item "CTST-2" | get-property "columns[0]" | equals "CTST-2" | verify-true
+    get-item "CTST-2" | get-property "columns[1]" | equals "+50.00" | verify-true
+}
+
+get-button "Resume (F8)" | click
+wait -ms 1000
+wait-for-breakpoint -stackFramePath "CWXTDECS [Xpediter Batch Debug Session]/.*/Thread [CWXTDECS, Step: TEST010] (Suspended (breakpoint))/CWXTDECS [CWXTDECS] (procedure: 0000-MAINLINE line: 111)"
+wait-for-variable "CTST-2"
+
+with [get-view Variables | get-tree] {
+    get-item "CTST-2" | get-property "columns[0]" | equals "CTST-2" | verify-true
+    get-item "CTST-2" | get-property "columns[1]" | equals "+51.00" | verify-true
+}
+
+get-view Debug | get-tree | select "CWXTDECS [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+
+// Reset preferences
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button "Enable Xpediter/TSO exit breakpoints" | uncheck
+    get-button OK | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

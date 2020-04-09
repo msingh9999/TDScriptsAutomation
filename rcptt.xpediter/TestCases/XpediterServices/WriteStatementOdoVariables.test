@@ -1,0 +1,74 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_XGIuQCavEeedXcEAlx00Tw,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: WriteStatementOdoVariables
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _s1jisDgMEeivRuG24U3yqw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/5/18 9:18 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test occurs depending on Variables from a write statement.
+Validate the number of occurs variables
+Source and values are retrieved to make sure no excptions occur but the values are not validated
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "ODOIMBM"]
+global [val pgm "TC4M04B"]
+
+open-perspective $HOST_EXPLORER
+
+add-filter -hostName $HOST -portNum $PORT -filter $jclDataset
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $jclDataset -dataset $jclDataset -member $jclMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click   
+    
+with [get-window "Debug Configurations"] {
+
+    get-tab-folder | get-tab-item DDIO | click
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text "XDEVREG.XPED.SD"
+        get-button OK | click
+    }
+    
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.Tc4m04bWriteListener" -methodName "addWriteListener"
+
+with [get-editor [format "%s [%s]" $pgm $pgm]] {
+    get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 652
+}
+
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "ODOIMBM [Xpediter Batch Debug Session]/.*/Thread [TC4M04B, Step: S1] (Suspended (breakpoint))/TC4M04B [TC4M04B] (procedure: P100-START line: 652)"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.Tc4m04bWriteListener" -methodName "assertOdoVariableCount"  -args 3
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.Tc4m04bWriteListener" -methodName "removeWriteListener"
+
+with [get-editor [format "%s [%s]" $pgm $pgm]] {
+    get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 652
+}
+
+get-button "Resume (F8)" | click
+
+wait-for-batch-terminated -configName $jclMember
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

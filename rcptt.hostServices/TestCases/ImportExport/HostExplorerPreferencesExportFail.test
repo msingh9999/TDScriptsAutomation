@@ -1,0 +1,61 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _7WSUgGhrEeargO7pG6rfCA
+Element-Name: HostExplorerPreferencesExportFail
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _KBxkELQdEeeHVIG-NZiX-w
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 11/22/17 11:08 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to verify that user gets a proper error message when trying to export preferences to a non-writable directory (for example "C:\Program Files")
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Export location within project that gets cleared with every run of the test; see Contexts for project
+global [val exportLocation "C:\Program Files/ImportExportProject/export"]
+global [val translateHebrewText "Enable bidirectional data flow between the host and workstation for Hebrew text"]
+global [val insertLeftToRightText "Insert left-to-right control characters"]
+
+
+// Export the preferences
+get-menu "File/Export..." | click
+with [get-window Export]
+{
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+
+with [get-window "Export Compuware Configuration Settings"]
+{
+    get-group "Configuration Settings" | get-tree | get-item "Host Explorer/General Preferences" | check
+    get-combo -after [get-label "To directory:"] | set-text $exportLocation
+    get-button Finish | click
+    try -command
+    {
+    	get-window "Import/Export Warning" | get-button Yes | click
+    } -catch
+    {
+    	// Okay if window is missing
+    }
+    get-window "Import/Export Error" | get-button OK | click
+    try -command
+    {
+    	get-window "Import/Export" | get-button OK | click
+    }
+    -catch
+    {
+    	// Okay if we don't get the finish dialog.
+	}
+}
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,98 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: ExitAbendDialog
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _tYi8wMCbEeasVt9-GrdU6w
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:26 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "BATCOB04"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-button Debug | click
+}
+
+handle-login-dialog
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+with [get-view Debug] {
+    click
+    get-button "Exit with Abend..." | click
+}
+get-window "Exit with Abend" | get-button "User (e.g., Unnnn):" | click
+with [get-window "Exit with Abend"] {
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "The user abend code must be four numerical digits." | verify-true
+    get-editbox | get-property text | equals U | verify-true
+}
+get-window "Exit with Abend" | get-editbox | set-text "U-123"
+with [get-window "Exit with Abend"] {
+    get-editbox | get-property text | equals "U-123" | verify-true
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "The user abend code must be four numerical digits." | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Exit with Abend" | get-editbox | set-text U9999
+with [get-window "Exit with Abend"] {
+    get-editbox -after [get-label "Abend Code"] | get-property text | equals "Enter a four digit user abend code." 
+        | verify-true
+    get-editbox | get-property text | equals U9999 | verify-true
+    get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Exit with Abend" | get-editbox | set-text "U!*34"
+with [get-window "Exit with Abend"] {
+    get-editbox | get-property text | equals "U!*34" | verify-true
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "The user abend code must be four numerical digits." | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+}
+with [get-window "Exit with Abend"] {
+    get-button "System (e.g., Sxxx):" | click
+    get-editbox -index 1 | click-text 2
+}
+with [get-window "Exit with Abend"] {
+    get-editbox -index 1 | get-property text | equals S | verify-true
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "The system abend code must be three hexadecimal digits." | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Exit with Abend" | get-editbox -index 1 | set-text "S!@3"
+with [get-window "Exit with Abend"] {
+    get-editbox -index 1 | get-property text | equals "S!@3" | verify-true
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "The system abend code must be three hexadecimal digits." | verify-true
+    get-button OK | get-property enablement | equals false | verify-true
+}
+get-window "Exit with Abend" | get-editbox -index 1 | set-text S999
+with [get-window "Exit with Abend"] {
+    get-editbox -index 1 | get-property text | equals S999 | verify-true
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "Enter a three digit hexadecimal system abend code." | verify-true
+    get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Exit with Abend" | get-editbox -index 1 | set-text SACF
+with [get-window "Exit with Abend"] {
+    get-editbox -index 1 | get-property text | equals SACF | verify-true
+    get-editbox -after [get-label "Abend Code"] | get-property text 
+        | equals "Enter a three digit hexadecimal system abend code." | verify-true
+    get-button OK | get-property enablement | equals true | verify-true
+}
+get-window "Exit with Abend" | get-button Cancel | click
+get-view Debug | get-tree | select "BATCOB04 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

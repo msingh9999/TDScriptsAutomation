@@ -1,0 +1,20 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteSonarLintIntegration
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _CusGcKy9EearpKw8qQl8DQ
+Manually-Ordered: true
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 6/12/17 2:20 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_XAb3kK2dEeaI5LAUP6iy4A	// kind: 'test' name: 'AnalyzerPreferences' path: 'AnalyzerPreferences.test'
+_PfPn0Ky9EearpKw8qQl8DQ	// kind: 'test' name: 'AnalyzeCobolProgramNoCopybooks' path: 'AnalyzeCobolProgramNoCopybooks.test'
+_Rke2AKy9EearpKw8qQl8DQ	// kind: 'test' name: 'AnalyzeCobolProgramWithCopybooks' path: 'AnalyzeCobolProgramWithCopybooks.test'
+_JrQP8Ky9EearpKw8qQl8DQ	// kind: 'test' name: 'BindOnlineProject' path: 'BindOnlineProject.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

@@ -1,0 +1,65 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _ishV8ER7EeamKrg04Gqe-Q
+Element-Name: ResultSummaryDialog
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _V8QiAFAMEeaG3ezV_jUfiw
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/26/17 2:37 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- ResultSummaryDialog ----------------------------------------------"
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "setMockCommandSetForWizardPage"
+
+get-preferences-menu | click
+with [get-window Preferences] {
+	get-tree | select "Compuware/Enterprise Services"
+	get-group "Central Administration" | get-button "Sync..." | click
+	with [get-window "Compuware Enterprise Services Synchronization"] {
+		get-button "Next >" | click
+		get-button Finish | click
+	}
+	
+	// TODO: These checks will have to change when we update the wizard to get CES data.
+	with [get-window "Compuware Enterprise Services Synchronization"] {
+		get-label "Synchronization Complete" | get-property caption | equals "Synchronization Complete" | verify-true
+		with [get-table] {
+			with [get-item "Test model 4"] {
+				get-property index | equals 0 | verify-true
+				get-property "columns[0]" | equals "Test model 4" | verify-true
+				get-property "columns[1]" | equals "Example data '\"Test model data 4\"' sucessfully updated." | verify-true
+			}
+			with [get-item "My test model"] {
+				get-property index | equals 1 | verify-true
+				get-property "columns[0]" | equals "My test model" | verify-true
+				get-property "columns[1]" | equals "Example data '{\"filtered\":\"My model data\"}' sucessfully updated."
+					| verify-true
+			}
+			with [get-item "Test model 1"] {
+				get-property index | equals 2 | verify-true
+				get-property "columns[0]" | equals "Test model 1" | verify-true
+				get-property "columns[1]" | equals "Example data '\"Test model data 1\"' sucessfully updated." | verify-true
+			}
+			with [get-item "Test model 2"] {
+				get-property index | equals 3 | verify-true
+				get-property "columns[0]" | equals "Test model 2" | verify-true
+				get-property "columns[1]" | equals "Example data '{\"filtered\":\"Test model data 2\"}' sucessfully updat" +
+					"ed." | verify-true
+			}
+		}
+	}
+
+	get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+	get-button OK | click
+}
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "resetRealCommandSet"
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

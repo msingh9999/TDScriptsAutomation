@@ -1,0 +1,32 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _IQ4-sEUKEeamKrg04Gqe-Q,_IRCIoEUKEeamKrg04Gqe-Q
+Element-Name: TsoCommandFailedStartedTask
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _jnT_4GJEEee_-JfTQJQ4Yg
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 7/28/17 7:59 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val TSOTestCommandOutput "> The HCI was unable to successfully create a started task on host \"CW06.compuware.com\" port \"16196\".\n"
+    + "Verify that the started task JCL is configured properly."]
+
+remove-all-hosts-native
+add-host -hostName $HOST_CW06 -portNum $PORT_16196
+login-from-host -hostName $HOST_CW06 -port $PORT_16196
+
+with [get-view Console] {
+    click
+    get-button "Clear Console" | click
+    get-button "Open Console" | click -arrow
+}
+
+get-menu "1 TSO Commands Console" | click
+verify-tso-command-output-contains -commandOutput $TSOTestCommandOutput | verify-true
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

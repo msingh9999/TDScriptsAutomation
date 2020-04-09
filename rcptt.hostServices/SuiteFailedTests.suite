@@ -1,0 +1,19 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteFailedTests
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _Vrt_8DSrEeeUervyi9aX3g
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 5/9/17 7:36 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_MNB28MH3EeaZifM36uMTJA	// kind: 'test' name: 'DeleteMigratedPdsMember' path: 'TestCases/HostExplorer/MigratedDatasets/DeleteMigratedPdsMember.test'
+_TVqSkL4-EeajusfmOW4rkQ	// kind: 'test' name: 'MoveCopyPaste' path: 'TestCases/HostExplorer/MoveCopyPaste.test'
+_zg4lYEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'CompareWithEachOther' path: 'TestCases/OnlineProjects/CompareWithEachOther.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

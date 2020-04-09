@@ -1,0 +1,59 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_curj0DvnEeeWi7symNUhhw,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: SecureConnectionTrimain
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Bt1CEDvmEeeWi7symNUhhw
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:30 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Connect to an Xpediter session using a secure host connection.
+This is a single step job, but we will force multi-step which will cause issue CWE-112778
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- SecureConnectionTrimain ----------------------------------------------"
+
+global [val jclMember "TRIMAIN"]
+global [val pgmName   "TRIMAIN"]
+global [val filterXdevregXped [format "%s.xped" $FILTER_XDEVREG]]
+
+add-filter -portNum $PORT_46806 -filter $filterXdevregXped
+
+get-view $HOST_EXPLORER | get-tree 
+	| select [get-pds-member-path -dataset "XDEVREG.XPED.JCL" -member $jclMember -filter $filterXdevregXped -portNUM $PORT_46806]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+
+
+with [get-window "Debug Configurations"] 
+{
+	//Check the "Debug all stepss..." so Xpediter thinks this is multistep
+    get-group "Debug criteria" | get-button "Debug all steps that match the specified criteria" | check
+    get-button Debug | click
+}
+
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+wait-for-breakpoint -stackFramePath [format "%s [Xpediter Batch Debug Session]/.*/Thread [%s, Step: STEP1] (Suspended (breakpoint))/%s [%s] (procedure: MAIN-PARA line: 34)" $jclMember $pgmName $pgmName $pgmName] 
+
+close-cheatsheet 
+
+get-button "Resume (F8)" | click
+
+wait-for-batch-terminated -configName $jclMember
+
+close-all-editors
+remove-filter -port $PORT_46806 -filter $filterXdevregXped
+remove-host -portNum $PORT_46806
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

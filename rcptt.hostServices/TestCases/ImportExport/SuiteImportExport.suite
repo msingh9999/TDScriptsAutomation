@@ -1,0 +1,21 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteImportExport
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _MfLUUIl3EeaOKusaXEFUkQ
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 12/1/17 8:12 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_yII10GheEea6Qc9uN6U8vQ	// kind: 'test' name: 'CesPreferences' path: 'CesPreferences.test'
+_RF0BkKqPEeaU6qETMTCGWw	// kind: 'test' name: 'CicsChannelsContainersPreferences' path: 'CicsChannelsContainersPreferences.test'
+_fmmpgLccEeak39QdlE0Nvg	// kind: 'test' name: 'HostConnections' path: 'HostConnections.test'
+_0KcEIBrsEeeLrZD9rw5kPA	// kind: 'test' name: 'HostExplorerPreferencesImportExport' path: 'HostExplorerPreferencesImportExport.test'
+_0h7awH_jEeahW91r4IViYw	// kind: 'test' name: 'HyperlinkSettingsImportExport' path: 'HyperlinkSettingsImportExport.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

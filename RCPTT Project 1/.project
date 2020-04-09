@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>RCPTT Project 1</name>
+	<comment></comment>
+	<projects>
+		<project>A RCPTT project</project>
+		<project>rcptt.codeCoverage</project>
+		<project>rcptt.hostServices</project>
+		<project>rcptt.workbench</project>
+		<project>rcptt.xpediter</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.rcptt.core.builder.q7Builder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.rcptt.core.rcpttnature</nature>
+	</natures>
+</projectDescription>

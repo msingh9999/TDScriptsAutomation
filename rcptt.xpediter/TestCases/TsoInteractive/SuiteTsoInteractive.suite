@@ -1,0 +1,20 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteTsoInteractive
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _HCN0AImFEeaOKusaXEFUkQ
+Manually-Ordered: true
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 2/6/17 4:25 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_-HmFQHTyEeao6LAbRG4SEA	// kind: 'test' name: 'InteractiveCobol' path: 'InteractiveCobol.test'
+_IsJKQHwTEeaucpLG7Fz7mQ	// kind: 'test' name: 'XTTSOFileSpecDialog' path: 'XTTSOFileSpecDialog.test'
+_I2PBwHwQEeaucpLG7Fz7mQ	// kind: 'test' name: 'XTTSOTargetTab' path: 'XTTSOTargetTab.test'
+_68Gv8OyvEeahS5eQmd5eMA	// kind: 'test' name: 'TsoLaunchSecureCredentials' path: 'TsoLaunchSecureCredentials.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

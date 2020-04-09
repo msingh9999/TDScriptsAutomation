@@ -1,0 +1,47 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_kRiL8ER7EeamKrg04Gqe-Q,_QgUBwEULEeamKrg04Gqe-Q,_R9YAMEUMEeamKrg04Gqe-Q
+Element-Name: ConnectToHost
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _PQ1E8EUNEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/9/17 9:59 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the "Connect to Host" button on the TSO Command Console view. Use cases to test:
+*	Single host defined:
+	*	Should be disabled (tested as part of IssueTSOConsoleCommand)
+*	Multiple hosts defined:
+	*	Should bring up host selection dialog
+	*	Selecting new/different host should update label of the console view.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+get-view Console | get-button $OpenConsole | click -arrow
+get-menu $ZOSConsoleMenu | click
+
+with [get-window $HOST_EXPLORER] {
+    get-table | select [format "%s:%s" $HOST $PORT]
+    get-button OK | click
+}
+get-view Console | get-button $CONNECT_BUTTON | get-property enablement | equals true | verify-true
+get-view Console | get-button $CONNECT_BUTTON | click
+get-window $HOST_EXPLORER | get-label "Select a Host" | get-property caption | equals "Select a Host" | verify-true
+with [get-window $HOST_EXPLORER] {
+    get-table | select [format "%s:%s" $HOST_CW09 $PORT]
+    get-button OK | click
+}
+get-view Console | get-label [format "z/OS Console - %s:%s" $HOST_CW09 $PORT] | get-property caption 
+    | equals [format "z/OS Console - %s:%s" $HOST_CW09 $PORT] | verify-true
+get-view Console | get-button $CloseConsole | click
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

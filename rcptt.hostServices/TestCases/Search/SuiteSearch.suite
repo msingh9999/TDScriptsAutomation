@@ -1,0 +1,22 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteSearch
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _-eslgIvOEeakRZO-pZTR5w
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 12/18/17 11:57 AM
+
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_737XkIvOEeakRZO-pZTR5w	// kind: 'test' name: 'Search' path: 'Search.test'
+_RAWwwJ0QEeaEL9K2GkMuew	// kind: 'test' name: 'SearchWildcards' path: 'SearchWildcards.test'
+_h3rg4P-BEeaNk7oX-tKcJA	// kind: 'test' name: 'EnableAddDatasets' path: 'EnableAddDatasets.test'
+_gWnyQMouEeeIU8lrV5Wfag	// kind: 'test' name: 'SearchMigrated' path: 'SearchMigrated.test'
+_EDp0IOQSEeeUyZopB_5zVA	// kind: 'test' name: 'SearchMigratedConcurrency' path: 'SearchMigratedConcurrency.test'
+_GpIv0OPqEeeUyZopB_5zVA	// kind: 'test' name: 'SearchWildcardsMigrated' path: 'SearchWildcardsMigrated.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

@@ -1,0 +1,28 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteCesSecurity
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _HVIn8DppEeecusG2bnvmdQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/31/17 12:36 PM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Suite of CES security related tests
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_DFmCMDplEeecusG2bnvmdQ	// kind: 'test' name: 'BasicLogin' path: 'BasicLogin.test'
+_dYuUoDmdEeecusG2bnvmdQ	// kind: 'test' name: 'SavedCredentials' path: 'SavedCredentials.test'
+_hh8NoDsaEeecusG2bnvmdQ	// kind: 'test' name: 'SwitchAuthType' path: 'SwitchAuthType.test'
+_WPO4gDmUEeecusG2bnvmdQ	// kind: 'test' name: 'InvalidCredentials' path: 'InvalidCredentials.test'
+_n-6GkDpVEeecusG2bnvmdQ	// kind: 'test' name: 'LdapLogin' path: 'LdapLogin.test'
+_Z-Bp0DvWEeecusG2bnvmdQ	// kind: 'test' name: 'Licensing' path: 'Licensing.test'
+_YaPW4EYeEeegiaPGzUCP4w	// kind: 'test' name: 'NoSecurity' path: 'NoSecurity.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

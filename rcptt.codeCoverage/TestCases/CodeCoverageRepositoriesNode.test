@@ -1,0 +1,249 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_UrIe0ER7EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CodeCoverageRepositoriesNode
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _O5qJkLsvEeem0fyxENOpag
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 11/14/17 12:18 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the Code Coverage Perspective Repositories node and child nodes.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CodeCoverageRepositoriesNode ---------------------------------------"
+
+global [val repoName [format "XDEVREG.TEMP.REPO.%s" [get-generated-dataset-suffix]]]
+wait -ms 1000
+global [val repoName2 [format "XDEVREG.TEMP.REPO.%s" [get-generated-dataset-suffix]]]
+wait -ms 1000
+global [val repoName3 [format "XDEVREG.TEMP.REPO.%s" [get-generated-dataset-suffix]]]
+global [val filterName "XDEVREG.TEMP"]
+
+/* 
+ * <p>Verifies a host name and port exists within the Code Coverage Repositories tree</p>
+ * <p>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * host-exists -hostName "cw01" -portNum "30947"
+ * </code>
+ */
+proc "host-exists" [val hostName $HOST] [val portNum $PORT]
+{
+	try 
+	{
+		get-view "Code Coverage" | get-tree 
+			| get-item [format "Repositories/%s:%s" $hostName $portNum]
+			| get-property caption -raw | equals [format "%s:%s" $hostName $portNum]
+	}
+	-catch 
+	{
+        log [format "Could not find caption %s" [format "%s:%s" $hostName $portNum]]
+        bool false
+	}
+}
+
+/* 
+ * <p>Verifies a list of repository names exist on the specified host name and port within the Code Coverage Repositories tree</p>
+ * <p>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * repositories-exist -repositoryNames "XDEVREG.CC.ONE" "XDEVREG.CC.TWO"
+ * </code>
+ */
+proc "repositories-exist" [val hostName $HOST] [val portNum $PORT] [val repositoryNames]
+{
+	$repositoryNames | each [val repositoryName]
+	{
+		try 
+		{
+			get-view "Code Coverage" | get-tree | get-item [format "Repositories/%s:%s/%s" $hostName $portNum $repositoryName] | get-property caption -raw | equals $repositoryName
+		}
+		-catch 
+		{
+       		log [format "Could not find caption %s" $repositoryName]
+       		bool false
+		}
+	}
+}
+
+add-filter -filter $filterName
+
+add-host -hostName $HOST_CW09 -portNum $PORT
+login-from-host -hostName $HOST_CW09
+
+// Remove all repositories for all defined z/OS hosts
+invoke-static -pluginId "com.compuware.codecoverage.rcptt" -className "com.compuware.codecoverage.rcptt.CodeCoverageTestUtilities" -methodName "removeAllRepositories"
+
+// Test 'Repositories' node menu titles and enablement
+open-perspective "Code Coverage"
+
+get-view "Code Coverage" | get-tree | select Repositories
+with [get-view "Code Coverage" | get-tree]
+{
+    get-item -path Repositories | get-property caption | equals Repositories | verify-true
+    get-item -path Repositories | get-property childCount | equals 0 | verify-true
+    get-menu -path "New Repository..." | get-property caption | equals "New Repository..." | verify-true
+    get-menu -path "Add..." | get-property enablement | equals true | verify-true
+    get-menu -path "Add..." | get-property caption | equals "Add..." | verify-true
+}
+
+// Test creating a new repository from the Repositories node
+get-view "Code Coverage" | get-tree | select Repositories | get-menu -path "New Repository..." | click
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-combo -after [get-label "Host:"] | select [format "%s:%s" $HOST $PORT]
+    get-button "Next >" | click
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $repoName
+    get-button Finish | click
+    get-window "Allocate Xpediter/Code Coverage Repository" | get-button OK | click
+}
+
+repositories-exist -repositoryNames [list $repoName] | verify-true
+
+// Test adding a single repository from the Repositories node
+get-view "Code Coverage" | get-tree | select Repositories | get-menu -path "Add..." | click
+with [get-window "Code Coverage"]
+{
+    with [get-section Repositories]
+    {
+        get-editbox -after [get-label "Name:"] | set-text XDEVREG | click-text 8
+        get-button List | click
+        get-table | select $repoName
+    }
+    get-button OK | click
+}
+
+repositories-exist -repositoryNames [list $repoName] | verify-true
+
+get-view "Code Coverage" | get-tree | select Repositories | get-menu -path "Add..." | click
+with [get-window "Code Coverage"]
+{
+	get-combo -after [get-label "Host:"] | select "CW09.compuware.com:30947"
+    with [get-section Repositories]
+    {
+        get-editbox -after [get-label "Name:"] | click-text 8
+        get-button List | click
+        get-table | select $repoName
+    }
+    get-button OK | click
+}
+
+repositories-exist -hostName $HOST_CW09 -repositoryNames [list $repoName] | verify-true
+
+// Test host node menu titles and enablement
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s" $HOST $PORT]
+with [get-view "Code Coverage" | get-tree]
+{
+    get-item -path [format "Repositories/%s:%s" $HOST $PORT] | get-property caption | equals [format "%s:%s" $HOST $PORT] | verify-true
+    get-item -path [format "Repositories/%s:%s" $HOST $PORT] | get-property childCount | equals 1 | verify-true
+    get-menu -path "New Repository..." | get-property caption | equals "New Repository..." | verify-true
+    get-menu -path "Add..." | get-property enablement | equals true | verify-true
+    get-menu -path "Add..." | get-property caption | equals "Add..." | verify-true
+}
+
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s" $HOST $PORT] [format "Repositories/%s:%s" $HOST_CW09 $PORT] | verify-error {get-menu}
+
+// Test creating a new repository from a host node
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s" $HOST $PORT] | get-menu -path "New Repository..." | click
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $repoName2
+    get-button Finish | click
+    get-window "Allocate Xpediter/Code Coverage Repository" | get-button OK | click
+}
+
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s" $HOST $PORT] | get-menu -path "New Repository..." | click
+with [get-window "Allocate Xpediter/Code Coverage Repository"] 
+{
+    get-editbox -after [get-label "Repository dataset name:"] | set-text $repoName3
+    get-button Finish | click
+    get-window "Allocate Xpediter/Code Coverage Repository" | get-button OK | click
+}
+
+repositories-exist -repositoryNames [list $repoName2 $repoName3] | verify-true
+
+// Test a single repository node menu titles and enablement
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s/%s" $HOST $PORT $repoName]
+with [get-view "Code Coverage" | get-tree]
+{
+    get-item -path [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] | get-property caption | equals $repoName | verify-true
+    get-item -path [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] | get-property childCount | equals 0 | verify-true
+    get-menu -path "Remove" | get-property caption | equals "Remove" | verify-true
+    get-menu -path "Remove" | get-property enablement | equals true | verify-true
+}
+
+// Test multiple repository nodes menu titles and enablement
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] [format "Repositories/%s:%s/%s" $HOST $PORT $repoName2]
+with [get-view "Code Coverage" | get-tree]
+{
+    get-menu -path "Remove" | get-property caption | equals "Remove" | verify-true
+    get-menu -path "Remove" | get-property enablement | equals true | verify-true
+}
+
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] [format "Repositories/%s:%s/%s" $HOST_CW09 $PORT $repoName] | verify-error {get-menu}
+
+// Test cross element menu titles and enablement
+get-view "Code Coverage" | get-tree | select Repositories [format "Repositories/%s:%s" $HOST $PORT] | verify-error {get-menu}
+get-view "Code Coverage" | get-tree | select Repositories [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] | verify-error {get-menu}
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s" $HOST $PORT] [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] | verify-error {get-menu}
+
+// Test removing a single repository
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] | get-menu -path Remove | click
+    
+get-window "Remove Repository" | get-button Yes | click
+repositories-exist -repositoryNames [list $repoName] | verify-false
+
+// Test adding multiple repositories from a host node
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s" $HOST $PORT] | get-menu -path "Add..." | click
+with [get-window "Code Coverage"]
+{
+    with [get-section Repositories]
+    {
+        get-editbox -after [get-label "Name:"] | click-text 8
+        get-button List | click
+        get-table | select $repoName $repoName3
+    }
+    get-button OK | click
+}
+
+repositories-exist -repositoryNames [list $repoName $repoName3] | verify-true
+
+// Test removing multiple repositories
+get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s/%s" $HOST $PORT $repoName2] [format "Repositories/%s:%s/%s" $HOST $PORT $repoName3] | get-menu -path Remove | click
+get-window "Remove Repository" | get-button Yes | click
+
+repositories-exist -repositoryNames [list $repoName2 $repoName3] | verify-false
+
+// Test deleting a host
+open-perspective -perspective $HOST_EXPLORER
+remove-host
+open-perspective -perspective "Code Coverage"
+host-exists | verify-false
+
+// Test adding of a host that previously has repositories associated with it
+open-perspective -perspective $HOST_EXPLORER
+add-host
+open-perspective -perspective "Code Coverage"
+host-exists | verify-true
+repositories-exist -repositoryNames [list $repoName] | verify-true
+
+// Perform clean up
+invoke-static -pluginId "com.compuware.codecoverage.rcptt" -className "com.compuware.codecoverage.rcptt.CodeCoverageTestUtilities" -methodName "removeAllRepositories"
+open-perspective -perspective $HOST_EXPLORER
+login-from-host
+delete-pds -filter $filterName -datasetName $repoName
+delete-pds -filter $filterName -datasetName $repoName2
+delete-pds -filter $filterName -datasetName $repoName3
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

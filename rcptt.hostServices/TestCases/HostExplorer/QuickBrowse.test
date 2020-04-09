@@ -1,0 +1,39 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: QuickBrowse
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _qQ6R0LyHEea2UcoPeLeX6A
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 12/7/16 9:15 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Verify Quick Browse from Z/OS Dataset category node
+
+add-filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Quick Browse..." | click
+with [get-window Browse] {
+    with [get-combo -after [get-label "Dataset Name:"]] {
+        set-text "XDEVREG.COBOL"
+    }
+    get-button OK | click
+    with [get-window "Dataset Selection"] {
+        get-section Datasets | get-table | select "XDEVREG.COBOL"
+        get-section Members | get-table | select OLPDLT1
+        get-button OK | click
+    }
+}
+get-editor "OLPDLT1.cbl" | close
+
+// Verify that Quick Browse menu does not exist on Host, Filter, PDS or PDS Member
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s" $HOST $PORT]  | verify-error {get-menu "Quick Browse..."}
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG]  | verify-error {get-menu "Quick Browse..."}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.COBOL"] | verify-error {get-menu "Quick Browse..."}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.COBOL" -member "OLPDLT1"] | verify-error {get-menu "Quick Browse..."}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

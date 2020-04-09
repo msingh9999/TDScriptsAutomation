@@ -1,0 +1,61 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: AcceptStatementVariables
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _vOrnoPw_EeeUFrppDB367Q
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 1/18/18 8:08 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests Accept statements in a Cobol program and that variables are returned when requested.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "CWXTCOB"]
+
+open-perspective $HOST_EXPLORER
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click   
+    
+with [get-window "Debug Configurations"] {
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "createCwxtcobAcceptListener"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "addCwxtcobAcceptListener"
+
+with [get-editor "CWXTCOB [CWXTCOB]"] {
+    get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 360
+}
+
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "CWXTCOB [Xpediter Batch Debug Session]/.*/Thread [CWXTCOB, Step: STEP1] (Suspended (breakpoint))/CWXTCOB [CWXTCOB] (procedure: 0000-MAINLINE line: 360)"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "assertCwxtcobAcceptStatementVariables"
+
+with [get-view Debug] {
+    get-tree | select "CWXTCOB [Xpediter Batch Debug Session]" 
+        | select "CWXTCOB [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+}
+get-window "Terminate and Remove" | get-button Yes | click
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

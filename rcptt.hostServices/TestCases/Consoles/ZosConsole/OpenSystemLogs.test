@@ -1,0 +1,46 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_QgUBwEULEeamKrg04Gqe-Q,_IQ4-sEUKEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q
+Element-Name: OpenSystemLogs
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _8Soa0IsDEeaum6QWtlCXVw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/5/16 10:07 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+close-all-consoles
+close-all-editors
+
+get-view Console | get-button "Open Console" | click -arrow
+
+get-menu "2 z\\/OS Console" | click
+with [get-view Console] 
+{
+    get-button "Open System Logs..." | click
+}
+
+with [get-window "Open System Logs"] 
+{
+    get-table | select Execution -column Queue
+    get-button OK | click
+}
+
+get-window "System Log Display" | get-button OK | click
+
+with [get-editor -index 0]
+{  
+	get-label -index 0 | get-property caption | contains "Browsing: SYSLOG" | verify-true
+	close
+}
+
+//there should be no editors open
+verify-error {get-editor -index 0}
+
+get-view Console | get-button "Close Console" | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

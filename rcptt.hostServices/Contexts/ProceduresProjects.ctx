@@ -1,0 +1,438 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresProjects
+Element-Type: context
+Element-Version: 2.0
+Id: _XnPvkEUIEeamKrg04Gqe-Q
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 4/3/18 2:58 PM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+
+/* Adds a copybook to the given online project. */
+proc "add-copybook-online-project" [val project] [val hostName $HOST] [val portNum $PORT] [val copybook] [val removeOld false]
+{
+	get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Copybook Concatenation" $project $hostName $portNum]
+    | get-menu "Configure Copybook Concatenation List..." | click
+    
+	with [get-window [format "Properties for %s" $project]]
+	{
+		if [and[$removeOld] [get-table | get-property itemCount -raw | not-eq 0]]
+		{
+		    get-table | select ".*" -all
+		    get-button Remove | click
+		}
+
+	    get-button "Add..." | click
+	    with [get-window Datasets]
+	    {
+			get-editbox | set-text $copybook
+			get-button OK | click
+	    }
+	    get-button OK | click
+	}
+}
+
+/**
+ Adds a dataset to the given online project.
+ <p>
+ Note: you can also use this method to add a member by specifying a datasetName of "dataset(member)".
+ Consider adding a member parameter instead though.
+ */
+proc "add-source-online-project" [val projectName] [val datasetName] [val hostName $HOST] [val portNum $PORT]
+{
+	get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]" $projectName $hostName $portNum] | get-menu "Add Source..." | click
+	with [get-window "Project Source"]
+	{
+		get-editbox | set-text $datasetName
+		get-button OK | click
+	}
+}
+
+/* Adds a dataset to the given offline project.*/
+proc "add-source-offline-project" [val hostName $HOST] [val portNum $PORT] [val projectName] [val filter] [val datasetName]
+{
+	get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $hostName -portNUM $portNum -filter $filter -dataset $datasetName] | get-menu "Refresh" | click
+	get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $hostName -portNUM $portNum -filter $filter -dataset $datasetName] | get-menu "Add Files to Project..." | click
+	
+	with [get-window "Add Files To Project"]
+	{
+	    get-editbox -after [get-label [format "Compuware Mainframe Projects using host %s:%s:" $hostName $portNum]] | set-focus
+	    get-table | select $projectName
+	    get-button Finish | click
+	}
+}
+
+/* Create an online project if it does not already exist.*/
+proc "create-online-project" [val projectName] [val hostName $HOST] [val port $PORT] {
+	if [has-project $projectName | equals false] {
+		get-menu "File/New/Compuware Mainframe Project" | click
+		with [get-window "New Compuware Mainframe Project"] {
+			get-editbox -after [get-label "Project name:"] | set-text $projectName
+			get-group "Project type" | get-button "Online. Keep resources on mainframe." | click
+
+			// If there's more than one host, select the proper host
+			with [get-window "New Compuware Mainframe Project" | get-group "Share to host" | get-combo -after [get-label
+				"Host:"]] {
+				if [get-property enablement -raw | equals true] {
+					select [format "%s:%s" $hostName $port]
+				}
+			}
+
+			get-button Finish | click
+		}
+	}
+
+	get-view "Project Explorer" | get-tree | get-item [format "%s [%s:%s]" $projectName $hostName $port] | get-property
+		"caption" | equals [format "%s [%s:%s]" $projectName $hostName $port] | verify-true
+}
+
+/* Create an offline project if it does not already exist.*/
+proc "create-offline-project" [val projectName] [val hostName $HOST] [val port $PORT] {
+	if [has-project $projectName | equals false] {
+		get-menu "File/New/Compuware Mainframe Project" | click
+		with [get-window "New Compuware Mainframe Project"] {
+			get-editbox -after [get-label "Project name:"] | set-text $projectName
+			get-group "Project type" | get-button "Offline. Download resources to work offline." | click
+
+			// If there's more than one host, select the proper host
+			with [get-window "New Compuware Mainframe Project" | get-group "Share to host" | get-combo -after [get-label
+				"Host:"]] {
+				if [get-property enablement -raw | equals true] {
+					select [format "%s:%s" $hostName $port]
+				}
+			}
+
+			get-button Finish | click
+		}
+	}
+
+	get-view "Project Explorer" | get-tree | get-item [format "%s [%s:%s]" $projectName $hostName $port] | get-property
+		"caption" | equals [format "%s [%s:%s]" $projectName $hostName $port] | verify-true
+}
+
+proc "delete-online-project" [val projectName] [val hostName $HOST] [val port $PORT] {
+	try -command
+	{
+		get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]" $projectName $hostName $port] | get-menu Delete
+			| click
+		with [get-window "Delete Resources"] {
+			get-button "Yes" | click
+		}
+	}
+	-catch
+	{
+		log [format "delete-online-project failed for project %s." $projectName]
+	}
+
+	get-view "Project Explorer" | get-tree | verify-error {
+		get-item [format "%s [%s:%s]" $projectName $hostName $port]
+	}
+}
+
+proc "delete-online-project-with-description" [val projectName] [val description] {
+	try -command
+	{
+		get-view "Project Explorer" | get-tree | select [format "%s [%s]" $projectName $description] | get-menu Delete
+			| click
+		with [get-window "Delete Resources"] {
+			get-button "Yes" | click
+		}
+	}
+	-catch
+	{
+		log [format "delete-online-project failed for project %s." $projectName]
+	}
+
+	get-view "Project Explorer" | get-tree | verify-error {
+		get-item [format "%s [%s:%s]" $projectName $hostName $port]
+	}
+}
+
+proc "delete-offline-project" [val projectName] [val hostName $HOST] [val port $PORT] {
+	get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]" $projectName $hostName $port] | get-menu Delete
+		| click
+		
+	with [get-window "Delete Resources"]
+	{
+    	get-button "Delete project contents on disk (cannot be undone)" | check
+    	get-button OK | click
+	}
+
+	get-view "Project Explorer" | get-tree | verify-error {
+		get-item [format "%s [%s:%s]" $projectName $hostName $port]
+	}
+}
+
+/* Checks if a Project Explorer resources has given decorator. */
+proc "PE-has-image-decorator" [val controlParm] [val decorName]
+{
+	try -command 
+	{
+		get-view "Project Explorer" | get-tree 
+   		| get-item $controlParm 
+    	| get-property "image.decorations[0].path"  -raw
+    	| equals $decorName
+	}
+	-catch 
+	{
+		bool false
+	}
+}
+
+proc "PE-dataset-has-image" [val project] [val dataset] [val hostname $HOST] [val portNum $PORT] [val imagePath]
+{
+		get-tab-folder | get-tab-item $PROJECT_EXPLORER | click
+		get-view $PROJECT_EXPLORER | get-tree 
+		    | get-item [format "%s \\[%s:%s\\]/Source/%s \\[%s:%s\\]" $project $hostname $portNum $dataset $hostname $portNum]
+		    | get-property "image.path" | equals $imagePath
+}
+
+proc "PE-dataset-has-image-decorator" [val project] [val dataset] [val hostname $HOST] [val portNum $PORT] [val imagePath]
+{
+	try -command 
+	{
+		get-view "Project Explorer" | get-tree 
+   		| get-item  [format "%s \\[%s:%s\\]/Source/%s \\[%s:%s\\]" $project $hostname $portNum $dataset $hostname $portNum]
+    	| get-property "image.decorations[0].path"  -raw
+    	| equals $imagePath
+	}
+	-catch 
+	{
+		bool false
+	}
+}
+
+proc "PE-dataset-wait-for-image-decorator"  [val project] [val dataset]  [val imagePath] [val srcType $SOURCE] [val hostname $HOST] [val portNum $PORT] [val seconds 180]
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-tab-folder | get-tab-item $PROJECT_EXPLORER | click
+		get-view $PROJECT_EXPLORER | get-tree 
+	    	| select [format "%s \\[%s:%s\\]/%s/%s \\[%s:%s\\]" $project $hostname $portNum $srcType $dataset $hostname $portNum]
+	    	| get-menu Refresh | click
+		PE-has-image-decorator -controlParm [format "%s \\[%s:%s\\]/%s/%s \\[%s:%s\\]" $project $hostname $portNum $ srcType $dataset $hostname $portNum]
+			-decorName $imagePath | verify-true
+	}
+	-catch 
+	{
+		log  [format"Waited %s seconds and could not detect image %s for selection: %s" $seconds $imagePath [format "%s \\[%s:%s\\]/%s/%s \\[%s:%s\\]" $project $hostname $portNum $srcType $dataset $hostname $portNum]]
+	}
+}
+
+proc "PE-dataset-wait-for-migration" [val project] [val dataset] [val srcType $SOURCE] [val hostname $HOST] [val portNum $PORT] [val seconds 180]
+{
+	PE-dataset-wait-for-image-decorator -project $project -dataset $dataset -srcType $srcType -imagePath $IMAGE_DIR_MIGRATED -seconds $seconds
+}
+
+
+/* Removes copybook from a given online project. */
+proc "remove-copybook" [val datasetName] [val projectName] [val hostName] [val portNum]
+{
+	get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Copybook Concatenation" $projectName $hostName $portNum]
+	    | get-menu "Configure Copybook Concatenation List..." | click
+	with [get-window [format "Properties for %s" $projectName]]
+	{
+	    get-table | select $datasetName
+	    get-button Remove | click
+	    get-button OK | click
+	}
+	
+	//Verify copybook is removed
+	get-view "Project Explorer" | get-tree 
+	| verify-error {get-item [format "%s [%s:%s]/Copybook Concatenation/%s [%s:%s]" $projectName $hostName $portNum $datasetName $hostName $portNum]}
+}
+
+/* Removes source from a given online project. */
+proc "remove-source" [val folder] [val datasetName] [val projectName] [val hostName] [val portNum]
+{
+	get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/%s/%s [%s:%s]" $projectName $hostName $portNum $folder $datasetName $hostName $portNum] | get-menu Delete | click
+	get-window "Delete Resources" | get-button Yes | click
+	
+	//Verify source is removed
+	get-view "Project Explorer" | get-tree | verify-error {get-item [format "%s [%s:%s]/%s/%s [%s:%s]" $projectName $hostName $portNum $folder $datasetName $hostName $portNum]}
+} 
+
+/* Selects a PDS from a mainframe online project explorer tree. */
+proc "select-pds-in-online-project" [val projectName] [val dataset] [val srcType $SOURCE] [val hostName $HOST] [val portNum $PORT]
+{
+    get-view "Project Explorer" | get-tree | select [PE-get-dataset-path -projectName $projectName -dataset $dataset -srcType $srcType -hostName $hostName -portNum $portNum]
+}
+
+/* Selects a PDS member from a mainframe online project explorer tree. */
+proc "select-pds-member-in-online-project" [val projectName] [val dataset] [val member] [val hostName $HOST] [val portNum $PORT]
+{
+    get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Source/%s [%s:%s]/%s [%s on %s:%s]" $projectName $hostName $portNum $dataset $hostName $portNum $member $dataset $hostName $portNum]
+}
+
+/* Selects a copybook PDS from a mainframe online project explorer tree. */
+proc "select-copybook-pds-in-online-project" [val projectName] [val dataset] [val hostName $HOST] [val portNum $PORT]
+{
+    get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Copybook Concatenation/%s [%s:%s]" $projectName $hostName $portNum $dataset $hostName $portNum]
+}
+
+/* Selects a copybook PDS member from a mainframe online project explorer tree. */
+proc "select-copybook-member-in-online-project" [val projectName] [val dataset] [val memberName] [val hostName $HOST] [val portNum $PORT]
+{
+    get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Copybook Concatenation/%s [%s:%s]/%s [%s on %s:%s]" $projectName $hostName $portNum $dataset $hostName $portNum $memberName $dataset $hostName $portNum]
+}
+
+/* Get the text value of the path for a dastaset in an online project scrType=the Source or Copybook Concatenation folder name*/
+proc "PE-get-dataset-path" [val projectName] [val dataset] [val srcType $SOURCE] [val hostName $HOST] [val portNum $PORT]
+{
+	format "%s [%s:%s]/%s/%s [%s:%s]" $projectName $hostName $portNum $srcType $dataset $hostName $portNum
+}
+
+/* Return true if the dataset node has the proper text */
+proc "PE-has-text" [val project] [val dataset] [val srcType $SOURCE] [val hostName $HOST] [val portNum $PORT]
+{
+	try 
+	{
+		get-view $PROJECT_EXPLORER | get-tree 
+   			| get-item [PE-get-dataset-path -projectName $project -dataset $dataset -srcType $srcType -hostName $hostName -portNum $portNum]
+    		| get-property caption -raw | equals [format "%s [%s:%s]" $dataset $hostName $portNum] 
+   	}
+	-catch 
+	{
+		log [format "Could not find caption %s" [format "%s [%s:%s]" $dataset $hostName $portNum]]
+		bool false
+	}
+}
+
+/* Waits specified seconds for a dataset node to have a non-migrated icon. */
+proc "PE-wait-for-recall"  [val project] [val dataset] [val imagePath] [val srcType $SOURCE] [val hostName $HOST] [val portNum $PORT] [val seconds 180]
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		has-image -view $PROJECT_EXPLORER -path [PE-get-dataset-path -projectName $projectName -dataset $dataset -srcType $srcType -hostName $hostName -portNum $portNum]
+			-imagePath $imagePath | verify-true
+	}
+	-catch 
+	{
+		log  [format"Waited %s seconds and could not detect image %s for selection: %s" $seconds $imagePath [PE-get-dataset-path -projectName $projectName -dataset $dataset -hostName $hostName -portNum $portNum]]
+	}
+}
+
+/* Returns true if the dataset contains the specified menu. */
+proc "PE-dataset-has-menu" [val project] [val dataset] [val menuName] [val srcType $SOURCE] [val hostName $HOST] [val portNum $PORT]
+{
+	get-view $PROJECT_EXPLORER | get-tree 
+		| select [PE-get-dataset-path -projectName $project -dataset $dataset -hostName $hostName -portNum $portNum -srcType $srcType]
+		| has-menu -menuName $menuName
+}
+
+/* Returns true if the dataset member contains the specified menu. */
+proc "PE-member-has-menu" [val project] [val dataset] [val member] [val menuName] [val srcType $SOURCE] [val hostName $HOST] [val portNum $PORT]
+{
+	get-view $PROJECT_EXPLORER | get-tree 
+		| select [format "%s [%s:%s]/%s/%s [%s:%s]/%s [%s on %s:%s]" $project $hostName $portNum $srcType $dataset $hostName $portNum $member $dataset $hostName $portNum]
+		| has-menu -menuName $menuName
+}
+
+proc "offline-project-dataset-exists" [val project] [val dataset] [val hostName $HOST] [val portNum $PORT]
+{
+    try 
+    {
+        get-view $PROJECT_EXPLORER | get-tree 
+            | get-item [format "%s [%s:%s]/%s [%s:%s]" $project $hostName $portNum $dataset $hostName $portNum]
+            | get-property caption -raw | equals [format "%s [%s:%s]" $dataset $hostName $portNum] 
+    }
+    -catch 
+    {
+        log [format "Could not find caption %s" [format "%s [%s:%s]" $dataset $hostName $portNum]]
+        bool false
+    }
+}
+
+proc "offline-project-dataset-member-exists" [val project] [val dataset] [val member] [val hostName $HOST] [val portNum $PORT]
+{
+    try 
+    {
+        get-view $PROJECT_EXPLORER | get-tree 
+            | get-item [format "%s [%s:%s]/%s [%s:%s]/%s [%s:%s]" $project $hostName $portNum $dataset $hostName $portNum $member $hostName $portNum]
+            | get-property caption -raw | equals [format "%s [%s:%s]" $member $hostName $portNum] 
+    }
+    -catch 
+    {
+        log [format "Could not find caption %s" [format "%s [%s:%s]" $member $hostName $portNum]]
+        bool false
+    }
+}
+
+/* Selects a PDS member from a mainframe offline project explorer tree. */
+proc "select-pds-member-in-offline-project" [val projectName] [val dataset] [val member] [val hostName $HOST] [val portNum $PORT]
+{
+    get-view $PROJECT_EXPLORER | get-tree | select [format "%s [%s:%s]/%s [%s:%s]/%s [%s:%s]" $projectName $hostName $portNum $dataset $hostName $portNum $member $hostName $portNum]
+}
+
+/* Binds an online project to a sonar qube project. The sonar qube server must have a project defined with the same
+   name as this project (e.g. it uses the 'auto-bind' action to bind the project.) */
+proc "sonar-lint-bind-project" [val projectName] [val hostName $HOST] [val portNum $PORT]
+{
+	try
+	{
+		get-view "Project Explorer" | get-tree | get-item [format "%s \\[%s:%s\\]" $projectName $hostName $portNum]
+			| get-property "image.decorations[0].path" | equals "org.sonarlint.eclipse.ui/icons/onde-label-decorator.gif" | verify-true
+	}
+	-catch
+	{
+		with [get-view "Project Explorer"]
+		{
+			click
+			get-tree | select [format "%s [%s:%s]" $projectName $hostName $portNum] | get-menu "SonarLint/Bind to a SonarQube project..." | click
+		}
+	
+		with [get-window "Bind Eclipse projects to SonarQube projects"]
+		{
+			wait 300
+			get-link "<a>Refresh project list</a>" | click-link
+			get-button "Auto bind selected projects" | click
+			get-table | get-item $projectName | get-property "columns[1]" | equals [format "'%s' on server 'sonarqube.*'" $projectName] | verify-true
+			get-button Finish | click
+		}
+	}
+}
+
+/**
+ * Opens the specified copybook dataset/member from the Project Explorer view.
+ * <p>
+ * Use the "useSlickEdit" parameter to control if the SlickEdit or Compuware editor is used.
+ */
+proc "open-copybook-from-online-project" [val datasetName] [val memberName] [val useSlickEdit] [val extension]
+{
+	if [$useSlickEdit | eq true]
+	{
+		select-copybook-member-in-online-project $projectName $datasetName [format-with-extension $memberName $extension]
+			| get-menu -path "Open With/Compuware Editor powered by SlickEdit" | click
+	}
+	-else
+	{
+		select-copybook-member-in-online-project $projectName $datasetName [format-with-extension $memberName $extension]
+			| get-menu -path "Open With/Compuware Editor" | click
+	}
+}
+
+/**
+ * Opens the specified source dataset/member from the Project Explorer view.
+ * <p>
+ * Use the "useSlickEdit" parameter to control if the SlickEdit or Compuware editor is used.
+ */
+proc "open-source-from-online-project" [val datasetName] [val memberName] [val useSlickEdit] [val extension]
+{
+	if [$useSlickEdit | eq true]
+	{
+		select-pds-member-in-online-project $projectName $datasetName [format-with-extension $memberName $extension]
+			| get-menu -path "Open With/Compuware Editor powered by SlickEdit" | click
+	}
+	-else
+	{
+		select-pds-member-in-online-project $projectName $datasetName [format-with-extension $memberName $extension]
+			| get-menu -path "Open With/Compuware Editor" | click
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

@@ -1,0 +1,22 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: RemoveAllHosts
+Element-Type: context
+Element-Version: 2.0
+Id: _l8aZYER7EeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/7/16 3:47 PM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Logs out of and removes all hosts, INCLUDING the host defined via the constants $HOST and $PORT.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+remove-extra-hosts false
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

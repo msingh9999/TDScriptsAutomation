@@ -1,0 +1,55 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: BrowseToEditNoStats
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _4q9-MIgHEeeas9cRRz_euA
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 8/23/17 9:47 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to verify that when switching from browse to edit mode for a PDS member with no stats, the file is not re-downloaded and the user is not prompted that the local file has changed.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val nostatDataset "XDEVREG.NOSTATS.SOURCE"]
+global [val tempDataset [format "XDEVREG.NOSTATS.SOURCE.T%S" [get-time | format-time -format mmssSSS]]]
+global [val member "TRIMAIN2"]
+
+copy-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -sourcePDS $nostatDataset -targetPDS $tempDataset
+
+get-view $HOST_EXPLORER | get-tree 
+    | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $tempDataset -member $member] | get-menu "Browse With/Compuware Editor" | click
+
+// Switch the file to edit mode
+with [get-editor "TRIMAIN2.data" | get-text-viewer] {
+    set-caret-pos 2 13
+    key-type Enter
+}
+
+get-window "Read-only File Encountered" 
+    | get-label [format "File '/.com.compuware.hostexplorer/%s_%s/%s/%s.data' is read-only. Do you wish to make it writable?" $HOST $PORT $tempDataset $member]
+    | get-property caption 
+    | equals [format "File '/.com.compuware.hostexplorer/%s_%s/%s/%s.data' is read-only. Do you wish to make it writable?" $HOST $PORT $tempDataset $member]
+    | verify-true
+get-window "Read-only File Encountered" | get-button Yes | click
+
+// should not be prompted that the local file has changed
+verify-error { get-window "File Changed" }
+
+// verify that editor is now in edit mode
+get-editor [format "%s.data" $member] | get-label [format "Editing: %s(%s) on %s:%s" $tempDataset $member $HOST $PORT]
+    | get-property caption | equals [format "Editing: %s(%s) on %s:%s" $tempDataset $member $HOST $PORT] | verify-true
+get-view $HOST_EXPLORER | click
+get-editor [format "%s.data" $member] | close
+
+delete-pds -filter $FILTER_XDEVREG -datasetName $tempDataset
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

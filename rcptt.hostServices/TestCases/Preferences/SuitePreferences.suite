@@ -1,0 +1,16 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuitePreferences
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _-J8esIl3EeaOKusaXEFUkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/3/16 10:45 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_R15sECi5Eeawwty1Y0abzw	// kind: 'test' name: 'HyperlinksPreferencePage' path: 'HyperlinksPreferencePage.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

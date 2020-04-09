@@ -1,0 +1,273 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_awG7YHplEea5Nqp6_aAnbQ,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: LocalFiles
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _8bXGwL5NEeajusfmOW4rkQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/21/17 7:39 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// This test will currently only run on a Windows platform only.  
+// It makes a few assumptions:
+// 1. Your machine/computer name starts with "dtw"
+// 2. You have a C:\ drive
+// 3. The running test has permission to create a C:\TEMP_FOLDER_XXXXX and files underneath that folder (deleted on cleanup)
+
+// Probably can make this work for a Mac, just wasn't sure about checking hidden files and the computer name portion
+
+global [val tempFolder [format "TEMP_FOLDER_T%S" [get-time | format-time -format mmssSSS]]]
+global [val uncPath "\\\\dtw-netapp1\commonxpeddev\\"]
+global [val rcpttTestFolder "RCPTT_TEST"]
+
+if [has-drive-filter -driveName "C" | equals false] {
+	//get-view $HOST_EXPLORER | get-tree | get-item "Hosts" | expand-all
+	//get-view $HOST_EXPLORER | get-tree | get-item "Drives" | get-menu "Add Filter..." | click
+	get-view $HOST_EXPLORER | get-tree | select $LOCAL_DRIVE_PATH | get-menu "Add Filter..." | click
+	with [get-window Filter] {
+	    get-editbox -after [get-label "Filter:"] | set-text C
+	    get-button OK | click
+	}
+}
+
+if [has-drive-filter -driveName $uncPath | equals false] {
+    get-view $HOST_EXPLORER | get-tree | select $LOCAL_DRIVE_PATH | get-menu "Add Filter..." | click
+    with [get-window Filter] {
+        get-editbox -after [get-label "Filter:"] | set-text $uncPath
+        get-button OK | click
+    }
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C" $LOCAL_DRIVE_PATH] | get-menu "New Folder" | click
+with [get-window "New Folder"] {
+    with [get-editbox -after [get-label "Folder name:"]] {
+        set-text $tempFolder
+    }
+    get-button OK | click
+}
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    with [get-editbox -after [get-label "File name:"]] {
+        set-text "test.xml"
+    }
+    get-button OK | click
+}
+
+get-editor "test.xml" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.xml"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.xml" | get-text-viewer] {
+    type-text "<myxml/>"
+    key-type "M1+s"
+}
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    get-editbox -after [get-label "File name:"] | set-text "test.jcl"
+    get-button OK | click
+}
+get-editor "test.jcl" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.jcl"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.jcl" | get-text-viewer] {
+    type-text "Test JCL"
+    key-type "M1+s"
+}
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    get-editbox -after [get-label "File name:"] | set-text "test.txt"
+    get-button OK | click
+}
+get-editor "test.txt" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.txt"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.txt" | get-text-viewer] {
+    type-text "This is a text file"
+    key-type "M1+s"
+}
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    with [get-editbox -after [get-label "File name:"]] {
+        set-text "test.psf"
+    }
+    get-button OK | click
+}
+get-editor "test.psf" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.psf"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.psf" | get-text-viewer] {
+    type-text "This is a PSF File"
+    key-type "M1+s"
+}
+
+// Make sure we have a file association for *.patch files, so it does not open in an external editor
+set-default-editor "patch" "Compuware Editor"
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    with [get-editbox -after [get-label "File name:"]] {
+        set-text "test.patch"
+    }
+    get-button OK | click
+}
+with [get-editor "test.patch" | get-text-viewer] 
+{
+    type-text "This is a patch file"
+    key-type "M1+s"
+}
+
+// Make sure we have a file association for *.launch files, so it does not open in an external editor
+set-default-editor "launch" "Compuware Editor"
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." | click
+}
+with [get-window "New File"] {
+    with [get-editbox -after [get-label "File name:"]] {
+        set-text "test.launch"
+    }
+    get-button OK | click
+}
+with [get-editor "test.launch" | get-text-viewer] 
+{
+    type-text "This is a launch file"
+    key-type "M1+s"
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    get-editbox -after [get-label "File name:"] | set-text "test.log"
+    get-button OK | click
+}
+get-editor "test.log" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.log"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.log"] {
+    with [get-text-viewer] {
+        type-text "This is a log file"
+        key-type "M1+s"
+    }
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    get-editbox -after [get-label "File name:"] | set-text "test.cbl"
+    get-button OK | click
+}
+get-editor "test.cbl" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.cbl"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.cbl" | get-text-viewer] {
+    type-text "This is some Cobol"
+    key-type "M1+s"
+}
+get-view $HOST_EXPLORER | get-tree | get-item [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder]
+    | get-property childCount | equals 8 | verify-true
+    
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer"
+    with [get-group Presentation | get-button "Display hidden files"] {
+        check
+    }
+    get-button OK | click
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C" $LOCAL_DRIVE_PATH] | get-menu Refresh | click
+
+get-view $HOST_EXPLORER | get-tree | get-item [format "%s/C/%s" $LOCAL_DRIVE_PATH "pagefile.sys"] | get-property caption 
+    | equals "pagefile.sys" | verify-true
+    
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-group Presentation | get-button "Display hidden files" | uncheck
+    get-button OK | click
+}
+
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "%s/C" $LOCAL_DRIVE_PATH] | get-menu Refresh | click
+    verify-error {get-item [format "%s/C/%s" $LOCAL_DRIVE_PATH "pagefile.sys"]}
+}
+
+close-all-editors -editorCount 8
+
+// Test hyperlinking in an HTML file
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder]
+    | get-menu "New File..." | click
+with [get-window "New File"] {
+    get-editbox -after [get-label "File name:"] | set-text "test.html"
+    get-button OK | click
+}
+get-view $HOST_EXPLORER | click
+close-all-editors
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "test.html"]
+    | get-menu "Open With/Compuware Editor" | click
+with [get-editor "test.html" | get-text-viewer] {
+    type-text "XDEVREG.COBOL(CWXGDATE)"
+    key-type "M1+s"
+}
+
+// Add hyperlink preference for html extension
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Hyperlinks"
+    with [get-group "File extensions"] {
+        try -command
+        {
+            get-list | select html
+            get-button Remove | click
+        } -catch
+        {
+        }
+        get-editbox | set-text html
+        get-button Add | click
+    }
+    get-button OK | click
+}
+
+// Attempt to browse member using hyperlink
+with [get-editor "test.html" | get-text-viewer] {
+    set-caret-pos 1 23
+    select-range 1 24 1 1
+    get-menu "Hyperlink/Browse" | click
+}
+with [get-window "Host Explorer"] {
+    get-table | select [format "%s:%s" $HOST $PORT]
+    get-button OK | click
+}
+
+close-all-editors
+
+// Remove HTML hyperlink preference
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Hyperlinks"
+    with [get-group "File extensions"] {
+        get-list | select html
+        get-button Remove | click
+    }
+    get-button OK | click
+}
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "%s/C" $LOCAL_DRIVE_PATH] | get-menu Refresh | click
+    select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+with [get-window Delete | get-table] {
+    get-item $tempFolder | get-property "columns[0]" | equals $tempFolder | verify-true
+    get-item $tempFolder | get-property "columns[2]" 
+        | contains "successfully deleted." | verify-true
+}
+get-window Delete | get-button Done | click
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,91 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_flHIADsvEeecusG2bnvmdQ
+Element-Name: SwitchAuthType
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _hh8NoDsaEeecusG2bnvmdQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/18/17 12:45 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests Compuware Enterprise Services preference page specifically switching authentication types and the affect to existing credentials, both saved to secure storage as well as for the Topaz Workbench session.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val cesUrlBasic "http://10.100.10.121:58226/compuware/"]
+global [val cesUrlLdap "http://10.100.10.121:58227/compuware/"]
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    with [get-editbox -after [get-label "URL:"]] {
+        set-text $cesUrlLdap
+    }
+}
+
+with [get-window Preferences] {
+    get-button "Validate Connection" | click
+    get-window "Validate Connection" | get-button OK | click
+}
+
+// Test management of credentials (LDAP)    
+with [get-window Preferences] {
+    get-button "Credentials..." | click
+    with [get-window "Edit Compuware Enterprise Services Credentials"] {
+        with [get-editbox -after [get-label "User:"]] {
+            set-text FAULTMGR
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        get-editbox -after [get-label "Password:"] | set-text [decrypt "Ubf3tt8J6YQPw1FmY0/XqA=="]
+        get-button "Save credentials" | check
+        get-button OK | click
+    }
+}
+
+try -command
+{
+	// Handle Secure Storeage window popup if saving credentials to secure storage for first time
+	get-window "Secure Storage" | get-button No | click
+}
+-catch
+{
+	// Do nothing; expect no window if saved credentials to secure storage before
+}
+
+with [get-window Preferences] {
+	get-button "Credentials..." | click
+	with [get-window "Edit Compuware Enterprise Services Credentials"] {
+    	get-editbox -after [get-label "User:"] | get-property text | equals FAULTMGR | verify-true
+    	get-editbox -after [get-label "Password:"] | get-property text | equals cpwrfm09 | verify-true
+     	get-button "Save credentials" | get-property selected | equals true | verify-true   	
+     	get-button Cancel | click
+    }
+}
+
+// Test switching CES URL causes saved credentials to be wiped
+with [get-window Preferences] {
+    with [get-editbox -after [get-label "URL:"]] {
+        set-text $cesUrlBasic
+    }	
+	get-button "Credentials..." | click
+}
+
+with [get-window Preferences | get-window "Edit Compuware Enterprise Services Credentials"] {
+    get-editbox -after [get-label "User:"] | get-property text | equals "" | verify-true
+    get-editbox -after [get-label "Password:"] | get-property text | equals "" | verify-true
+    get-button "Save credentials" | get-property selected | equals true | verify-true
+   	get-button Cancel | click
+}
+
+with [get-window Preferences] {
+	get-button OK | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,66 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q
+Element-Name: AllocateMenuAvailability
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _JKOk0LyHEea2UcoPeLeX6A
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/27/17 9:38 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- AllocateMenuAvailability ----------------------------------------------"
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+with [get-view $HOST_EXPLORER | get-tree] {
+	// z\OS Datasets
+	select [format "Hosts/cw01:%s/z\\/OS Datasets" $PORT]
+    get-menu "Allocate/PDS or Sequential Dataset..." | get-property enablement | equals true | verify-true
+    get-menu "Allocate/VSAM Cluster..." | get-property enablement | equals true | verify-true
+    get-menu "Allocate/Compuware Source Listing Datasets..." | get-property enablement | equals true | verify-true
+    
+    HE-recall-dataset -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.API.TEST.ESDS" -imagePath $IMAGE_VSAM
+    HE-recall-dataset -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.API.TEST.KSDS" -imagePath $IMAGE_VSAM
+    HE-recall-dataset -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.API.TEST.LINEAR" -imagePath $IMAGE_VSAM
+    HE-recall-dataset -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.API.TEST.RRDS" -imagePath $IMAGE_DDIO
+    HE-recall-dataset -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.API.TEST.SEQ" -imagePath $IMAGE_DOCUMENT
+
+	// PDS
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.COBOL" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// DDIO (Compuware Source Listing Dataset)
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.DDIO.TEST" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// VSAM ESDS
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.ESDS" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// VSAM KSDS
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.KSDS" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// VSAM LINEAR
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.LINEAR" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// VSAM RRDS	
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.RRDS" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// Sequential	
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.SEQ" $PORT]
+	get-menu "Allocate Like..." | get-property enablement | equals true | verify-true
+
+	// Migrated (no "Allocate Like..." option)
+	select [format "Hosts/cw01:%s/z\\/OS Datasets/xdevreg/XDEVREG.HS.API.TEST.SEQ.MIGRATED" $PORT]
+	verify-error {get-menu "Allocate Like..."}
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

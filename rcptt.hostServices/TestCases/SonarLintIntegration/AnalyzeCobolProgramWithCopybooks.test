@@ -1,0 +1,111 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_Qgyi4EULEeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_FO6L8K_oEeaI5LAUP6iy4A,_Cjmk4KzKEearpKw8qQl8DQ,_xtFvMKzTEearpKw8qQl8DQ,_GcCAAK_gEeaI5LAUP6iy4A,_T7dv4K_8EeaI5LAUP6iy4A
+Element-Name: AnalyzeCobolProgramWithCopybooks
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Rke2AKy9EearpKw8qQl8DQ
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 4/5/18 10:22 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that opening a COBOL program (with copybooks) from an online project is successfully analyzed by SonarLint.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- AnalyzeCobolProgramWithCopybooks ----------------------------------------------"
+
+get-view Console | get-button "Open Console" | click -arrow
+get-new-console "SonarLint Console" | click
+
+with [get-view Console] {
+    click
+    get-button "Clear Console" | click
+}
+
+get-view "Project Explorer" | get-tree 
+    | select [format "%3$s [%1$s:%2$s]/Source/XDEVREG.PROJECT.COBOL.SOURCE [%1$s:%2$s]/PDA150.cbl [XDEVREG.PROJECT.COBOL.SOURCE on %1$s:%2$s]" $HOST $PORT $SONAR_LINT_PROJECT]
+    | get-menu "Open With/Compuware Editor powered by SlickEdit" | click
+get-window "SlickEdit Copybook Download" | get-button Yes | click
+
+get-view Console | get-text-viewer | get-property text | contains "PDA150.cbl" | verify-true
+//wait-for-console-text -text "Found 181 issue(s)" | verify-true
+wait-for-console-text -text "Found 174 issue(s)" | verify-true
+
+
+
+get-menu "Window/Show View/Other..." | click
+with [get-window "Show View"] {
+    get-tree | select "General/Problems"
+    get-button OK | click
+}
+
+//global [val infoNodeText "Infos \\(100 of 181 items\\)"]
+global [val infoNodeText "Infos \\(100 of 174 items\\)"]
+with [get-view Problems | get-tree] {
+	// First click Resource column to prevent changing the sort direction on Location, when clicking on Location.:
+    get-column-header Resource | click
+    get-column-header Location | click
+
+	let [val desc "Either this paragraph is a dead code that must be removed or the code must be refactored to make an explicit call to it."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDA150.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 383" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+
+	let [val desc "Increase the size of \"PDA150-USERID-NUMBER\" \\(PIC 9\\(05\\)\\) or do not \"MOVE\" \"USERID1-NUMBER\" \\(PIC S9\\(9\\)\\) to it."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDA150.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 701" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+
+	let [val desc "Avoid using NEXT SENTENCE statement."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDA150.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 495" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+
+	let [val desc "Increase the size of \"PDA150-USERID-NUMBER\" \\(PIC 9\\(05\\)\\) or do not \"MOVE\" \"USERID1-NUMBER\" \\(PIC S9\\(9\\)\\) to it."] 
+    {
+		with [get-item [format "%s/%s" $infoNodeText $desc]]
+		{
+			get-property caption | equals $desc | verify-true
+			get-property "columns[0]" | equals $desc | verify-true
+			get-property "columns[1]" | equals "PDA150.cbl" | verify-true
+			get-property "columns[2]" | equals [format "%s/Source/XDEVREG.PROJECT.COBOL.SOURCE" $SONAR_LINT_PROJECT] | verify-true
+			get-property "columns[3]" | equals "line 701" | verify-true
+			get-property "columns[4]" | contains "SonarLint" | verify-true
+		}
+	}
+}
+
+get-editor "PDA150.cbl" | close
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

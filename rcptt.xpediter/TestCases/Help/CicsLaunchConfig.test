@@ -1,0 +1,81 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CicsLaunchConfig
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Q51l0JxoEee5T_BDt0pU3g
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/20/18 11:25 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to validate Xpediter CICS Launch Configuration context sensitive help
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "----------------------------------------------- CicsLaunchConfig -----------------------------------------------"
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] {
+	get-tree | select "Xpediter CICS Debug Session"
+	get-button "New launch configuration" | click
+	get-group "Program to debug" | get-editbox -after [get-label "Load Module:"] | click-text
+	validate-context-help "tab of a CICS configuration allows you to define the program you want to debug and the con" +
+		"nection for your debug session. The load module and connection fields on this tab are required"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item Breakpoints | click
+	get-group "Processing existing breakpoints" | get-button "Load the main module only" | click
+	validate-context-help "The purpose of the breakpoints tab is to specify the load modules to be loaded into memory" +
+		" at the start of a debug session so that existing breakpoints can automatically be set at that time"
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-tab-folder | get-tab-item Traps | click
+	get-group "CICS traps" | get-table | key-type TRAVERSE_TAB_NEXT
+	validate-context-help "CICS launch configuration</a> allows you to define the traps to be set upon startup of you" +
+		"r Xpediter debug session."
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-group "CICS traps" | get-button "Add..." | click
+	with [get-window "Add CICS Trap"] {
+		with [get-editbox] {
+			set-focus
+			key-type TRAVERSE_TAB_NEXT
+		}
+		validate-context-help "CICS launch configuration</a> allows you to define the traps to be set upon startup of" +
+			" your Xpediter debug session"
+	}
+}
+
+with [get-window "Debug Configurations" | get-window "Add CICS Trap"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+with [get-window "Debug Configurations"] {
+	get-tab-folder | get-tab-item Comments | click
+	get-text-viewer | key-type Tab
+	get-button Help | click
+}
+
+with [get-window "Debug Configurations"] {
+	get-button Help | click
+	get-button "Delete selected launch configuration(s)" | click
+	get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+	get-button Close | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

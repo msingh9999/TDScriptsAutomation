@@ -1,0 +1,208 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _l8aZYER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q
+Element-Name: DatasetMigration
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _WVMJML1WEeaqp4c4eJvd8g
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/28/17 10:51 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the contents of the Properties view when a dataset becomes migrated
+Cases covered (for both Host Explorer view and Search view):
+* Previously retrieved properties are still displayed after a dataset is migrated
+* No properties are displayed if the dataset is migrated prior to displaying properties
+** No dialog is displayed in this case
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+proc "handle-migrated"
+{
+	try
+	{
+		with [get-window Search | get-window Search] {
+			get-button "Recall" | click
+		}
+	}
+	-catch
+	{
+		// If nothing was migrated, then there is no need to fail since we were going to recall anyway,
+	}
+}
+
+add-filter $FILTER_XDEVREG
+
+global [val dataset1 "XDEVREG.PROPVIEW.TST1"]
+global [val dataset2 "XDEVREG.PROPVIEW.TST2"]
+
+/*
+ * Test that viewing properties prior to migration will still display these properties after migration:
+ */
+
+do-search $dataset1 "EMP"
+handle-migrated
+
+get-view "Host Explorer" | get-tree | get-item [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $dataset1] | expand
+
+get-view Search | get-tree | select $dataset1 | get-menu "Show In/Properties" | click
+with [get-view Properties | get-tree]
+{
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Allocated Extents" | get-property caption | equals "Allocated Extents" | verify-true
+    get-item "Allocated Units" | get-property caption | equals "Allocated Units" | verify-true
+    get-item "Allocation Type" | get-property caption | equals "Allocation Type" | verify-true
+    get-item "Volume Serial" | get-property caption | equals "Volume Serial" | verify-true
+}
+get-view Search | get-tree | select [format "%s/DEBUG.*" $dataset1] | get-menu "Show In/Properties" | click
+with [get-view Properties | get-tree]
+{
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+get-view Search | get-tree | select [format "%s/ALATRA10.*" $dataset1] | get-menu "Show In/Properties" | click
+with [get-view Properties | get-tree]
+{
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $dataset1]
+with [get-view Properties | get-tree] {
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Allocated Extents" | get-property caption | equals "Allocated Extents" | verify-true
+    get-item "Allocated Units" | get-property caption | equals "Allocated Units" | verify-true
+    get-item "Allocation Type" | get-property caption | equals "Allocation Type" | verify-true
+    get-item "Volume Serial" | get-property caption | equals "Volume Serial" | verify-true
+}
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/DEBUG" $HOST $PORT $FILTER_XDEVREG $dataset1]
+with [get-view Properties | get-tree] {
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/ALATRA10" $HOST $PORT $FILTER_XDEVREG $dataset1]
+with [get-view Properties | get-tree] {
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+
+submit-job -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.JCL" -member "MIGRATE7" -jobName "XDEVMIG7"
+
+get-view Search | get-tree | select $dataset1 | get-menu "Show In/Properties" | click
+with [get-view Properties | get-tree]
+{
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Allocated Extents" | get-property caption | equals "Allocated Extents" | verify-true
+    get-item "Allocated Units" | get-property caption | equals "Allocated Units" | verify-true
+    get-item "Allocation Type" | get-property caption | equals "Allocation Type" | verify-true
+    get-item "Volume Serial" | get-property caption | equals "Volume Serial" | verify-true
+}
+get-view Search | get-tree | select [format "%s/DEBUG.*" $dataset1] | get-menu "Show In/Properties" | click
+with [get-view Properties | get-tree]
+{
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+get-view Search | get-tree | select [format "%s/ALATRA10.*" $dataset1] | get-menu "Show In/Properties" | click
+with [get-view Properties | get-tree]
+{
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $dataset1]
+with [get-view Properties | get-tree] {
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Allocated Extents" | get-property caption | equals "Allocated Extents" | verify-true
+    get-item "Allocated Units" | get-property caption | equals "Allocated Units" | verify-true
+    get-item "Allocation Type" | get-property caption | equals "Allocation Type" | verify-true
+    get-item "Volume Serial" | get-property caption | equals "Volume Serial" | verify-true
+}
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/DEBUG" $HOST $PORT $FILTER_XDEVREG $dataset1]
+with [get-view Properties | get-tree] {
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/ALATRA10" $HOST $PORT $FILTER_XDEVREG $dataset1]
+with [get-view Properties | get-tree] {
+	get-property itemCount -raw | gt 0 | verify-true
+    get-item "Creation Date" | get-property caption | equals "Creation Date" | verify-true
+    get-item "File Extension" | get-property caption | equals "File Extension" | verify-true
+    get-item "Version Level" | get-property caption | equals "Version Level" | verify-true
+}
+
+/*
+ * Test that viewing properties after migration will not have any properties to display (and no error dialogs will
+ * occur):
+ */
+
+do-search $dataset2 "EMP"
+handle-migrated
+get-view "Host Explorer" | get-tree | get-item [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $dataset2] | expand
+
+submit-job -filter $FILTER_XDEVREG -dataset "XDEVREG.HS.JCL" -member "MIGRATE7" -jobName "XDEVMIG7"
+
+get-view "Host Explorer"
+	| get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s" $HOST $PORT $FILTER_XDEVREG $dataset2]
+	| get-menu "Properties" | click
+with [get-view Properties | get-tree] {
+	get-property itemCount | equals 0 | verify-true
+}
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/DEBUG" $HOST $PORT $FILTER_XDEVREG $dataset2]
+	| get-menu "Properties" | click
+with [get-view Properties | get-tree] {
+	get-property itemCount | equals 0 | verify-true
+}
+get-view "Host Explorer" | get-tree
+	| select [format "Hosts/%s:%s/z\\/OS Datasets/%s/%s/ALATRA10" $HOST $PORT $FILTER_XDEVREG $dataset2]
+	| get-menu "Properties" | click
+with [get-view Properties | get-tree] {
+	get-property itemCount | equals 0 | verify-true
+}
+
+get-view Search | get-tree | select $dataset2
+with [get-view Properties | get-tree]
+{
+	get-property itemCount | equals 0 | verify-true
+}
+get-view Search | get-tree | select [format "%s/DEBUG.*" $dataset2]
+with [get-view Properties | get-tree]
+{
+	get-property itemCount | equals 0 | verify-true
+}
+get-view Search | get-tree | select [format "%s/ALATRA10.*" $dataset2]
+with [get-view Properties | get-tree]
+{
+	get-property itemCount | equals 0 | verify-true
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

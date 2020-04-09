@@ -1,0 +1,85 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: DatasetMemberNameCopyPaste
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _jBVC8IasEee6NL9PVuutmA
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 9/8/17 5:21 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val testDataset1 "XDEVREG.EDIT.TEST"]
+global [val testMember1 "T0227799"]
+global [val testDataset2 "XDEVREG.ASSEM.SOURCE"]
+global [val testDataset3 "XDEVREG.BINARY"]
+global [val testDataset4 "XDEVREG.BROWSE.EDIT.TEST"]
+global [val testDataset5 "XDEVREG.DDIO.TEST"]
+global [val testMember2 "TESTDECI (7)"]
+global [val testMemberPaste "TESTDECI"]
+
+add-filter $FILTER_XDEVREG
+
+// Test copying a PDS name into an editor
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1 -member $testMember1]
+        | get-menu "Edit With/Compuware Editor" | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2] | get-menu Copy | click
+}
+get-editor [format "%S.data" $testMember1] | get-editbox -after [get-label [format "Editing: %S(%S) on %s:%s" $testDataset1 $testMember1 $HOST $PORT]] 
+    | get-menu Paste | click
+get-editor [format "%S.data" $testMember1] | get-text-viewer | get-property text | equals $testDataset2 | verify-true
+get-editor [format "%S.data" $testMember1] | close
+get-window "Host Explorer" | get-button No | click
+
+// Test copying multiple dataset names into an editor
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1 -member $testMember1]
+        | get-menu "Edit With/Compuware Editor" | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset3] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset4]
+    get-menu Copy | click
+}
+get-editor [format "%S.data" $testMember1] | get-editbox -after [get-label [format "Editing: %S(%S) on %s:%s" $testDataset1 $testMember1 $HOST $PORT]] 
+    | get-menu Paste | click
+with [get-editor [format "%S.data" $testMember1] | get-text-viewer | get-property text] {
+	contains $testDataset2 | verify-true
+	contains $testDataset3 | verify-true
+	contains $testDataset4 | verify-true
+}
+get-editor [format "%S.data" $testMember1] | close
+get-window "Host Explorer" | get-button No | click
+
+// Test copying ddio dataset and member into editor
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1 -member $testMember1]
+        | get-menu "Edit With/Compuware Editor" | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset5] [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset5 -member $testMember2 ]
+    get-menu Copy | click
+}
+get-editor [format "%S.data" $testMember1] | get-editbox -after [get-label [format "Editing: %S(%S) on %s:%s" $testDataset1 $testMember1 $HOST $PORT]] 
+    | get-menu Paste | click
+with [get-editor [format "%S.data" $testMember1] | get-text-viewer | get-property text] {
+	contains $testDataset5 | verify-true
+	contains [format "%S(%S)" $testDataset5 $testMemberPaste] | verify-true
+}
+get-editor [format "%S.data" $testMember1] | close
+get-window "Host Explorer" | get-button No | click
+
+// Test copying a dataset name into a dialog text box
+with [get-view "Host Explorer" | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1 -member $testMember1] | get-menu Copy | click
+    select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Quick Browse..." | click
+}
+with [get-window Browse] {
+    get-combo -after [get-label "Dataset Name:"] | set-text [format "%S(%S)" $testDataset1 $testMember1]
+    get-button OK | click
+}
+get-editor [format "%S.data" $testMember1] | get-label [format "Browsing: %S(%S) on %s:%s" $testDataset1 $testMember1 $HOST $PORT] | get-property caption 
+    | equals [format "Browsing: %S(%S) on %s:%s" $testDataset1 $testMember1 $HOST $PORT] | verify-true
+get-editor [format "%S.data" $testMember1] | close
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

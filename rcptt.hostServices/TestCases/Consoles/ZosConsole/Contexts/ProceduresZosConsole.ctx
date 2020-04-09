@@ -1,0 +1,47 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresZosConsole
+Element-Type: context
+Element-Version: 2.0
+Id: _IWNcMEUNEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/8/16 9:09 AM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+proc "clear-zos-console"
+{
+    with [get-view Console] {
+        get-button $ClearConsole | click
+        get-text-viewer | set-caret-pos 1 1
+    }
+}
+
+proc "execute-zos-command" [val commandString] [val delayMilliseconds 1]
+{
+    with [get-view Console | get-text-viewer] {
+        set-caret-pos 1 3
+        type-text $commandString
+        key-type Enter
+        set-caret-pos 3 3
+    }
+
+    wait -ms $delayMilliseconds
+}
+
+proc "verify-zos-command-output" [val commandOutput] [val attempts 30]
+{
+    try -times $attempts -delay 10 -command
+    {
+        get-view Console | get-text-viewer | get-property text | equals $commandOutput | verify-true 
+        bool true
+    }
+    -catch
+    {
+        bool false
+    }  
+}
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

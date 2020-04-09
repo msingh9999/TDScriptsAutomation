@@ -1,0 +1,43 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_flHIADsvEeecusG2bnvmdQ
+Element-Name: Licensing
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Z-Bp0DvWEeecusG2bnvmdQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/18/17 12:44 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests CES security login when accessing Topaz Workbench Licensing.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val cesUrlLdap "http://10.100.10.121:58227/compuware/"]
+
+connect-ces $cesUrlLdap
+
+get-menu "Help/Topaz Workbench Licensing..." | click
+with [get-window "Compuware Enterprise Services Login"] {
+    with [get-editbox -after [get-label "User:"]] {
+        set-text FAULTMGR
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    get-editbox -after [get-label "Password:"] | set-text [decrypt "Ubf3tt8J6YQPw1FmY0/XqA=="]
+    get-button OK | click
+}
+
+with [get-window "Topaz Workbench Licensing"] {
+    get-table | select "Topaz for Enterprise Data"
+    get-button "Check Out" | click
+    get-button Release | click
+    get-button Close | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

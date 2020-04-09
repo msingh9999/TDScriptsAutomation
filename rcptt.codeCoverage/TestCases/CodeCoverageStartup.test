@@ -1,0 +1,245 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _UrIe0ER7EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_L8LU0G4MEeewnPydhNCs0A
+Element-Name: CodeCoverageStartup
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _9CT2ELjUEeerR_GNBFvSDA
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 10/26/17 3:14 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests changing of new default Code Coverage annotation color preferences to original default colors verifying they are not updated on restart of Topaz Workbench.
+See CWE-120703:  Original Code Coverage colors are always changed to match the softer look of JaCoCo/EclEmma
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val exportLocation [concat [get-workspace-location]"/CodeCoverageImportExportProject/export"]]
+global [val execCritExclAnnotation "Code Coverage Executed Critical and Excluded Line"]
+global [val execCritAnnotation "Code Coverage Executed Critical Line"]
+global [val execExclAnnotation "Code Coverage Executed Excluded Line"]
+global [val execAnnotation "Code Coverage Executed Line"]
+global [val unexecCritExclAnnotation "Code Coverage Unexecuted Critical and Excluded Line"]
+global [val unexecCritAnnotation "Code Coverage Unexecuted Critical Line"]
+global [val unexecExclAnnotation "Code Coverage Unexecuted Excluded Line"]
+global [val unexecAnnotation "Code Coverage Unexecuted Line"]
+global [val partialCritExclAnnotation "Code Coverage Partially Executed Critical and Excluded Conditional"]
+global [val partialCritAnnotation "Code Coverage Partially Executed Critical Conditional"]
+global [val partialExclAnnotation "Code Coverage Partially Executed Excluded Conditional"]
+global [val partialAnnotation "Code Coverage Partially Executed Conditional"]
+global [val optimizedCritExclAnnotation "Code Coverage Optimized Critical and Excluded Line"]
+global [val optimizedCritAnnotation "Code Coverage Optimized Critical Line"]
+global [val optimizedExclAnnotation "Code Coverage Optimized Excluded Line"]
+global [val optimizedAnnotation "Code Coverage Optimized Line"]
+
+/**
+ * Change the annotation color for the given RGB values.
+ * <p>
+ * The context is expected to be the General/Editors/Text Editors/Annotations preference page.
+ */
+proc "change-annotation-color" [val red] [val green] [val blue]
+{
+	set-dialog-result Color [format "%s,%s,%s" $red $green $blue]
+    get-button -after [get-label "Color:"] | click
+}
+
+/**
+ * Validate the annotation color for the given RGB values.
+ * <p>
+ * The context is expected to be the General/Editors/Text Editors/Annotations preference page.
+ */
+proc "validate-annotation-color" [val red] [val green] [val blue]
+{
+	with [get-button -after [get-label "Color:"]]
+	{
+	    get-property "getImage().getImageData().data.byte[472]" | equals $blue | verify-true
+	    get-property "getImage().getImageData().data.byte[473]" | equals $green | verify-true
+	    get-property "getImage().getImageData().data.byte[474]" | equals $red | verify-true
+	}
+}
+
+log "---------------------------------------------- CodeCoverageStartup ----------------------------------------------"
+
+// Verify the default preference(s) for the annotation color are set.
+get-preferences-menu | click
+with [get-window Preferences] {
+    with [get-editbox] {
+        set-text annotation
+    }
+    get-tree | select "General/Editors/Text Editors/Annotations"
+
+	get-table | select $execCritExclAnnotation
+	validate-annotation-color "-64" "-1" "-64"
+
+	get-table | select $execCritAnnotation
+	validate-annotation-color "-64" "-1" "-64"
+
+	get-table | select $execExclAnnotation
+	validate-annotation-color "-64" "-1" "-64"
+
+	get-table | select $execAnnotation
+	validate-annotation-color "-64" "-1" "-64"
+
+	get-table | select $optimizedCritExclAnnotation
+	validate-annotation-color "-44" "-44" "-44"
+
+	get-table | select $optimizedCritAnnotation
+	validate-annotation-color "-44" "-44" "-44"
+
+	get-table | select $optimizedExclAnnotation
+	validate-annotation-color "-44" "-44" "-44"
+
+	get-table | select $optimizedAnnotation
+	validate-annotation-color "-44" "-44" "-44"
+
+	get-table | select $partialCritExclAnnotation
+	validate-annotation-color "-1" "-1" "-128"
+
+	get-table | select $partialCritAnnotation
+	validate-annotation-color "-1" "-1" "-128"
+
+	get-table | select $partialExclAnnotation
+	validate-annotation-color "-1" "-1" "-128"
+
+	get-table | select $partialAnnotation
+	validate-annotation-color "-1" "-1" "-128"
+
+	get-table | select $unexecCritExclAnnotation
+	validate-annotation-color "-1" "-96" "-96"
+
+	get-table | select $unexecCritAnnotation
+	validate-annotation-color "-1" "-96" "-96"
+
+	get-table | select $unexecExclAnnotation
+	validate-annotation-color "-1" "-96" "-96"
+
+	get-table | select $unexecAnnotation
+	validate-annotation-color "-1" "-96" "-96"
+}
+
+// Alter the annotation color(s)
+with [get-window Preferences] {
+    with [get-editbox] {
+         set-text annotation
+    }
+    get-tree | select "General/Editors/Text Editors/Annotations"
+
+    get-table | select $execCritExclAnnotation
+	change-annotation-color "50" "203" "69"
+
+	get-table | select $execCritAnnotation
+	change-annotation-color "50" "203" "69"
+
+	get-table | select $execExclAnnotation
+	change-annotation-color "50" "203" "69"
+
+	get-table | select $execAnnotation
+	change-annotation-color "50" "203" "69"
+
+	get-table | select $optimizedCritExclAnnotation
+	change-annotation-color "192" "192" "192"
+
+	get-table | select $optimizedCritAnnotation
+	change-annotation-color "192" "192" "192"
+
+	get-table | select $optimizedExclAnnotation
+	change-annotation-color "192" "192" "192"
+
+	get-table | select $optimizedAnnotation
+	change-annotation-color "192" "192" "192"
+
+	get-table | select $partialCritExclAnnotation
+	change-annotation-color "255" "255" "0"
+
+	get-table | select $partialCritAnnotation
+	change-annotation-color "255" "255" "0"
+
+	get-table | select $partialExclAnnotation
+	change-annotation-color "255" "255" "0"
+
+	get-table | select $partialAnnotation
+	change-annotation-color "255" "255" "0"
+
+	get-table | select $unexecCritExclAnnotation
+	change-annotation-color "255" "79" "79"
+
+	get-table | select $unexecCritAnnotation
+	change-annotation-color "255" "79" "79"
+
+	get-table | select $unexecExclAnnotation
+	change-annotation-color "255" "79" "79"
+
+	get-table | select $unexecAnnotation
+	change-annotation-color "255" "79" "79"
+}
+
+get-window Preferences | get-button OK | click
+
+// Restart and verify changed annotation color(s) are still set
+invoke-static -pluginId "com.compuware.codecoverage.rcptt" -className "com.compuware.codecoverage.rcptt.CodeCoverageTestUtilities" -methodName "earlyStartup"
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    with [get-editbox] {
+        set-text annotation
+    }
+    get-tree | select "General/Editors/Text Editors/Annotations"
+
+	get-table | select $execCritExclAnnotation
+	validate-annotation-color "50" "-53" "69"
+
+	get-table | select $execCritAnnotation
+	validate-annotation-color "50" "-53" "69"
+
+	get-table | select $execExclAnnotation
+	validate-annotation-color "50" "-53" "69"
+
+	get-table | select $execAnnotation
+	validate-annotation-color "50" "-53" "69"
+
+	get-table | select $optimizedCritExclAnnotation
+	validate-annotation-color "-64" "-64" "-64"
+
+	get-table | select $optimizedCritAnnotation
+	validate-annotation-color "-64" "-64" "-64"
+
+	get-table | select $optimizedExclAnnotation
+	validate-annotation-color "-64" "-64" "-64"
+
+	get-table | select $optimizedAnnotation
+	validate-annotation-color "-64" "-64" "-64"
+
+	get-table | select $partialCritExclAnnotation
+	validate-annotation-color "-1" "-1" "0"
+
+	get-table | select $partialCritAnnotation
+	validate-annotation-color "-1" "-1" "0"
+
+	get-table | select $partialExclAnnotation
+	validate-annotation-color "-1" "-1" "0"
+
+	get-table | select $partialAnnotation
+	validate-annotation-color "-1" "-1" "0"
+
+	get-table | select $unexecCritExclAnnotation
+	validate-annotation-color "-1" "79" "79"
+
+	get-table | select $unexecCritAnnotation
+	validate-annotation-color "-1" "79" "79"
+
+	get-table | select $unexecExclAnnotation
+	validate-annotation-color "-1" "79" "79"
+
+	get-table | select $unexecAnnotation
+	validate-annotation-color "-1" "79" "79"
+	
+	get-button OK | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

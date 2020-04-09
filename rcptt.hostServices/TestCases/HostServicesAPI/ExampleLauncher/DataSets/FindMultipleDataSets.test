@@ -1,0 +1,111 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wvcyALzIEearCfJIpjdCZQ,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: FindMultipleDataSets
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _pups0L5JEearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 1:36 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/Datasets/Find Multiple Datasets"]
+global [val resultDialogTitle "Find Multiple Datasets Results"]
+
+/****** Procedures ******/
+
+proc "enter-filter-in-dialog" [val filter] [val type "Any"]
+{
+	with [get-window "Find Datasets Example"]
+	{
+	    with [get-editbox -after [get-label "Dataset filter:"]]
+	    {
+	        set-text $filter
+	    }
+	    with [get-combo -after [get-label "Dataset type:"]]
+	    {
+	        set-value $type
+	    }
+	    get-button Run | click
+	}
+}
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+// Test a filter without any matches
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREGX.*"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Could not find any datasets for filter \"XDEVREGX.*\" of type \"Any\" on host \"cw01:%s\"" $PORT]
+
+// Test a filter that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.DSNTOOLARGE.*"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"dataSetFilter\" is not a valid dataset filter for code page 1047. Argument value: XDEVREG.DSNTOOLARGE.*"
+
+// Test a filter that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.INVALID!.CHAR.*"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"dataSetFilter\" is not a valid dataset filter for code page 1047. Argument value: XDEVREG.INVALID!.CHAR.*"
+
+// Test with the "Any" type
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.HS.API.TEST.**.*s*.**"
+
+with [get-window $resultDialogTitle]
+{
+	with [get-editbox | get-property text -raw]
+	{
+		verify-text-line -lineIndex 0 -expectedText [format "Found the following datasets on host \"%s:%s\":" $HOST $PORT]
+		verify-text-line -lineIndex 1 -expectedText "   \"XDEVREG.HS.API.TEST.COBOL.SOURCE\" of type \"PARTITIONED\""
+		verify-text-line -lineIndex 2 -expectedText "   \"XDEVREG.HS.API.TEST.ESDS\" of type \"VSAM\""
+		verify-text-line -lineIndex 10 -expectedText "   \"XDEVREG.HS.API.TEST.SEQ\" of type \"SEQUENTIAL\""
+		verify-text-line -lineIndex 12 -expectedText "   \"XDEVREG.HS.API.TEST.SEQ.MIGRATED\" of type \"MIGRATED\""
+	}
+	get-button OK | click
+}
+
+// Test with the "PARTITIONED" type
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.HS.API.TEST.**.*s*.**" -type "PARTITIONED"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following datasets on host \"cw01:%s\":\n"
++"   \"XDEVREG.HS.API.TEST.COBOL.SOURCE\" of type \"PARTITIONED\"\n"
++"   \"XDEVREG.HS.API.TEST.PDS.CNTL\" of type \"PARTITIONED\"\n"
++"   \"XDEVREG.HS.API.TEST.PDS.EMPTY\" of type \"PARTITIONED\"\n"
++"   \"XDEVREG.HS.API.TEST.PDSE.CNTL\" of type \"PARTITIONED\"\n"
++"   \"XDEVREG.HS.API.TEST.PDSE.EMPTY\" of type \"PARTITIONED\"" $PORT]
+
+// Test with the "SEQUENTIAL" type
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.HS.API.TEST.**.*s*.**" -type "SEQUENTIAL"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following datasets on host \"cw01:%s\":\n"
++"   \"XDEVREG.HS.API.TEST.SEQ\" of type \"SEQUENTIAL\"\n"
++"   \"XDEVREG.HS.API.TEST.SEQ.JCL\" of type \"SEQUENTIAL\"" $PORT]
+
+// Test with the "VSAM" type
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.HS.API.TEST.**.*s*.**" -type "VSAM"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following datasets on host \"cw01:%s\":\n"
++"   \"XDEVREG.HS.API.TEST.ESDS\" of type \"VSAM\"\n"
++"   \"XDEVREG.HS.API.TEST.KSDS\" of type \"VSAM\"\n"
++"   \"XDEVREG.HS.API.TEST.KSDS.ALIAS\" of type \"VSAM\"\n"
++"   \"XDEVREG.HS.API.TEST.RRDS\" of type \"VSAM\"" $PORT]
+
+// Test with the "MIGRATED" type
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -filter "XDEVREG.HS.API.TEST.**.*s*.**" -type "MIGRATED"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following datasets on host \"cw01:%s\":\n"
++"   \"XDEVREG.HS.API.TEST.SEQ.MIGRATED\" of type \"MIGRATED\"\n"
++"   \"XDEVREG.HS.API.TEST.SEQVB\" of type \"MIGRATED\"" $PORT]
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

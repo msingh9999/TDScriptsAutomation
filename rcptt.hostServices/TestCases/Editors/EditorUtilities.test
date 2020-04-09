@@ -1,0 +1,87 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_z0XzoHpxEea5Nqp6_aAnbQ
+Element-Name: EditorUtilities
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _tcDmMCitEeawwty1Y0abzw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 3/15/17 11:53 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val datasetTinySpace "XDEVREG.HS.TINY.SPACE"]
+global [val memberZeroLength [format "T%S" [get-time | format-time -format mmssSSS]]]
+global [val dataExtension ".data"]
+
+proc "delete-test-pds-member-ignore-errors"
+{
+    try -command 
+    {
+		get-view $HOST_EXPLORER | get-tree | select  [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetTinySpace -member $memberZeroLength]
+		    | get-menu Delete | click
+		with [get-window Delete] {
+		    get-button Delete | click
+		    get-button Done | click
+		}
+	} 
+	-catch 
+	{
+	}	
+}
+
+add-filter -filter $FILTER_XDEVREG
+
+delete-test-pds-member-ignore-errors
+
+// Create new Member ZEROLEN
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetTinySpace] 
+    | get-menu "New Member..." | click
+with [get-window "New Member"] {
+    get-editbox -after [get-label "Member name:"] | set-text $memberZeroLength
+    get-button OK | click
+}
+
+// Enter some text into the editor and attempt to save it.  This will cause an error as the dataset is not defined
+// with enough storage
+get-editor [concat $memberZeroLength $dataExtension] | get-text-viewer | type-text "Hello, the world!"
+get-editor [concat $memberZeroLength $dataExtension] | close
+
+// Test escape to cancel save prompt
+get-window $HOST_EXPLORER | key-type "TRAVERSE_ESCAPE"
+
+// Should not get a 2nd prompt to save from Eclipse
+verify-error { get-window "Save Resource" }
+
+get-editor [concat $memberZeroLength $dataExtension] | close
+get-window $HOST_EXPLORER | close
+
+// Should not get a 2nd prompt to save from Eclipse
+verify-error { get-window "Save Resource" }
+
+get-editor [concat $memberZeroLength $dataExtension] | close
+
+get-window $HOST_EXPLORER | get-button Yes | click
+get-window $HOST_EXPLORER
+    | get-label "An exception occurred while attempting to perform a 'Save' operation.You may choose to retry or cancel the save operation. If you choose to cancel, you will return to your edit session. The current editor session was not successfully saved. You may wish to save a copy of the data to another location before closing the editor.Exception: An error occurred while trying to save to a member. The member could not be replaced. The dataset is out of space." 
+    | get-property caption | equals "An exception occurred while attempting to perform a 'Save' operation.\n\n"
+    + "You may choose to retry or cancel the save operation. If you choose to cancel, you will return to your edit session. The current editor session was not successfully saved. You may wish to save a copy of the data to another location before closing the editor.\n"
+    + "Exception: An error occurred while trying to save to a member. The member could not be replaced. The dataset is out of space." 
+    | verify-true
+get-window $HOST_EXPLORER | get-button Cancel | click
+get-editor [concat $memberZeroLength $dataExtension] | close
+get-window $HOST_EXPLORER  | get-button No | click
+
+// Verify that the member still exists and that we can reopen it
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetTinySpace -member $memberZeroLength]
+    | double-click
+get-editor [concat $memberZeroLength $dataExtension] | close
+
+delete-test-pds-member-ignore-errors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,138 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_awG7YHplEea5Nqp6_aAnbQ
+Element-Name: CompuwareDSNHyperlinkDetector
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _wEvZkCgGEeaVl-h40AzGIA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/18/16 7:42 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val hyperlinksDataDatasetName "XDEVREG.HYPRLNKS.DATA"]
+global [val hyperlinksJCLDatasetName "XDEVREG.HYPRLNKS.JCL"]
+
+add-filter $FILTER_XDEVREG
+
+global [val hyperlinksDataExtension [get-resource-file-extension $hyperlinksDataDatasetName]]
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $hyperlinksDataDatasetName]           
+    get-menu "Browse With/Compuware Editor" | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $hyperlinksJCLDatasetName]
+    get-menu "Browse With/Compuware Editor" | click
+}
+
+with [get-editor [format "%s.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    get-menu "Hyperlink"
+}
+
+with [get-editor [concat $hyperlinksDataDatasetName $hyperlinksDataExtension] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    verify-error {get-menu "Hyperlink"}
+}
+
+// Add hyperlink extension to preferences and validate that hyperlink menu is now available in editor for the file with that extension
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Hyperlinks"
+    with [get-group "File extensions"] {
+        get-editbox | set-text [split -str $hyperlinksDataExtension -sep "." | to-list | get 1 | str]
+        get-button Add | click
+    }
+    get-button OK | click
+}
+
+with [get-editor [concat $hyperlinksDataDatasetName $hyperlinksDataExtension] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    get-menu "Hyperlink"
+}
+
+// Remove .jcl extension from hyperlinks and verify hyperlink menu is no longer available in editor for .jcl file
+get-preferences-menu | click
+with [get-window Preferences] {
+	get-tree | select "Compuware/Hyperlinks"
+    with [get-group "File extensions"] {
+        get-list | select "jcl"
+        get-button Remove | click
+    }
+    get-button OK | click
+}
+
+with [get-editor [format "%s.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    verify-error {get-menu "Hyperlink"}
+}
+
+// Uncheck the "Only display z/OS dataset hyperlinks for the file extensions preference and 
+//   then verify hyperlink menu is available in both editors
+get-preferences-menu | click
+with [get-window Preferences] {
+	get-tree | select "Compuware/Hyperlinks"
+    get-group "File extensions" | get-button "Only display z/OS dataset hyperlinks for the following file extensions:" 
+        | uncheck
+    get-button OK | click
+}
+
+with [get-editor [format "%s.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    get-menu "Hyperlink"
+}
+
+with [get-editor [concat $hyperlinksDataDatasetName $hyperlinksDataExtension] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    get-menu "Hyperlink"
+}
+
+// Change Eclipse Hyperlinking preference to be disabled and verify hyperlink menu is not available in open editors
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "General/Editors/Text Editors/Hyperlinking"
+    get-button "Enable on demand hyperlink style navigation" | uncheck
+    get-button OK | click
+}
+
+with [get-editor [format "%s.jcl" $hyperlinksJCLDatasetName] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    verify-error {get-menu "Hyperlink"}
+}
+
+with [get-editor [concat $hyperlinksDataDatasetName $hyperlinksDataExtension] | get-text-viewer] {
+    set-caret-pos 4 7
+    select-range 4 8 4 1
+    verify-error {get-menu "Hyperlink"}
+}
+
+// restore Eclipse Hyperlinking preference to enabled
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "General/Editors/Text Editors/Hyperlinking"
+    get-button "Enable on demand hyperlink style navigation" | check
+    get-button OK | click
+}
+
+// Restore default preferences
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-button "Restore Defaults" | click 
+    get-button OK | click  
+}
+
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

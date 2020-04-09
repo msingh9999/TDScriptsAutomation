@@ -1,0 +1,65 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _UrIe0ER7EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_gJI9gIl3Eeaf8rtXp2pZyA,_PprFMER9EeamKrg04Gqe-Q
+Element-Name: UsingJESExplorer
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _VMrRENknEeiaAsW9UGWbDw
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 11/5/18 12:03 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Open JES Exporer view and connect to host
+connect-jes-explorer-description -hostDescription TestDrive
+
+// Search JOBS with a Owner
+with [get-view "JES Explorer" | get-section Search] {
+    get-editbox -after [get-label "Owner:"] | set-text PFHMKS0
+    get-button Search | click
+}
+
+// Filter jobs
+with [get-view "JES Explorer" | get-section Search] {
+    with [get-combo -after [get-label "Prefix:"]] {
+        set-text PFHMKSA
+        select PFHMKSA
+    }
+    get-button Search | click
+}
+
+// Verify the filter results
+get-view "JES Explorer" | get-label "Found 1 job(s) on TestDrive." | get-property caption 
+    | equals "Found 1 job(s) on TestDrive." | verify-true
+    
+// Explore JES Explorer tool bar and verify tool tips
+with [get-view "JES Explorer"] {
+    get-button "Refresh\tF5" | get-property tooltip | equals "Refresh\tF5" | verify-true
+    get-button "Purge\tDel" | get-property tooltip | equals "Purge\tDel" | verify-true
+    get-button "Cancel Job" | get-property tooltip | equals "Cancel Job" | verify-true
+    get-button "Cancel Job With Dump" | get-property tooltip | equals "Cancel Job With Dump" | verify-true
+    get-button "Extract Job JCL" | get-property tooltip | equals "Extract Job JCL" | verify-true
+    get-button "Re-submit Job" | get-property tooltip | equals "Re-submit Job" | verify-true
+    get-button "Show Compile Diagnostics" | get-property tooltip | equals "Show Compile Diagnostics" | verify-true
+    get-button "Connect...\tF6" | get-property tooltip | equals "Connect...\tF6" | verify-true
+    
+	// Browse Job output and verify DD statments
+	get-view "JES Explorer" | get-table | select PFHMKSA -column Job | double-click
+	get-view "JES Explorer" | get-label "Selected job: J0653697. 652 records." | get-property caption 
+	    | contains "Selected job:" | verify-true
+}
+
+// Purge Jobs
+with [get-view "JES Explorer"] {
+    get-table | select PFHMKSA -column Job
+    get-button "Purge\tDel" | click
+}
+
+// Verify purge
+get-window "Purge Confirmation" | get-property title | equals "Purge Confirmation" | verify-true
+get-window "Purge Confirmation" | get-button Cancel | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

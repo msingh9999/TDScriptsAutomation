@@ -1,0 +1,20 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteTsoCommandsConsole
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _JixDAIl2EeaOKusaXEFUkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/3/16 10:32 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_XWz08EUKEeamKrg04Gqe-Q	// kind: 'test' name: 'CancelCommand' path: 'CancelCommand.test'
+_XW7wwEUKEeamKrg04Gqe-Q	// kind: 'test' name: 'ClistRexxCommands' path: 'ClistRexxCommands.test'
+_XXDskEUKEeamKrg04Gqe-Q	// kind: 'test' name: 'CommandHistory' path: 'CommandHistory.test'
+_XXNdkEUKEeamKrg04Gqe-Q	// kind: 'test' name: 'ConnectToHost' path: 'ConnectToHost.test'
+_XXWngEUKEeamKrg04Gqe-Q	// kind: 'test' name: 'IssueTSOConsoleCommand' path: 'IssueTSOConsoleCommand.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

@@ -1,0 +1,215 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: VSAM
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _DuqP8HQ5Eeao6LAbRG4SEA
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/22/17 12:32 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- VSAM ----------------------------------------------"
+
+global [val vsamKSDSClusterName [format "XDEVREG.VSAM.TEST.KSDS.T%S" [get-time | format-time -format mmssSSS]]]
+global [val vsamESDSClusterName [format "XDEVREG.VSAM.TEST.ESDS.T%S" [get-time | format-time -format mmssSSS]]]
+global [val vsamRRDSClusterName [format "XDEVREG.VSAM.TEST.RRDS.T%S" [get-time | format-time -format mmssSSS]]]
+global [val vsamLinearClusterName [format "XDEVREG.VSAM.TEST.LINEAR.T%S" [get-time | format-time -format mmssSSS]]]
+global [val propertiesVSAMDataset "XDEVREG.HS.API.TEST.KSDS"]
+global [val propertiesVSAMIndex "XDEVREG.HS.API.TEST.KSDS.INDEX"]
+
+add-filter -filter $FILTER_XDEVREG
+
+// Allocate a KSDS VSAM Cluster
+
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-combo -after [get-label "Dataset type:"] | select KSDS
+    get-editbox -after [get-label "Cluster name:"] | set-text $vsamKSDSClusterName
+    get-group "Cluster/Data space" | get-editbox -after [get-label "Secondary:"] | set-text 1
+    with [get-group "Allocation options"] {
+        with [get-editbox -after [get-label "Average record size:"]] {
+            set-text 80
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        with [get-editbox -after [get-label "Maximum record size:"]] {
+            set-text 120
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        with [get-editbox -after [get-label "Key length:"]] {
+            set-text 10
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        get-editbox -after [get-label "Key offset:"] | set-text 0
+        get-button "Erase on delete" | check
+        get-button "Set expiration:" | check
+        get-date-time | set-value "2025/1/1 6:26:43"
+        with [get-editbox -after [get-label "CI percent free space:"]] {
+            click-text
+            key-type F1 -display
+        }
+    }
+}
+
+
+with [get-window "Allocate VSAM Cluster"] {
+    with [get-group "Allocation options"] {
+        get-editbox -after [get-label "CI percent free space:"] | set-text 20
+        get-editbox -after [get-label "CA percent free space:"] | set-text 20
+    }
+    get-button "Next >" | click
+    get-group Owner | get-button "Current user" | click
+    get-button Finish | click
+	get-window "Allocate VSAM Cluster" | get-label [format "Dataset %S has been allocated on host %s:%s." $vsamKSDSClusterName $HOST $PORT] 
+	    | get-property caption | equals [format "Dataset %S has been allocated on host %s:%s." $vsamKSDSClusterName $HOST $PORT]
+	    | verify-true
+	get-window "Allocate VSAM Cluster" | get-button OK | click
+}
+
+// Delete XDEVREG.VSAM.TEST.KSDS
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $vsamKSDSClusterName]
+    | get-menu Delete | click
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $vsamKSDSClusterName | get-property "columns[2]" 
+    | equals [format "Resource %S successfully deleted." $vsamKSDSClusterName] | verify-true
+get-window Delete | get-button Done | click
+
+
+// Allocate a new ESDS VSAM Cluster
+
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-combo -after [get-label "Dataset type:"] | select ESDS
+    get-editbox -after [get-label "Cluster name:"] | set-text $vsamESDSClusterName
+    with [get-group "Allocation options"] {
+        get-button Reusable | check
+        get-button "Write check" | check
+        get-button "Spanned records" | check
+    }
+    get-button "Next >" | click
+    get-button Finish | click
+	get-window "Allocate VSAM Cluster" | get-label [format "Dataset %S has been allocated on host %s:%s." $vsamESDSClusterName $HOST $PORT]
+	    | get-property caption | equals [format "Dataset %S has been allocated on host %s:%s." $vsamESDSClusterName $HOST $PORT] 
+	    | verify-true
+	get-window "Allocate VSAM Cluster" | get-button OK | click
+}
+with [get-view "Host Explorer" | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $vsamESDSClusterName]
+    | get-menu Delete | click
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $vsamESDSClusterName | get-property "columns[2]" 
+    | equals [format "Resource %S successfully deleted." $vsamESDSClusterName] | verify-true
+get-window Delete | get-button Done | click
+
+
+// Allocate a new VSAM RRDS Cluster
+
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-combo -after [get-label "Dataset type:"] | select RRDS
+    get-editbox -after [get-label "Cluster name:"] | set-text $vsamRRDSClusterName
+    get-group "Allocation options" | get-editbox -after [get-label "Data CI size:"] | set-text 28000
+    get-button "Next >" | click
+    get-group Volumes | get-editbox -after [get-label Data] | set-text 1
+    get-button Finish | click
+	get-window "Allocate VSAM Cluster" | get-label [format "Dataset %S has been allocated on host %s:%s." $vsamRRDSClusterName $HOST $PORT] 
+	    | get-property caption | equals [format "Dataset %S has been allocated on host %s:%s." $vsamRRDSClusterName $HOST $PORT] 
+	    | verify-true
+	get-window "Allocate VSAM Cluster" | get-button OK | click
+}
+with [get-view $HOST_EXPLORER | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $vsamRRDSClusterName]
+    | get-menu Delete | click
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $vsamRRDSClusterName | get-property "columns[2]" 
+    | equals [format "Resource %s successfully deleted." $vsamRRDSClusterName] | verify-true
+get-window Delete | get-button Done | click
+
+// Allocate a new Linear VSAM Cluster
+
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-combo -after [get-label "Dataset type:"] | select LINEAR
+    get-editbox -after [get-label "Cluster name:"] | set-text $vsamLinearClusterName
+    get-group "Cluster/Data space" | get-combo -after [get-label "Units:"] | select Cylinders
+    with [get-group "Allocation options"] {
+        get-editbox -after [get-label "Data CI size:"] | set-text ""
+        get-editbox -after [get-label "Buffer space:"] | set-text 1000
+    }
+    get-button "Next >" | click
+    get-button Finish | click
+    get-window "Allocate VSAM Cluster" | get-button No | click
+    get-group Volumes | get-editbox -after [get-label Data] | set-text ""
+    get-button Finish | click
+    get-window "Allocate VSAM Cluster" | get-button No | click
+    get-button "< Back" | click
+    get-group "Cluster/Data space" | get-combo -after [get-label "Units:"] | select Tracks
+    get-group "Allocation options" | get-editbox -after [get-label "Buffer space:"] | set-text ""
+    get-button "Next >" | click
+    get-button Finish | click
+	get-window "Allocate VSAM Cluster" 
+	    | get-label [format "Dataset %s has been allocated on host %s:%s." $vsamLinearClusterName $HOST $PORT] | get-property caption 
+	    | equals [format "Dataset %s has been allocated on host %s:%s." $vsamLinearClusterName $HOST $PORT] | verify-true
+	get-window "Allocate VSAM Cluster" | get-button OK | click
+}
+with [get-view $HOST_EXPLORER | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $vsamLinearClusterName] | get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $vsamLinearClusterName | get-property "columns[2]" 
+    | equals [format "Resource %s successfully deleted." $vsamLinearClusterName] | verify-true
+get-window Delete | get-button Done | click
+
+// Create another test VSAM KSDS cluster using the "Allocate Like" feature
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-combo -after [get-label "Dataset type:"] | select KSDS
+    get-button "Allocate Like..." | click
+    with [get-window "Dataset Selection"] {
+        with [get-section Datasets] {
+            get-editbox -after [get-label "Name:"] | set-text "XDEVREG*"
+            get-button List | click
+            get-table | select "XDEVREG.HS.API.TEST.KSDS"
+        }
+        get-button OK | click
+    }
+    get-editbox -after [get-label "Cluster name:"] | set-text $vsamKSDSClusterName
+    get-button "Next >" | click
+    get-group Owner | get-button "Current user" | click
+    get-button Finish | click
+	get-window "Allocate VSAM Cluster" | get-label [format "Dataset %s has been allocated on host %s:%s." $vsamKSDSClusterName $HOST $PORT] 
+	    | get-property caption | equals [format "Dataset %s has been allocated on host %s:%s." $vsamKSDSClusterName $HOST $PORT] 
+	    | verify-true
+	get-window "Allocate VSAM Cluster" | get-button OK | click
+}
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu Refresh | click
+}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $vsamKSDSClusterName]
+    | get-menu Delete | click
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $vsamKSDSClusterName | get-property "columns[2]" 
+    | equals [format "Resource %s successfully deleted." $vsamKSDSClusterName] | verify-true
+get-window Delete | get-button Done | click
+
+// Test properties view for an existing VSAM Cluster
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $propertiesVSAMDataset]
+    | get-menu Properties | click
+get-view Properties | get-tree | get-item "Cluster Name" | get-property "columns[1]" 
+    | equals $propertiesVSAMDataset | verify-true
+with [get-view Properties | get-tree] {
+    get-item "Index Name" | get-property "columns[0]" | equals "Index Name" | verify-true
+    get-item "Index Name" | get-property "columns[1]" | equals $propertiesVSAMIndex | verify-true
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

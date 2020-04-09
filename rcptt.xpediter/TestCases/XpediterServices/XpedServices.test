@@ -1,0 +1,121 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_KsdzsHT2Eeao6LAbRG4SEA,_XGIuQCavEeedXcEAlx00Tw,_vZ3AoJ-TEeaqXcq-JvSnkA,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: XpedServices
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _rSkqwOy5EeaJFfr7b3zF8A
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 3/23/18 2:09 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val configName BATCOB11]
+global [val step1Pgm CWXTCOB]
+
+add-filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree 
+	| select [get-pds-member-path -dataset "XDEVREG.XPED.JCL" -member $configName -filter $FILTER_XDEVREG]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+    
+with [get-window "Debug Configurations"] 
+{
+
+	//select multiple steps to debug
+    with [get-group "Debug criteria" | get-table] {
+        get-item STEP1 | check
+    }
+	    
+    //add DDIO
+    get-tab-folder | get-tab-item DDIO | click
+    get-group "DDIO (Compuware source listing files)" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        get-editbox | set-text "XDEVREG.XPED.DDIO"
+        get-button OK | click
+    }
+
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | check
+    get-combo -after [get-label "Repository:"] | set-text "CC.REPO.DATASET"
+    get-button "Browse..." | key-type "TRAVERSE_TAB_NEXT"
+    get-combo -after [get-label "System:"] | set-text "SYSTEM1"
+    get-button "Browse..." -after [get-label "System:"] | key-type "TRAVERSE_TAB_NEXT"
+    get-combo -after [get-label "Test ID:"] | set-text "TEST1"
+    get-button "Clear existing statistics before starting the debug session" | check
+    get-button "Display a report after the debug session" | uncheck
+    get-button "Collect Code Coverage" | uncheck
+
+    get-tab-folder | get-tab-item Scripting | click
+    get-group "Initial script" | get-editbox | set-text BRANCHON
+    get-group "Include datasets" | get-button "Add..." | click
+    with [get-window Datasets]
+    {
+        get-editbox | set-text "XDEVREG.XPED.SCRIPTS"
+        get-button OK | click
+    }
+
+    get-button Debug | click
+}
+
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+close-cheatsheet
+
+wait-for-source -lmName $step1Pgm -pgmName $step1Pgm
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testVarsOnCurrentLine" -args 1
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args CALL -args 4
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args READ -args 1
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args WRITE -args 27
+// TODO: The mainframe is currently not returning a DDIO dataset name or listing type for this program (works for
+// Db2Coprocessor and Db2Preprocessor tests). We will need to update this test, once we know more.
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetDdioDatasetName" -args "XDEVREG.XPED.DDIO" -args "DDIO"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils"
+	-methodName "testGetLaunchConfiguration"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils"
+	-methodName "testIsDb2Ims" -args false -args false
+
+with [get-view "Open DDIO"] 
+{
+    with [get-editbox -after [get-label "Load Module:"]] {
+        set-text CWXTDATE
+        key-type Enter
+    }
+    get-table | select CWXTDATE | get-menu "Set Initial Breakpoint" | click
+}
+
+get-view Breakpoints | get-tree | get-item "CWXTDATE \\[CWXTDATE\\] \\[line: 57\\]" | get-property caption 
+    | equals "CWXTDATE [CWXTDATE] [line: 57]" | verify-true
+    
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "BATCOB11 [Xpediter Batch Debug Session]/.*/Thread [CWXTCOB, Step: STEP1] (Suspended (breakpoint))/CWXTDATE [CWXTDATE] (procedure: 0000-MAINLINE line: 57)"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testVarsOnCurrentLine" -args 4
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args CALL -args 0
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args READ -args 0
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetStatements" -args WRITE -args 0
+// TODO: The mainframe is currently not returning a DDIO dataset name or listing type for this program (works for
+// Db2Coprocessor and Db2Preprocessor tests). We will need to update this test, once we know more.
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "testGetDdioDatasetName" -args "" -args "DDIO"
+
+
+get-view Breakpoints | get-tree | get-item "CWXTDATE \\[CWXTDATE\\] \\[line: 57\\]" | uncheck
+
+get-button "Resume (F8)" | click
+
+wait-for-batch-terminated -configName $configName
+
+//close the Log, Visualizer and any other editors that may have been left open
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

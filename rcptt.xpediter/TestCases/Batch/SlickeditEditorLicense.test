@@ -1,0 +1,57 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_Hm2bsL42Eeaqe9EaNYGaSg,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: SlickeditEditorLicense
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Dfb6YL42Eeaqe9EaNYGaSg
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:31 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "BATCOB06"]
+
+// Specifically disable Slickedit license even though we have the Xpediter editor preference set to Slickedit
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.slickedit.api" -className "com.compuware.frameworks.hostservices.slickedit.api.SlickEditUtilities" -methodName "setLicensed" -args [bool false]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+// Checks to verify that the Xpediter editor is being used (How to get editor ID???)
+// Outline should not be able and ruler inside editor can be identified.
+
+get-view Outline | get-label "An outline is not available." | get-property caption 
+    | equals "An outline is not available." | verify-true
+get-editor "CWXTCOB [CWXTCOB]" | get-canvas | get-property className 
+    | equals "com.compuware.frameworks.hostservices.hostexplorer.editors.util.HorizontalRuler" | verify-true
+get-view Debug | get-tree | select "BATCOB06 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+// reset default editor to Xpediter
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-group "Debug editor" | get-combo -after [get-label "Editor to use for source display:"] 
+        | select "Xpediter Editor"
+    get-button OK | click
+}
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

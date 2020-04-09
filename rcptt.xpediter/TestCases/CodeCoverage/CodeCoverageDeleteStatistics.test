@@ -1,0 +1,80 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_qoJmoID-Eeau_5-Qg9vVJQ,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CodeCoverageDeleteStatistics
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _wpQt4MZKEeeMfpFU3URQ1g
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/13/18 7:09 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// TODO: change the host and port once all new CC functionality is present on our main host:port
+log "---------------------------------------------- CodeCoverageDeleteStatistics ----------------------------------------------"
+global [val origRepo "XDEVREG.CC.REPOSIT.DELSTATS"]
+global [val tempRepo "XDEVREG.CC.REPOSIT.DELSTATS.TEMP"]
+global [val system "SYSA"]
+global [val testId "TEST1"]
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "TRIMAIN9"]
+global [val currentDate [format "%s" [get-time | format-time -format "M/d/yy"]]]
+
+open-perspective $HOST_EXPLORER
+set-cc-perspective-switch-preference "Never"
+
+// make a copy of the DELSTATS repository so we can delete stats from the copy rather than the original
+copy-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -sourcePDS $origRepo -targetPDS $tempRepo
+
+// Create an XT Batch launch configuration from TRIMAIN JCL and turn on the "Clear stats" option
+get-view "Host Explorer" | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $jclMember] | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"]
+{
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | check
+    get-combo -after [get-label "Repository:"] | set-text $tempRepo
+    get-combo -after [get-label "System:"] | set-text $system
+    get-combo -after [get-label "Test ID:"] | set-text $testId
+    get-button "Clear existing statistics before starting the debug session" | check
+    get-button Debug | click
+}
+
+// Launch the debug session
+handle-login-dialog
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+// Validate that we printed a success message in the Console for deleting the stats
+get-view Console | get-text-viewer | get-property text 
+    | contains [format "Code Coverage statistics were cleared in repository %s for the following criteria: System: %s, Test: %s" $tempRepo $system $testId]
+    | verify-true
+
+// Terminate the debug session immediately so that no stats are written for the system/test ID
+get-button "Terminate.*" | click
+wait-for-batch-terminated -configName $jclMember
+
+// Validate that the system and test we deleted exists in the report, but has %0 coverage
+with [get-view [format "%s.*" $currentDate] | get-tree]
+{
+    get-item "System: SYSA" | get-property "columns[0]" | equals "System: SYSA" | verify-true
+    get-item "System: SYSA" | get-property "columns[3]" | equals "0%" | verify-true
+    get-item "System: SYSA/Test ID: TEST1" | get-property "columns[0]" | equals "Test ID: TEST1" | verify-true
+    get-item "System: SYSA/Test ID: TEST1" | get-property "columns[3]" | equals "0%" | verify-true
+}
+
+with [get-view Annotations | get-tree]
+{
+	get-item "Unexecuted \\(16 items\\)" | get-property "columns[0]" | equals "Unexecuted (16 items)" | verify-true
+}
+
+// Cleanup
+close-all-editors
+get-view [format "%s.*" $currentDate] | close
+get-view Annotations | close
+open-perspective $HOST_EXPLORER
+delete-pds -hostName $HOST -portNum $PORT -datasetName $tempRepo
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

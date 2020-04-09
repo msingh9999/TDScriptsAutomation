@@ -1,0 +1,19 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: Build_Your_Environment
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _F29DcNlXEeiaAsW9UGWbDw
+Manually-Ordered: true
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 10/26/18 3:41 PM
+Tags: TestDrive
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_6rb6kNFxEeiWBtlyArcHEQ	// kind: 'test' name: 'UsingHostExplorer' path: '../TestCases/UsingHostExplorer.test'
+_VMrRENknEeiaAsW9UGWbDw	// kind: 'test' name: 'UsingJESExplorer' path: '../TestCases/UsingJESExplorer.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

@@ -1,0 +1,71 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q
+Element-Name: DeleteMigratedPdsMember
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _MNB28MH3EeaZifM36uMTJA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/12/17 12:45 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that Delete action displays dataset name in migrated error message, when the dataset is migrated.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- DeleteMigratedPdsMember ----------------------------------------------"
+
+global [val DELTST_DATASET "XDEVREG.HE.MIGRATE.DELTST"]
+global [val DELTST_MEMBER "TSTDEL"]
+
+add-filter
+
+// Make sure the PDS is NOT migrated prior to migrating it, so the Host Explorer enables normal PDS commands:
+recall-dataset $DELTST_DATASET
+
+// We don't expect the delete to work, but in case the test fails for some reason, this will re-add the member:
+if [has-pds-member $DELTST_DATASET $DELTST_MEMBER | not]
+{
+	create-pds-member $DELTST_DATASET $DELTST_MEMBER
+	close-all-editors
+	// backup dataset so migrate will work:
+	submit-job "XDEVREG.HS.JCL" "BACKDS8" -jobName "XDEVBAC8"
+}
+
+/*
+ * Verify Delete action displays dataset name in migrated error message.
+ */
+select-pds-member $DELTST_DATASET $DELTST_MEMBER
+submit-job "XDEVREG.HS.JCL" "MIGRATE8" -jobName "XDEVMIG8"
+
+select-pds-member $DELTST_DATASET $DELTST_MEMBER | get-menu Delete | click
+
+with [get-window Delete]
+{
+	get-button Delete | click
+
+	with [get-table | get-item $DELTST_MEMBER] {
+	    get-property "columns[0]" | equals $DELTST_MEMBER | verify-true
+	    get-property "columns[1]" -raw | matches [format ".*dataset %s is migrated.*" $DELTST_DATASET] | verify-true
+	}
+
+	get-button Done | click
+}
+
+/*
+ * Verify the Host Explorer tree node is updated to show the dataset as migrated.
+ */
+wait -ms 1000
+
+get-view "Host Explorer" | get-tree | get-item [get-pds-path $DELTST_DATASET] | get-property "image.path"
+	| equals "com.compuware.frameworks.imagerepository/images/obj/directory_migrated.gif" | verify-true
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

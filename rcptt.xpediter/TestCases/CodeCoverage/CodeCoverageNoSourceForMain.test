@@ -1,0 +1,96 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_qoJmoID-Eeau_5-Qg9vVJQ,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CodeCoverageNoSourceForMain
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _qztfQLXBEeepJvAKJRcDdQ
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/6/17 6:05 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test a multi-module program which does not have source for the main program.  Sub-programs are loaded and coverage data collected for the sub-programs.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CodeCoverageNoSourceForMain ----------------------------------------------"
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "CCCBL001"]
+global [val ccSystemId "CCCBL001"]
+global [val ccTestId "NoSource"]
+
+/*
+ * Test case for main program with no source, but sub programs do have source (so CC stats should be collected, and
+ * displayed in the CC perspective.
+ */
+open-perspective $HOST_EXPLORER
+
+set-cc-perspective-switch-preference "Prompt"
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $jclMember] 
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+    
+with [get-window "Debug Configurations"] 
+{
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | check
+    get-combo -after [get-label "Repository:"] | set-text "XDEVREG.RCPTT.REPOSIT"
+    get-combo -after [get-label "System:"] | set-text $ccSystemId
+    get-combo -after [get-label "Test ID:"] | set-text $ccTestId
+    get-button Debug | click
+}
+
+handle-login-dialog
+
+// Since there is no source for the main routine, we need to dismiss the prompt to show the log.
+wait-for-window Xpediter | get-button No | click
+get-window "Confirm Perspective Switch" | get-button Yes | click
+
+close-view "Cheat Sheets"
+try
+{
+	get-button "Resume (F8)" | click
+}
+-catch
+{
+	get-button "Resume" | click
+}
+
+wait-for-batch-terminated -configName $jclMember
+
+with [get-window "Confirm Open Perspective"] 
+{
+    get-label "Code Coverage views are associated with the Code Coverage perspective.Do you want to open this perspective now?" 
+        | get-property caption | equals "Code Coverage views are associated with the Code Coverage perspective.\n\n\n\n"
+        + "Do you want to open this perspective now?" | verify-true
+    with [get-button "Remember my decision"] 
+    {
+        get-property caption | equals "&Remember my decision" | verify-true
+        get-property selected | equals false | verify-true
+    }
+    with [get-button Yes] 
+    {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals "&Yes" | verify-true
+    }
+    with [get-button No] 
+    {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals "&No" | verify-true
+    }
+    get-button Yes | click
+}
+
+get-view "Code Coverage" | get-tree | get-item -path "Report Requests" | get-property caption | equals "Report Requests" | verify-true
+
+close-all-editors
+open-perspective $HOST_EXPLORER
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

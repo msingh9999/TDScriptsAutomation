@@ -1,0 +1,176 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: Test 11 - copy of test 10 - Create COBX test and Run and Delete Project
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _4g5QoFK0EeiLfsknE9oTUQ
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 5/8/18 7:49 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclMember "LAUNCHCX"]
+global [val pgmName   "CWKTCOBX"]
+
+add-filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree 
+	| select [get-pds-member-path -dataset "XDEVREG.TTT.JCL" -member $jclMember -filter $FILTER_XDEVREG -portNUM $PORT]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+    
+get-window "Debug Configurations" | get-button Debug | click
+
+handle-login-dialog
+
+wait-for-perspective-switch-msg
+
+close-view "Cheat Sheets"
+
+get-menu "Help/Topaz Workbench Licensing..." | click
+with [get-window "Topaz Workbench"] {
+    get-button "Preferences..." | click
+    with [get-window "Preferences (Filtered)"] {
+        get-group Licensing | get-button "Use Compuware cloud license service for Topaz Workbench licensing" | check
+        get-button Apply | click
+        get-button OK | click
+    }
+    wait 1000
+    get-button Close | click
+}
+with [get-editor "CWKTCOBX [CWKTCOBX]" | get-text-viewer] {
+    hover-text 337 22
+    set-caret-pos 336 40
+    get-menu "Generate Unit Test..." | click
+}
+wait 3000
+get-window "Topaz for Total Test" | get-section Location | get-button "New..." | click
+with [get-window "Topaz for Total Test" -index 1] {
+    get-editbox -after [get-label "Project name:"] | set-text COBX
+    get-button Finish | click
+}
+wait 3000
+get-window "Topaz for Total Test" | get-button OK | click
+get-button "Resume (F8)" | click
+//wait-for-batch-terminated -configName $jclMember
+wait-for-batch-terminated -configName $jclMember
+get-button "Host Explorer" | click
+get-tab-folder | get-tab-item "Project Explorer" | click
+get-view "Project Explorer" | get-tree | select "COBX/Unit Test/JCL/Runner.jcl" | double-click
+get-editor "Runner.jcl" | get-control Any -after [get-label "Editing: Runner.jcl on COBX/Unit Test/JCL"] -index 2 
+    | key-type "TRAVERSE_ARROW_PREVIOUS"
+get-editor "Runner.jcl" | close
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Xpediter"
+    get-button OK | click
+}
+get-view "Project Explorer" | get-tree | select "COBX/Unit Test/JCL/Runner.jcl" 
+    | select "COBX/Unit Test/JCL/Runner.jcl" | get-menu "Open With/Compuware Editor" | click
+with [get-editor "Runner.jcl" | get-text-viewer] {
+    set-caret-pos 26 27
+    key-type Del -times 21
+    type-text "CX.R1700"
+    type-text 0
+    type-text 0
+    type-text "."
+    type-text S
+    type-text M
+    type-text P
+    type-text E
+    type-text "."
+    type-text S
+    type-text L
+    type-text C
+    type-text X
+    type-text L
+    type-text O
+    type-text A
+    type-text D
+    set-caret-pos 28 27
+    key-type Del -times 2
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    key-type Del
+    type-text E
+    type-text N
+    type-text T
+    type-text Q
+    type-text A
+    type-text "."
+    type-text T
+    type-text T
+    type-text T
+    type-text "."
+    type-text P
+    type-text S
+    key-type BackSpace
+    type-text D
+    type-text S
+    type-text E
+    type-text "."
+    type-text L
+    type-text O
+    type-text A
+    type-text D
+}
+get-menu "File/Save" | click
+get-view "Project Explorer" | get-tree | select "COBX/Unit Test/Scenarios/CWKTCOBX_Scenario.testscenario" | double-click
+get-editor "CWKTCOBX_Scenario.testscenario" | get-button "Run test scenario" | click
+with [get-window -class RunnerSettingsDialog] {
+    get-group "Host Connection" | get-combo | select "cw01:30947"
+    get-group "JCL template" | get-tree | select "Unit Test/JCL/Runner.jcl"
+    get-button OK | click
+}
+wait-for-job-completion JOBNAME
+wait 3000
+get-view "Project Explorer" | get-tree | select COBX | get-menu Delete | click
+with [get-window "Delete Resources"] {
+    get-button "Delete project contents on disk (cannot be undone)" | check
+    wait 3000
+    get-button OK | click
+}
+//close the Log, and any other editors that may have been left open
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

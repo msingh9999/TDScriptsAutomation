@@ -1,0 +1,67 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,__J2YgA15EeeqcLs0Ht7rNg,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: HebrewSequential
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _VoUagA5HEeeqcLs0Ht7rNg
+Runtime-Version: 2.2.0.201703262316
+Save-Time: 3/28/17 1:32 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that Hebrew text is displayed and saved correctly when browsing/editing sequential datasets.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val srcDataset "XDEVREG.HEBREW.SEQ.SOURCE"]
+global [val destDataset [format "XDEVREG.HEBREW.SEQ.DEST.T%S" [get-time | format-time -format mmssSSS]]]
+global [val seqDataExtension [get-resource-file-extension $srcDataset]]
+global [val editorTitle [format "%s%s" $destDataset $seqDataExtension]]
+
+// These variables contain invisible "Left To Right Marks" (U+200E)
+global [val originalText "This is a test with Hebrew ‎שנבג‎ 123.\nשנב‎ abc 12 ‎חלך‎ 34 -0 ‎בסז"]
+global [val editedText "This is a test with Hebrew ‎שנבג‎ 123.\nשצמזנב‎ abc 13 ‎חלך‎ 34 -0 ‎בסז"]
+
+/**
+ * Test modifications are translated before sending the data to the mainframe.
+ */
+copy-pds $srcDataset $destDataset
+get-view "Host Explorer" | get-tree | select-pds $destDataset | get-menu -path "Edit With/Compuware Editor"	| click
+with [get-editor $editorTitle | get-text-viewer]
+{
+	// Verify text displays as expected (proves translation occurred)
+	get-property text | equals $originalText | verify-true
+
+    key-type Down
+    key-type Home
+    key-type Right
+    type-text "צמז"
+    key-type Right -times 9
+    key-type Del
+    type-text 3
+}
+
+get-button "Save (M1+S)" | click
+// Verify modifications are what we expected
+get-editor $editorTitle | get-text-viewer | get-property text | equals $editedText | verify-true
+get-editor $editorTitle | close
+
+get-view "Host Explorer" | get-tree | select-pds $destDataset | get-menu -path "Browse With/Compuware Editor" | click
+// Verify re-opened member shows our modifications (proves we translated on save - otherwise the Hebrew text would be
+// reversed, since we already proved we translate on open.)
+get-editor $editorTitle | get-text-viewer | get-property text | equals $editedText | verify-true
+get-editor $editorTitle | close
+
+delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $destDataset
+
+// Logout to prevent other tests from running with Hebrew code page.
+logout
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

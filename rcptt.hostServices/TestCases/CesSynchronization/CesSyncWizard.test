@@ -1,0 +1,131 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _1E5kUGLsEeadrO1nQWrsqw
+Element-Name: CesSyncWizard
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _BT8UIE6hEea3Ofs-YxSJJg
+Runtime-Version: 2.2.0.201704030805
+Save-Time: 7/21/17 12:14 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val cesSyncUrlIStrobeOnly "http://10.100.10.37:48226/compuware/"]
+
+log "---------------------------------------------- CesSyncWizard ----------------------------------------------"
+
+// Test Sync... button is disabled when no CES URL is entered and datetime label is not visible when no synchronization has been done before
+get-preferences-menu | click
+get-window Preferences | get-tree | select "Compuware/Enterprise Services"
+with [get-window Preferences | get-group "Central Administration"] {
+	get-button "Sync..." | get-property enablement | equals false | verify-true
+    get-property "getChildren().Control[2].getText()" | contains "Last synchronized on" | verify-true
+    get-property "getChildren().Control[2].isVisible()" | equals false | verify-true
+}
+
+// Force flushing preferences, so the Host Connections preference page picks up on the altered preferences
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-button Apply | click
+}
+
+get-window Preferences | get-button OK | click
+
+// Test Sync... button is enabled when CES URL is entered and datetime label is not visible yet since no synchronization
+connect-ces
+
+get-preferences-menu | click
+get-window Preferences | get-tree | select "Compuware/Enterprise Services"
+with [get-window Preferences | get-group "Central Administration"] {
+	get-button "Sync..." | get-property enablement | equals true | verify-true
+    get-property "getChildren().Control[2].getText()" | contains "Last synchronized on" | verify-true
+    get-property "getChildren().Control[2].isVisible()" | equals false | verify-true
+}
+
+get-window Preferences | get-button OK | click
+
+// Test Sync... button is enabled when CES URL is entered and datetime label is visible after synchronization
+connect-ces
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "setMockCommandSetForWizardPage"
+
+get-preferences-menu | click
+
+get-window Preferences | get-tree | select "Compuware/Enterprise Services"
+with [get-window Preferences | get-group "Central Administration" | get-button "Sync..."] {
+	get-property enablement | equals true | verify-true
+
+	// Capture current time as close to clicking "Sync..." as we can. Only testing accurracy up to the current hour,
+	// so this should be plenty close enough.
+	global [val formattedDateTime [get-time | format-time -format "M/d/yy h"]]
+	click
+}
+
+// TODO: The sequence of these wizard pages will change, once we implement the code to retrieve the model from CES.
+// We will need to mock the CES data to include the current test data for these tests to continue to work.
+with [get-window Preferences | get-window "Compuware Enterprise Services Synchronization"] {
+	get-editbox -after [get-label "My Wizard Page"] | get-property text | equals "My wizard page message." | verify-true
+	get-label "My test content." | get-property caption | equals "My test content." | verify-true
+	get-label "\"My model data\"" | get-property caption | equals "\"My model data\"" | verify-true
+
+	get-button "Next >" | click
+	get-label "\"Test model data 2\"" | get-property caption | equals "\"Test model data 2\"" | verify-true
+
+	get-button "Next >" | get-property enablement | equals false | verify-true
+
+	get-button Finish | click
+	get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+}
+
+with [get-window Preferences | get-group "Central Administration" | get-label -after [get-button "Sync..."]] {
+	$formattedDateTime | log
+	get-property caption -raw | log
+	get-property caption | matches [concat "Last synchronized on " [$formattedDateTime] ":.. .M"] | verify-true
+}
+
+get-window Preferences | get-button OK | click
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "resetRealCommandSet"
+
+// Test when the HCI connection wizard does not have data to display, the wizard page should not get displayed
+// Case: Both HCI and iStrobe, but first synchronize and then try again which should not display any pages since
+// nothing changed
+
+// Remove all hosts
+remove-extra-hosts false
+
+connect-ces
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-group "Central Administration" | get-button "Sync..." | click
+}
+
+with [get-window "Compuware Enterprise Services Synchronization"] {
+    get-button "Select All" | click
+    get-button Finish | click
+}
+
+get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-group "Central Administration" | get-button "Sync..." | click
+}
+
+with [get-window Preferences | get-window "Compuware Enterprise Services Synchronization"] {
+    get-label "Synchronization Complete" | get-property caption | equals "Synchronization Complete" | verify-true
+	get-table | get-item "HCI Host Connections" | get-property "values['Details']" | contains "Content is up to date. Last synchronized on " | verify-true
+}
+
+get-window Preferences | get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+get-window Preferences | get-button OK | click
+
+// Remove all hosts
+remove-all-hosts-native
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

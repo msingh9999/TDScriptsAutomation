@@ -1,0 +1,29 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ClearAllBreakpoints
+Element-Type: context
+Element-Version: 2.0
+Id: _vZ3AoJ-TEeaqXcq-JvSnkA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 3/24/17 4:18 PM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+try -command 
+{
+	open-xpediter-perspective
+	
+	with [get-view Breakpoints] 
+	{
+    	get-button "Remove All Breakpoints" | click
+	}
+	get-window "Remove All Breakpoints" | get-button Yes | click
+}
+-catch
+{
+	// Ignore any errors.
+}
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

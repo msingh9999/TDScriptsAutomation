@@ -1,0 +1,118 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q
+Element-Name: AliasSupport
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Ea67AKKGEeajnfYDhbdKFw
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/12/17 12:39 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests alias support for Customer API
+    - Tests launching of Example Launcher
+        - From main menu
+        - From Quick Access
+    - Sequential Dataset
+	    - Test error dialog
+    - PDS Dataset
+	    - Test error dialog
+    - VSAM Dataset
+	    - Test error dialog
+    - DDIO Dataset
+	    - Test error dialog
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- AliasSupport ----------------------------------------------"
+
+global [val testSeqDatasetAlias "XDEVREG.SEQ.JCL.TEST1.ALIAS"]
+global [val testPdsDatasetAlias "XDEVREG.COBOL.ALIAS"]
+global [val testVsamDatasetAlias "XDEVREG.HS.API.TEST.KSDS.ALIAS"]
+global [val testDdioDatasetAlias "XDEVREG.DDIO.TEST.ALIAS"]
+
+proc "get-alias-error-message" [val dataset]
+{
+    format "Unable to fetch dataset characteristics for alias %s. Dataset characteristics are not supported for aliases." $dataset
+}
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+
+// Test launching of Example Launcher from main menu
+get-menu "Window/Show View/Other..." | click
+with [get-window "Show View"] {
+    get-tree | select "Compuware/Example Launcher"
+    get-button OK | click
+}
+
+get-view "Example Launcher" | close
+
+// Test launching of Example Launcher View from Quick Access
+get-quick-access | set-text example
+get-window -index 1 | get-table | select Views | double-click
+
+// Test Sequential Alias
+get-view "Example Launcher" | get-group Examples | get-tree 
+    | select "Host Services API/Datasets/Fetch Dataset Characteristics" | double-click
+
+with [get-window "Fetch Dataset Characteristics Example" | get-editbox -after [get-label "Dataset name:"]] {
+    set-text $testSeqDatasetAlias
+}
+exec-with-options {
+    get-window "Fetch Dataset Characteristics Example" | get-button Run | click
+    get-window "Problem Occurred" 
+        | get-label [get-alias-error-message $testSeqDatasetAlias]
+    get-window "Problem Occurred" | get-button OK | click
+} -allowStatusDialog
+
+// Test PDS Alias
+get-view "Example Launcher" | get-group Examples | get-tree 
+    | select "Host Services API/Datasets/Fetch Dataset Characteristics" | double-click
+
+with [get-window "Fetch Dataset Characteristics Example" | get-editbox -after [get-label "Dataset name:"]] {
+    set-text $testPdsDatasetAlias
+}
+exec-with-options {
+    get-window "Fetch Dataset Characteristics Example" | get-button Run | click
+    get-window "Problem Occurred" 
+        | get-label [get-alias-error-message $testPdsDatasetAlias]
+    get-window "Problem Occurred" | get-button OK | click
+} -allowStatusDialog
+
+// Test VSAM Alias
+get-view "Example Launcher" | get-group Examples | get-tree 
+    | select "Host Services API/Datasets/Fetch Dataset Characteristics" | double-click
+
+with [get-window "Fetch Dataset Characteristics Example" | get-editbox -after [get-label "Dataset name:"]] {
+    set-text $testVsamDatasetAlias
+}
+exec-with-options {
+    get-window "Fetch Dataset Characteristics Example" | get-button Run | click
+    get-window "Problem Occurred" 
+        | get-label [get-alias-error-message $testVsamDatasetAlias]
+    get-window "Problem Occurred" | get-button OK | click
+} -allowStatusDialog
+
+// Test DDIO Alias
+get-view "Example Launcher" | get-group Examples | get-tree 
+    | select "Host Services API/Datasets/Fetch Dataset Characteristics" | double-click
+
+with [get-window "Fetch Dataset Characteristics Example" | get-editbox -after [get-label "Dataset name:"]] {
+    set-text $testDdioDatasetAlias
+}
+exec-with-options {
+    get-window "Fetch Dataset Characteristics Example" | get-button Run | click
+    get-window "Problem Occurred" 
+        | get-label [get-alias-error-message $testDdioDatasetAlias]
+    get-window "Problem Occurred" | get-button OK | click
+} -allowStatusDialog
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

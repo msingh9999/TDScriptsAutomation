@@ -1,0 +1,31 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: EmbeddedDDIOReturnCode
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _2263cBu7EeeBQZldCHQxpA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/27/17 9:36 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- EmbeddedDDIOReturnCode ----------------------------------------------"
+
+global [val noLoadDataSet "XDEVREG.PDSE.EMBED.SRC.LOAD"]
+global [val pdseEmbedFilter "XDEVREG.PDSE.EMBED"]
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+add-filter -filter $pdseEmbedFilter -hostName $HOST -portNum $PORT
+
+get-view $HOST_EXPLORER | get-tree | select [get-ddio-section-path -filter $pdseEmbedFilter -dataset $noLoadDataSet -member "CB52MAIN" -section "CB52MAIN"]
+get-view Properties | click
+get-view Properties | get-tree | get-item "Return Code" | get-property "columns[1]" | equals 00 | verify-true
+
+remove-filter -filter $pdseEmbedFilter
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

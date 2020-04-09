@@ -1,0 +1,108 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_UrIe0ER7EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_PkqwgMlIEeeuRPE7E3vB_w,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_DIm2ALsyEeem0fyxENOpag
+Element-Name: ReportRequestDialogHostAndRepositoryPrefs
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _1seOAMlIEeeuRPE7E3vB_w
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/20/17 11:30 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test for Code Coverage preferences that save the last used host and repository for a report request.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- ReportRequestDialogHostAndRepositoryPrefs ----------------------------------------------"
+
+invoke-static -pluginId "com.compuware.codecoverage.rcptt" -className "com.compuware.codecoverage.rcptt.CodeCoverageTestUtilities" -methodName "createReportRequest" -args "TestReportCW09" -args "hci://10.10.0.205:30947" -args "XDEVREG.CC.REPOSIT2"
+
+// Add repository XDEVREG.CC.REPOSIT for CW01:30947
+
+get-view "Code Coverage" | get-tree | select Repositories | get-menu -path "Add..." | click
+with [get-window "Code Coverage"] {
+    with [get-section Repositories] {
+        with [get-editbox -after [get-label "Name:"]] {
+            set-text "XDEVREG.CC.REPOSIT*"
+            key-type Enter
+        }
+        get-table | select "XDEVREG.CC.REPOSIT"
+    }
+    get-button OK | click
+}
+
+// New report request should used the saved host/repository preferences (set by context).
+
+get-view "Code Coverage" | get-tree | select "Report Requests" | get-menu -path "New..." | click
+with [get-window "Code Coverage Report Request"] {
+    get-combo -after [get-label "Host:"] | get-property selection | equals [format "%s:%s" $HOST $PORT] | verify-true
+    get-combo -after [get-label "Repository:"] | get-property selection | equals "XDEVREG.CC.REPOSIT" | verify-true
+}
+get-window "Code Coverage Report Request" | get-button Cancel | click
+
+// Add host CW09
+open-perspective $HOST_EXPLORER
+add-host -hostName $HOST_CW09 -portNum $PORT
+login-from-host -hostName $HOST_CW09 -port $PORT
+
+// Add repository XDEVREG.CC.REPOSIT2 for CW09:30947
+
+get-button "Code Coverage" | click
+get-view "Code Coverage" | get-tree | select Repositories | get-menu -path "Add..." | click
+with [get-window "Code Coverage"] {
+    get-section Repositories | get-table | select "XDEVREG.CC.REPOSIT2"
+    get-button OK | click
+}
+
+// Verify the saved report request imported from the context displays the host/repository from the report model.
+
+get-view "Code Coverage" | get-tree | select "Report Requests/TestReportCW09" | get-menu -path "Edit..." | click
+with [get-window "Code Coverage Report Request"] {
+    get-combo -after [get-label "Host:"] | get-property selection | equals [format "%s:%s" $HOST_CW09 $PORT] | verify-true
+    get-combo -after [get-label "Repository:"] | get-property selection | equals "XDEVREG.CC.REPOSIT2" | verify-true
+}
+
+// Change the selected repository and save the report request
+with [get-window "Code Coverage Report Request"] {
+    get-button "Browse..." | click
+    with [get-window "Code Coverage"] {
+        with [get-section Repositories] {
+            with [get-editbox -after [get-label "Name:"]] {
+                set-text "XDEVREG.CCAPI*"
+                key-type Enter
+            }
+            get-table | select "XDEVREG.CCAPI.REPOSIT"
+        }
+        get-button OK | click
+    }
+    get-button OK | click
+}
+
+// Re-editing should now show the updated repository
+get-view "Code Coverage" | get-tree | select "Report Requests/TestReportCW09" | get-menu -path "Edit..." | click
+with [get-window "Code Coverage Report Request"] {
+    get-combo -after [get-label "Host:"] | get-property selection | equals [format "%s:%s" $HOST_CW09 $PORT] | verify-true
+    get-combo -after [get-label "Repository:"] | get-property selection | equals "XDEVREG.CCAPI.REPOSIT" | verify-true
+}
+get-window "Code Coverage Report Request" | get-button OK | click
+
+// Creating a new report request should use the updated host/repository preferences
+get-view "Code Coverage" | get-tree | select "Report Requests" | get-menu -path "New..." | click
+with [get-window "Code Coverage Report Request"] {
+    get-combo -after [get-label "Host:"] | get-property selection | equals [format "%s:%s" $HOST_CW09 $PORT] | verify-true
+    get-combo -after [get-label "Repository:"] | get-property selection | equals "XDEVREG.CCAPI.REPOSIT" | verify-true
+}
+get-window "Code Coverage Report Request" | get-button Cancel | click
+
+// Clean up CW09
+open-perspective $HOST_EXPLORER
+logout -hostName $HOST_CW09 -port $PORT
+remove-extra-hosts
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

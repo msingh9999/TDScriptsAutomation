@@ -1,0 +1,82 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _7WSUgGhrEeargO7pG6rfCA
+Element-Name: CesPreferences
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _yII10GheEea6Qc9uN6U8vQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/26/17 2:37 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests the importing and exporting of CES preferences.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Export location within project that gets cleared with every run of the test; see Contexts for project
+global [val exportLocation [concat [get-workspace-location]"/ImportExportProject/export"]]
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-editbox -after [get-label "URL:"] | set-text $CES_URL
+    get-group "Central Administration" | get-button "Disable synchronization notification messages" | check
+    get-button OK | click
+}
+
+get-menu "File/Export..." | click
+with [get-window Export] {
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+
+with [get-window "Export Compuware Configuration Settings"] {
+    get-group "Configuration Settings" | get-tree | select "Host Explorer" 
+        | get-item "Host Explorer/Compuware Enterprise Services" | check
+    get-combo -after [get-label "To directory:"] | set-text $exportLocation
+    get-button Finish | click
+    try -command {
+    	get-window "Import/Export Warning" | get-button Yes | click
+    } -catch {
+    	// Okay if window is missing
+    }
+    get-window "Import/Export" | get-button OK | click
+}
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-editbox -after [get-label "URL:"] | set-text ""
+    get-group "Central Administration" | get-button "Disable synchronization notification messages" | uncheck
+    get-button OK | click
+}
+
+get-menu "File/Import..." | click
+with [get-window Import] {
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+
+with [get-window "Import Compuware Configuration Settings"] {
+    get-group "Configuration Settings" | get-tree | select "Host Explorer" 
+        | get-item "Host Explorer/Compuware Enterprise Services" | check
+    get-combo -after [get-label "From directory:"] | select $exportLocation
+    get-button Finish | click
+    get-window "Import/Export" | get-button OK | click
+}
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-editbox -after [get-label "URL:"] | get-property text | equals $CES_URL | verify-true
+    get-group "Central Administration" | get-button "Disable synchronization notification messages" 
+        | get-property selected | equals true | verify-true
+}
+
+get-window Preferences | get-button OK | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

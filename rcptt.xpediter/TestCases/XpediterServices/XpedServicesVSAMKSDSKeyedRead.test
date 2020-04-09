@@ -1,0 +1,67 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: XpedServicesVSAMKSDSKeyedRead
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _pPqw8OyPEeaqGusLTWfDAA
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:50 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "XVSAM2"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+
+    //add test loadlib with VSAM file support
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        get-editbox | set-text "XT.R170000.SMPE.SLXTLOAD"
+        get-button OK | click
+    }
+
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "createVSAMListener"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "addVSAMReadWriteListeners"
+
+
+get-editor "XVSAM2 [XVSAM2]" | get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 68
+get-button "Resume (F8)" | click
+
+wait-for-breakpoint -stackFramePath "XVSAM2 [Xpediter Batch Debug Session]/.*/Thread [XVSAM2, Step: STEP1] (Suspended (breakpoint))/XVSAM2 [XVSAM2] (procedure: XVSAM2 line: 68)"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "removeVSAMReadWriteListeners"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateVSAMReadCount" -args 1
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateLastVSAMFileNameAndOrganization" -args "VSAMKSDS" -args "INDEXED"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateLastVSAMFileKey" -args 20
+
+with [get-view Debug] {
+    get-tree | select "XVSAM2 [Xpediter Batch Debug Session]" 
+        | select "XVSAM2 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+}
+get-window "Terminate and Remove" | get-button Yes | click
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,324 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _UrIe0ER7EeamKrg04Gqe-Q,_eEaF4ER8EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_L8LU0G4MEeewnPydhNCs0A
+Element-Name: AnnotationPreferences
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _xS8B0G4KEeewnPydhNCs0A
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/14/17 10:30 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val exportLocation [concat [get-workspace-location]"/CodeCoverageImportExportProject/export"]]
+global [val execCritExclAnnotation "Code Coverage Executed Critical and Excluded Line"]
+global [val execCritAnnotation "Code Coverage Executed Critical Line"]
+global [val execExclAnnotation "Code Coverage Executed Excluded Line"]
+global [val execAnnotation "Code Coverage Executed Line"]
+global [val unexecCritExclAnnotation "Code Coverage Unexecuted Critical and Excluded Line"]
+global [val unexecCritAnnotation "Code Coverage Unexecuted Critical Line"]
+global [val unexecExclAnnotation "Code Coverage Unexecuted Excluded Line"]
+global [val unexecAnnotation "Code Coverage Unexecuted Line"]
+global [val partialCritExclAnnotation "Code Coverage Partially Executed Critical and Excluded Conditional"]
+global [val partialCritAnnotation "Code Coverage Partially Executed Critical Conditional"]
+global [val partialExclAnnotation "Code Coverage Partially Executed Excluded Conditional"]
+global [val partialAnnotation "Code Coverage Partially Executed Conditional"]
+global [val optimizedCritExclAnnotation "Code Coverage Optimized Critical and Excluded Line"]
+global [val optimizedCritAnnotation "Code Coverage Optimized Critical Line"]
+global [val optimizedExclAnnotation "Code Coverage Optimized Excluded Line"]
+global [val optimizedAnnotation "Code Coverage Optimized Line"]
+
+log "---------------------------------------------- AnnotationPreferences ----------------------------------------------"
+
+// Delete any previously exported code coverage preference files
+try -command
+{
+    delete-file [uri-from-path $exportLocation]
+}
+-catch
+{
+    concat "Could not delete folder " $exportLocation | log
+}
+
+// Add Code Coverage Preferences
+
+get-preferences-menu | click
+proc "change-annotation-settings" [val isOverviewChecked] [val isNavigationChecked]
+{
+    get-button "Vertical ruler" | uncheck
+    if [$isOverviewChecked | equals true]
+    {
+        get-button "Overview ruler" | uncheck
+    }
+    -else
+    {
+        get-button "Overview ruler" | check
+    }
+    get-combo -after [get-label "Show in"] | select Box
+    get-button "Text as" | uncheck
+	set-dialog-result Color "130,130,230"
+    get-button -after [get-label "Color:"] | click
+    if [$isNavigationChecked | equals true]
+    {
+	    get-button "Include in next/previous navigation" | uncheck
+    }
+    -else
+    {
+	    get-button "Include in next/previous navigation" | check
+    }
+}
+
+with [get-window Preferences]
+{
+    get-tree | select "General/Editors/Text Editors/Annotations"
+    get-table | select $execCritExclAnnotation
+    change-annotation-settings false false
+
+    get-table | select $execCritAnnotation
+    change-annotation-settings true false
+
+    get-table | select $execExclAnnotation
+    change-annotation-settings false false
+
+    get-table | select $execAnnotation
+    change-annotation-settings false false
+
+    get-table | select $optimizedCritExclAnnotation
+    change-annotation-settings false false
+
+    get-table | select $optimizedCritAnnotation
+    change-annotation-settings true false
+
+    get-table | select $optimizedExclAnnotation
+    change-annotation-settings false false
+
+    get-table | select $optimizedAnnotation
+    change-annotation-settings false false
+
+    get-table | select $partialAnnotation
+    change-annotation-settings false true
+
+    get-table | select $partialCritExclAnnotation
+    change-annotation-settings false true
+
+    get-table | select $partialCritAnnotation
+    change-annotation-settings true true
+
+    get-table | select $partialExclAnnotation
+    change-annotation-settings false false
+
+    get-table | select $unexecCritExclAnnotation
+    change-annotation-settings false true
+
+    get-table | select $unexecCritAnnotation
+    change-annotation-settings true true
+
+    get-table | select $unexecExclAnnotation
+    change-annotation-settings false false
+
+    get-table | select $unexecAnnotation
+    change-annotation-settings true true
+
+	get-button OK | click    
+}
+
+// Export Code Coverage settings
+
+get-menu "File/Export..." | click
+with [get-window Export]
+{
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+with [get-window "Export Compuware Configuration Settings" | get-group "Configuration Settings" | get-tree]
+{
+    select "Code Coverage"
+    get-item "Code Coverage" | check
+}
+set-dialog-result Folder $exportLocation
+with [get-window "Export Compuware Configuration Settings"]
+{
+    get-button "Browse..." | click
+    get-button Finish | click
+    get-window "Import/Export" | get-button OK | click
+}
+
+// Clean up existing code coverage artifacts and reset/remove preferences
+
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tree | select "General/Editors/Text Editors/Annotations"
+    get-button "Restore Defaults" | click
+    get-button OK | click
+}
+
+// Verify preferences are reset
+
+proc "validate-annotation-settings" [val isVertRulerChecked] [val isOverviewChecked] [val textAs] [val isTextChecked] [val isNavigationChecked] [val red] [val green] [val blue]
+{
+    get-button "Vertical ruler" | get-property selected | equals $isVertRulerChecked | verify-true
+    get-button "Overview ruler" | get-property selected | equals $isOverviewChecked | verify-true
+    get-combo -after [get-label "Show in"] | get-property selection | equals $textAs | verify-true
+    get-button "Text as" | get-property selected | equals $isTextChecked | verify-true
+    get-button "Include in next/previous navigation" | get-property selected | equals $isNavigationChecked | verify-true
+	with [get-button -after [get-label "Color:"]]
+	{
+	    get-property "getImage().getImageData().data.byte[472]" | equals $blue | verify-true
+	    get-property "getImage().getImageData().data.byte[473]" | equals $green | verify-true
+	    get-property "getImage().getImageData().data.byte[474]" | equals $red | verify-true
+	}
+}
+
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tree | select "General/Editors/Text Editors/Annotations"
+	get-table | select $execCritExclAnnotation
+	validate-annotation-settings true false Highlighted true false "-64" "-1" "-64"
+
+	get-table | select $execCritAnnotation
+	validate-annotation-settings true true Highlighted true false "-64" "-1" "-64"
+
+	get-table | select $execExclAnnotation
+	validate-annotation-settings true false Highlighted true false "-64" "-1" "-64"
+
+	get-table | select $execAnnotation
+	validate-annotation-settings true false Highlighted true false "-64" "-1" "-64"
+
+	get-table | select $optimizedCritExclAnnotation
+	validate-annotation-settings true false Highlighted true false "-44" "-44" "-44"
+
+	get-table | select $optimizedCritAnnotation
+	validate-annotation-settings true true Highlighted true false "-44" "-44" "-44"
+
+	get-table | select $optimizedExclAnnotation
+	validate-annotation-settings true false Highlighted true false "-44" "-44" "-44"
+
+	get-table | select $optimizedAnnotation
+	validate-annotation-settings true false Highlighted true false "-44" "-44" "-44"
+
+	get-table | select $partialCritExclAnnotation
+	validate-annotation-settings true false Highlighted true true "-1" "-1" "-128"
+
+	get-table | select $partialCritAnnotation
+	validate-annotation-settings true true Highlighted true true "-1" "-1" "-128"
+
+	get-table | select $partialExclAnnotation
+	validate-annotation-settings true false Highlighted true false "-1" "-1" "-128"
+
+	get-table | select $partialAnnotation
+	validate-annotation-settings true false Highlighted true true "-1" "-1" "-128"
+
+	get-table | select $unexecCritExclAnnotation
+	validate-annotation-settings true false Highlighted true true "-1" "-96" "-96"
+
+	get-table | select $unexecCritAnnotation
+	validate-annotation-settings true true Highlighted true true "-1" "-96" "-96"
+
+	get-table | select $unexecExclAnnotation
+	validate-annotation-settings true false Highlighted true false "-1" "-96" "-96"
+
+	get-table | select $unexecAnnotation
+	validate-annotation-settings true true Highlighted true true "-1" "-96" "-96"
+
+    get-button OK | click
+}
+
+// Import the code coverage preferences that we exported.
+
+get-menu "File/Import..." | click
+with [get-window Import] {
+    get-tree | select "Compuware/Compuware Configuration Settings"
+    get-button "Next >" | click
+}
+set-dialog-result Folder "platform:/resource/CodeCoverageImportExportProject/export/Code Coverage Settings"
+with [get-window "Import Compuware Configuration Settings"] {
+    get-button "Browse..." | click
+    with [get-group "Configuration Settings" | get-tree] {
+        select "Code Coverage"
+        get-item "Code Coverage" | check
+    }
+    get-button Finish | click
+    get-window "Import/Export Error" | get-button OK | click
+}
+set-dialog-result Folder "platform:/resource/CodeCoverageImportExportProject/export"
+with [get-window "Import Compuware Configuration Settings"] {
+    get-button "Browse..." | click
+    with [get-group "Configuration Settings" | get-tree] {
+        get-item "Code Coverage" | uncheck
+        get-item "Code Coverage" | check
+    }
+    get-button Finish | click
+    try -command
+    {
+    	get-window "Import/Export Warning" | get-button "Yes To All" | click
+    }
+    -catch
+    {
+    }
+    get-window "Import/Export" | get-button OK | click
+}
+
+// Verify preferences are imported
+
+get-preferences-menu | click
+with [get-window Preferences]
+{
+    get-tree | select "General/Editors/Text Editors/Annotations"
+	get-table | select $execCritExclAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $execCritAnnotation
+	validate-annotation-settings false false Box false true "-126" "-126" "-26"
+
+	get-table | select $execExclAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $execAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $optimizedCritExclAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $optimizedCritAnnotation
+	validate-annotation-settings false false Box false true "-126" "-126" "-26"
+
+	get-table | select $optimizedExclAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $optimizedAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $partialCritExclAnnotation
+	validate-annotation-settings false true Box false false "-126" "-126" "-26"
+
+	get-table | select $partialCritAnnotation
+	validate-annotation-settings false false Box false false "-126" "-126" "-26"
+
+	get-table | select $partialExclAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $partialAnnotation
+	validate-annotation-settings false true Box false false "-126" "-126" "-26"
+
+	get-table | select $unexecCritExclAnnotation
+	validate-annotation-settings false true Box false false "-126" "-126" "-26"
+
+	get-table | select $unexecCritAnnotation
+	validate-annotation-settings false false Box false false "-126" "-126" "-26"
+
+	get-table | select $unexecExclAnnotation
+	validate-annotation-settings false true Box false true "-126" "-126" "-26"
+
+	get-table | select $unexecAnnotation
+	validate-annotation-settings false false Box false false "-126" "-126" "-26"
+
+    get-button OK | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

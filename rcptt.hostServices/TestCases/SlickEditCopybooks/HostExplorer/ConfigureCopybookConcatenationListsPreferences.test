@@ -1,0 +1,337 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_CdHz0LfKEeaZj-_yDyxeGA
+Element-Name: ConfigureCopybookConcatenationListsPreferences
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: __7DqkLZnEeaILoYZrimrPw
+Runtime-Version: 2.0.2.201511100828
+Save-Time: 12/2/16 10:42 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test Host Explorer Copybook Concatenation Lists Preferences
+    - Test opening from main toolbar
+        - Test New button
+        - Test Edit button
+	    - Test Duplicate button
+        - Test Add button
+        - Test Move Up button
+        - Test Move Down button
+        - Test Remove button
+    - Test opening from Host Explorer Tree View menu
+        - Test creation of new concatenation list from Host Explorer Tree View menu selection
+    - Test opening from main menu | Window | Preferences
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val datasetName1 "XDEVREG.HS.API.TEST.COBOL.COPYLIB"]
+global [val datasetName2 "XDEVREG.HS.API.TEST.COBOL.SOURCE"]
+global [val datasetName3 "XDEVREG.OLPDLT.CPYLIB"]
+global [val datasetName4 "XDEVREG.PROJECT.COBOL.COPYLIB"]
+global [val concatListName0 "CopybookConcat0"]
+global [val concatListName1 "CopybookConcat1"]
+global [val concatListName2 "CopybookConcat2"]
+global [val concatListName3 "CopybookConcat3"]
+global [val invalidDatasetName "A.B.C"]
+
+add-filter -filter $FILTER_XDEVREG
+
+remove-all-host-explorer-concatenation-lists
+
+// Test opening of the Copybook Concatenation preference page from the main toolbar
+
+get-button "SlickEdit Copybook Concatenation Lists preferences" | click
+
+with [get-window "Preferences (Filtered)"] {
+
+	// Validate initial enablement / disablement of controls
+	
+	get-combo -after [get-label "Active copybook concatenation list:"] | get-property enablement | equals true | verify-true
+    get-button "New..." | get-property enablement | equals true | verify-true
+    get-button "Edit..." | get-property enablement | equals false | verify-true
+    get-button "Duplicate..." | get-property enablement | equals false | verify-true
+    get-button "Add..." | get-property enablement | equals false | verify-true
+    get-button Remove | get-property enablement | equals false | verify-true
+    get-button "Move Up" | get-property enablement | equals false | verify-true
+    get-button "Move Down" | get-property enablement | equals false | verify-true
+    get-button Validate | get-property enablement | equals false | verify-true
+
+	// Test creation of new concatenation list
+	
+    get-button "New..." | click
+    
+    with [get-window "Copybook Concatenation List"] {
+        get-editbox -after [get-label "Copybook concatenation list name:"] | set-text $concatListName0
+        get-button "Browse..." | click
+        with [get-window "Dataset Selection"] {
+            with [get-section Datasets] {
+                with [get-editbox -after [get-label "Name:"]] {
+                    set-text $FILTER_XDEVREG
+                    key-type Enter
+                }
+                get-table | select $datasetName1 $datasetName2
+            }
+            get-button OK | click
+        }
+        get-button OK | click
+    }
+
+	// Test the Active concatenation list dropdown is updated with added concatenation list
+
+	with [get-combo -after [get-label "Active copybook concatenation list:"]] {
+    	get-property "getItemCount()" | equals 1 | verify-true
+    	get-property "values[0]" | equals $concatListName0 | verify-true
+	}
+	    
+    // Test editing of the concatenation list
+    
+    get-button "Edit..." | click
+    
+    with [get-window "Copybook Concatenation List"] {
+        get-editbox -after [get-label "Copybook concatenation list name:"] | set-text $concatListName1
+        get-editbox -after [get-label "Datasets:"] | set-text [format "%s\n" $datasetName1]
+        get-button OK | click
+    }
+
+	// Test the Active concatenation list dropdown is updated with edited concatenation list name
+
+	with [get-combo -after [get-label "Active copybook concatenation list:"]] {
+    	get-property "getItemCount()" | equals 1 | verify-true
+    	get-property "values[0]" | equals $concatListName1 | verify-true
+	}
+    
+    // Validate editing is reflected in listing
+    
+    with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName1 | get-property childCount | equals 1 | verify-true
+    	get-item $concatListName1 | get-property "getItems().TreeItem[0].getText()" 
+        	| equals $datasetName1 | verify-true
+	}
+	
+	// Test duplication of concatenation list
+	
+    get-button "Duplicate..." | click
+    
+    with [get-window "Copybook Concatenation List"] {
+        get-editbox -after [get-label "Copybook concatenation list name:"] | set-text $concatListName2
+        get-button OK | click
+    }
+	
+    // Validate duplication actually occurred
+    
+    with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName2 | get-property childCount | equals 1 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[0].getText()" 
+        	| equals $datasetName1 | verify-true
+	}
+
+    // Test addition to duplicated concatenation list
+    
+	get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName2
+    get-button "Add..." | click
+    
+    with [get-window Datasets] {
+        get-button "Browse..." | click
+        with [get-window "Dataset Selection"] {
+            with [get-section Datasets] {
+                with [get-editbox -after [get-label "Name:"]] {
+                    set-text $FILTER_XDEVREG
+                    key-type Enter
+                }
+                get-table | select $datasetName3 $datasetName4
+            }
+            get-button OK | click
+        }
+        get-button OK | click
+    }
+    
+    // Validate addition actually occurred
+
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName2 | get-property childCount | equals 3 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[0].getText()" 
+        	| equals $datasetName1 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[1].getText()" 
+        	| equals $datasetName3 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[2].getText()" 
+        	| equals $datasetName4 | verify-true
+	}    
+
+	// Validate at least one dataset must be entered when specifying concatenation list dataset(s)
+	
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName1
+    get-button "Duplicate..." | click
+    with [get-window "Copybook Concatenation List"] {
+        get-editbox -after [get-label "Copybook concatenation list name:"] | set-text $concatListName3
+        get-editbox -after [get-label "Datasets:"] | set-text ""
+        get-editbox -after [get-label "Duplicate Copybook Concatenation List"] | get-property "getText()" 
+        	| equals "No datasets entered." | verify-true
+        get-editbox -after [get-label "Datasets:"] | get-property text | equals "" | verify-true
+        get-button OK | get-property enablement | equals false | verify-true
+        
+        // Validate entering of invalid dataset is accepted; will be used later
+
+        get-editbox -after [get-label "Datasets:"] | set-text $invalidDatasetName
+        
+        get-button OK | click
+    }
+	
+    // Test ordering of concatenation listing using Move Up button
+    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select [format "%s/%s" $concatListName2 $datasetName4]
+    get-button "Move Up" | click | click
+    
+    // Validate ordering shows $datasetName4 was moved to first position in the concatenation list
+    
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName2 | get-property "getItems().TreeItem[0].getText()" 
+        	| equals $datasetName4 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[1].getText()" 
+        	| equals $datasetName1 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[2].getText()" 
+        	| equals $datasetName3 | verify-true
+	}    
+    
+    // Test ordering of concatenation listing using Move Down button
+    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select [format "%s/%s" $concatListName2 $datasetName1]
+    get-button "Move Down" | click
+    
+    // Validate ordering shows $datasetName1 was moved to last position in the concatenation list
+
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName2 | get-property "getItems().TreeItem[0].getText()" 
+        	| equals $datasetName4 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[1].getText()" 
+        	| equals $datasetName3 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[2].getText()" 
+        	| equals $datasetName1 | verify-true
+	}    
+
+	// Test validation of concatenation list $CopybookConcat1
+	    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName1
+    get-button Validate | click
+    get-window "Copybook Concatenation List Validation Succeeded" | get-button OK | click
+    
+    // Test validation of invalid concatenation list $CopybookConcat3
+    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName3
+    get-button Validate | click
+	get-window "Copybook Concatenation List Validation Failed" | get-table 
+    	| get-item $invalidDatasetName | getProperty "values['Reason']" | equals "not found" | verify-true
+    get-window "Copybook Concatenation List Validation Failed" | get-button OK | click    
+    	
+    // Validate selection of a single concatenation list and disablement of ordering buttons
+    // NOTE: Enablement validation of other buttons was handled implicitely due to testing their actions above
+    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName1
+   	get-button "Move Up" | get-property enablement | equals false | verify-true
+   	get-button "Move Down" | get-property enablement | equals false | verify-true
+	
+    // Validate selection of multiple concatenation lists and enablement / disablement
+    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName1 $concatListName2
+   	get-button "New..." | get-property enablement | equals true | verify-true
+   	get-button "Edit..." | get-property enablement | equals false | verify-true
+   	get-button "Duplicate..." | get-property enablement | equals false | verify-true
+   	get-button "Add..." | get-property enablement | equals false | verify-true
+   	get-button Remove | get-property enablement | equals true | verify-true
+   	get-button "Move Up" | get-property enablement | equals false | verify-true
+   	get-button "Move Down" | get-property enablement | equals false | verify-true
+   	get-button Validate | get-property enablement | equals false | verify-true
+ 	   
+    // Test removal of a concatenation list item
+    
+   	get-tree -after [get-label "Copybook concatenation lists:"] | select [format "%s/%s" $concatListName2 $datasetName3]
+   	get-button Remove | click
+	
+	// Validate the removal actually occurred
+	
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName2 | get-property childCount | equals 2 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[0].getText()" 
+        	| equals $datasetName4 | verify-true
+    	get-item $concatListName2 | get-property "getItems().TreeItem[1].getText()" 
+        	| equals $datasetName1 | verify-true
+	}    
+	   
+    // Test removal of multiple concatenation list items
+    
+   	get-tree -after [get-label "Copybook concatenation lists:"] | select [format "%s/%s" $concatListName2 $datasetName4] [format "%s/%s" $concatListName2 $datasetName1]
+   	get-button Remove | click
+
+	// Validate the removal actually occurred
+	
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-item $concatListName2 | get-property childCount | equals 0 | verify-true
+	}    
+    
+    // Test removal of concatenation list
+    
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName2
+    get-button Remove | click
+    
+    // Validate removal of concatenation lists actually occurred
+
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-property "getItemCount()" | equals 2 | verify-true
+	}    
+
+	// Test removal of multiple concatenation lists
+
+    get-tree -after [get-label "Copybook concatenation lists:"] | select $concatListName1 $concatListName3
+    get-button Remove | click
+    
+    // Validate removal of multiple concatenation lists actually occurred
+    
+	with [get-tree -after [get-label "Copybook concatenation lists:"]] {
+    	get-property "getItemCount()" | equals 0 | verify-true
+	}    
+    
+    get-button OK | click
+}
+
+// Test opening of the Copybook Concatenation preference page from the Host Explorer menu
+ 	
+get-view "Host Explorer" | get-tree 
+   	| select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetName1] 
+   	| get-menu "Add to Copybook Concatenation List/New Copybook Concatenation List..." | click
+
+with [get-window "Copybook Concatenation List"] {
+   	get-editbox -after [get-label "Copybook concatenation list name:"] | set-text $concatListName1
+   	get-button OK | click
+}
+
+// Validate new concatenation list is created containing selected dataset
+ 	
+with [get-window "Preferences (Filtered)" | get-tree -after [get-label "Copybook concatenation lists:"]] {
+	get-property "getItems().TreeItem[0].getText()" | equals $concatListName1 | verify-true
+    get-item $concatListName1 | get-property childCount | equals 1 | verify-true
+    get-item $concatListName1 | get-property "getItems().TreeItem[0].getText()" 
+       	| equals $datasetName1 | verify-true
+}
+
+with [get-window "Preferences (Filtered)"] {
+    get-tree -after [get-label "Copybook concatenation lists:"] | select CopybookConcat1
+    get-button Remove | click
+    get-button OK | click
+}
+
+// Test opening of the Copybook Concatenation preference page from Topaz Preferences
+
+get-preferences-menu | click
+
+with [get-window Preferences] {
+    get-tree | select "Compuware/Host Explorer/Copybook Concatenation"
+    get-button Cancel | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

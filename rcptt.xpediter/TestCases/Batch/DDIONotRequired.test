@@ -1,0 +1,40 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: DDIONotRequired
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _iBBZQIv1Eea1Gdzc0BbeFg
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:25 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "BATCOB03"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+
+get-eclipse-window | key-type F6 -times 7
+with [get-view Debug] {
+    get-tree | select "BATCOB03 [Xpediter Batch Debug Session]" 
+        | select "BATCOB03 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+}
+get-window "Terminate and Remove" | get-button Yes | click
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

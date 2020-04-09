@@ -1,0 +1,91 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: HostExplorerUtilities
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _x3uuACiyEeawwty1Y0abzw
+Runtime-Version: 2.2.0.201609192323
+Save-Time: 11/23/16 9:40 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val ddioDatasetName "XDEVREG.XPED.DDIO"]
+global [val vsamDatasetName "XDEVREG.HS.API.TEST.KSDS"]
+global [val jclDatasetName "XDEVREG.XPED.JCL"]
+global [val nonExistentDatasetName "XDEVREG.DOESNT.EXIST"]
+global [val unsupportedDatasetName "XDEVREG.OMVS.USER.HFS"]
+global [val migratedDatasetName "XDEVREG.HS.API.TEST.SEQ.MIGRATED"]
+global [val jclMemberName "XDEVREG.XPED.JCL(PLITYPEJ)"]
+global [val jclEditorName "PLITYPEJ.jcl"]
+global [val sequentialDatasetName "XDEVREG.DEMO.SEQS3"]
+
+// Used in some Workbench procedures
+add-filter $FILTER_XDEVREG
+global [val extension [get-resource-file-extension $sequentialDatasetName]]
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Quick Browse..." | click
+with [get-window Browse] {
+    get-combo -after [get-label "Dataset Name:"] | set-text $ddioDatasetName
+    get-button OK | click
+}
+get-window Browse | get-editbox -after [get-label Browse] | get-property text 
+    | equals [format "%s could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." $ddioDatasetName] 
+    | verify-true
+
+with [get-window Browse] {
+    get-combo -after [get-label "Dataset Name:"] | set-text $jclDatasetName
+    get-button OK | click
+}
+get-window Browse | get-window "Dataset Selection" | get-label "Dataset Selection" | get-property caption 
+    | equals "Dataset Selection" | verify-true
+with [get-window Browse] {
+    get-window "Dataset Selection" | get-button Cancel | click
+    get-combo -after [get-label "Dataset Name:"] | set-text $nonExistentDatasetName
+    get-button OK | click
+}
+get-window Browse | get-editbox -after [get-label Browse] | get-property text 
+    | equals [format "%s does not exist." $nonExistentDatasetName] | verify-true
+with [get-window Browse] {
+    get-combo -after [get-label "Dataset Name:"] | set-text $unsupportedDatasetName
+    get-button OK | click
+}
+get-window Browse | get-editbox -after [get-label Browse] | get-property text 
+    | equals [format "%s could not be opened because the dataset type is unsupported or the dataset name is not sufficient to open the dataset based on its type." $unsupportedDatasetName]
+    | verify-true
+with [get-window Browse] {
+    get-combo -after [get-label "Dataset Name:"] | set-text $migratedDatasetName
+    get-button OK | click
+}
+get-window Browse | get-window "Dataset is migrated" 
+    | get-label [format "The dataset %s is migrated. Would you like to recall the dataset?" $migratedDatasetName]
+    | get-property caption 
+    | equals [format "The dataset %s is migrated. Would you like to recall the dataset?" $migratedDatasetName] 
+    | verify-true
+with [get-window Browse] {
+    get-window "Dataset is migrated" | get-button No | click
+    get-combo -after [get-label "Dataset Name:"] | set-text $jclMemberName
+    get-button OK | click
+}
+get-tab-folder -index 1 | get-property activePage | equals $jclEditorName | verify-true
+get-editor $jclEditorName | close
+
+/* Todo: need to make this test condiditonal.
+ * This test fails when the File-AID DataEditor is installed, (i.e. under the nightly build) because the DataEditor
+ * becomes the default editor for sequential files.
+ * 
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Quick Browse..." | click
+with [get-window Browse] {
+    get-combo -after [get-label "Dataset Name:"] | set-text $sequentialDatasetName
+    get-button OK | click
+}
+get-tab-folder -index 1 | get-property activePage | equals [concat $sequentialDatasetName $extension] | verify-true
+get-editor [concat $sequentialDatasetName $extension] | close
+*/
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

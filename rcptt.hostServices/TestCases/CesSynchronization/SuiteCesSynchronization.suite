@@ -1,0 +1,22 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteCesSynchronization
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _wOHu8Il1EeaOKusaXEFUkQ
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/9/18 10:51 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_NOhK0FpJEeadDfq-N81CBA	// kind: 'test' name: 'CesServerURL' path: 'CesServerURL.test'
+_oLsswFm2EeadhvMZFS_VPA	// kind: 'test' name: 'CesSyncPopup' path: 'CesSyncPopup.test'
+_-B_ukFpOEea7asSIuD4J6A	// kind: 'test' name: 'CesSyncStartup' path: 'CesSyncStartup.test'
+_BT8UIE6hEea3Ofs-YxSJJg	// kind: 'test' name: 'CesSyncWizard' path: 'CesSyncWizard.test'
+_1iF7UHBNEea8jK97vfBXMw	// kind: 'test' name: 'HostConnectionCesPageLink' path: 'HostConnectionCesPageLink.test'
+_bTlUIFphEeadDfq-N81CBA	// kind: 'test' name: 'HostConnectionRefresh' path: 'HostConnectionRefresh.test'
+_V8QiAFAMEeaG3ezV_jUfiw	// kind: 'test' name: 'ResultSummaryDialog' path: 'ResultSummaryDialog.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

@@ -1,0 +1,110 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: XpediterViews
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _nYjDoKNwEeeK4om9NQMo6A
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/23/18 12:18 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to validate Xpediter View context sensitive help
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "------------------------------------------------- XpediterViews -------------------------------------------------"
+
+// For some reason, the F1 key does work reliably on test playback, so this test is using the Help/Dynamic Help menu
+// in place of the F1 key to test context sensitive help
+
+proc "wait-for-dynamic-help-view" [val seconds 10] {
+	get-menu -path "Help/Dynamic Help" | click
+
+	try -delay 1000 -times $seconds -command {
+		get-view Help
+	} -catch {
+		bool false | log [format "Waited %s seconds and could not detect dynamic help view." $seconds]
+	}
+}
+
+proc "validate-view-context-help" [val text] [val seconds 10] {
+	try -delay 1000 -times $seconds -command {
+		get-control Browser | get-property text | contains $text | verify-true
+	} -catch {
+		bool false | log [format "Waited %s seconds and could not detect help %s" $seconds $text]
+	}
+}
+
+open-xpediter-perspective
+close-cheatsheet
+
+get-menu -path "Window/Show View/CICS Code Coverage" | click
+get-view "CICS Code Coverage" | get-table
+
+wait-for-dynamic-help-view
+
+get-view "CICS Code Coverage" | click
+with [get-view Help] {
+	get-section "Code Coverage for CICS" | get-link "Code Coverage for CICS - More Details" | click
+	validate-view-context-help "Code Coverage collection for CICS consists of defining the test criteria, beginning t" +
+		"he Code Coverage data collection, executing the CICS transactions, and halting the collection"
+}
+
+get-view Help | click
+get-view "CICS Code Coverage" | click
+get-view Help | close
+get-view Outline | click
+get-view "CICS Code Coverage" | close
+get-menu -path "Window/Show View/CICS Traps" | click
+
+wait-for-dynamic-help-view
+
+with [get-view Help] {
+	get-section "CICS Traps View" | get-link "CICS Traps View - More Details" | click
+	validate-view-context-help "view provides information about the traps set for the active CICS debug session. The " +
+		"<span style=\"font-weight: bold;\">CICS Traps</span> view also allows users to add, edit, and remove traps w" +
+		"hile a debugging session is active"
+}
+
+get-view "CICS Traps" | click
+get-view Help | close
+get-view Outline | click
+get-view "CICS Traps" | close
+get-menu -path "Window/Show View/CICS Channels and Containers" | click
+
+wait-for-dynamic-help-view
+
+with [get-view Help] {
+	get-section "CICS Channels and Containers View" | get-link "CICS Channels and Containers View - More Details"
+		| click
+	validate-view-context-help "CICS Channels and Containers</span> view allows users to do the following when debugg" +
+		"ing a CICS transaction that involves container data"
+}
+
+get-view "CICS Channels and Containers" | click
+get-view Help | close
+get-view Outline | click
+get-view "CICS Channels and Containers" | close
+get-view "Open DDIO" | click
+
+wait-for-dynamic-help-view
+
+with [get-view Help] {
+	get-section "Open DDIO View" | get-link "Open DDIO View - More Details" | click
+	validate-view-context-help "The <span style=\"font-weight: bold;\">Open DDIO</span> view allows users to browse s" +
+		"ource listing files and set breakpoints during a debug session. Upon launching a debug session, the view is " +
+		"populated with the load module specified in the launch configuration used"
+}
+
+get-view "Open DDIO" | click
+get-view Help | close
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

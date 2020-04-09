@@ -1,0 +1,19 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteEndevor
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _vMdBIIl2EeaOKusaXEFUkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 5/16/17 1:59 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_RKQ6gEUHEeamKrg04Gqe-Q	// kind: 'test' name: 'RefreshAfterGenerate' path: 'RefreshAfterGenerate.test'
+_kjGO8L4-EeajusfmOW4rkQ	// kind: 'test' name: 'Endevor' path: 'Endevor.test'
+_UxGL0MOOEea8xdxnpjW-VA	// kind: 'test' name: 'EndevorTimeout' path: 'EndevorTimeout.test'
+_9uW6wDpDEeenec1Fvy4gYQ	// kind: 'test' name: 'CheckOutName' path: 'CheckOutName.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

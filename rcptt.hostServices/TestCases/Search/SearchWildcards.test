@@ -1,0 +1,70 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: SearchWildcards
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _RAWwwJ0QEeaEL9K2GkMuew
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 10/28/16 11:08 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Search with a combination of a member name and a wildcarded member name within the same dataset. 
+// This should issue two search requests, one with the wildcarded member and one for the entire member
+// and combine the results
+
+get-menu "Search/Dataset..." | click
+with [get-window Search] {
+    get-combo -after [get-label "Search for text:"] | set-text CWXTDATE
+    try -command
+    {
+        get-group Scope | get-button "Remove All" | click
+    }
+    -catch
+    {
+    }
+    
+    get-group Scope | get-button "Add..." | click
+    with [get-window Datasets] {
+        with [get-editbox] {
+            set-text "XDEVREG.SOURCE.COBOL(CWXTCOB)\n"
+                + "XDEVREG.SOURCE.COBOL(CWXTD*)"
+        }
+        get-button OK | click
+    }
+    get-button Search | click
+}
+with [get-view Search] {
+    get-link [format "'CWXTDATE' - 3 records, 3 occurrences, Host: %s:%s" $HOST $PORT] | get-property caption 
+        | equals [format "'CWXTDATE' - 3 records, 3 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+    with [get-tree] {
+        get-item "XDEVREG.SOURCE.COBOL/CWXTCOB \\(2 records, 2 occurrences\\)" | get-property caption 
+            | equals "CWXTCOB (2 records, 2 occurrences)" | verify-true
+        get-item "XDEVREG.SOURCE.COBOL/CWXTDATE \\(1 records, 1 occurrences\\)" | get-property caption 
+            | equals "CWXTDATE (1 records, 1 occurrences)" | verify-true
+    }
+}
+
+// Add the entire dataset to the previous search.  This should only perform one search call as the entire
+// dataset overrides any specific member or wildcard member entries
+
+get-menu "Search/Dataset..." | click
+with [get-window Search] {
+    get-group Scope | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-editbox | set-text "XDEVREG.SOURCE.COBOL"
+        get-button OK | click
+    }
+    get-button Search | click
+}
+get-view Search | get-link [format "'CWXTDATE' - 3 records, 3 occurrences, Host: %s:%s" $HOST $PORT] | get-property caption 
+    | equals [format "'CWXTDATE' - 3 records, 3 occurrences, Host: %s:%s" $HOST $PORT] | verify-true
+get-view $HOST_EXPLORER | click
+get-view Search | close
+get-view Console | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

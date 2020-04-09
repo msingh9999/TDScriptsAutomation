@@ -1,0 +1,63 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: AddSonarQubeServer
+Element-Type: context
+Element-Version: 2.0
+Id: _Cjmk4KzKEearpKw8qQl8DQ
+Runtime-Version: 2.2.0.201704062317
+Save-Time: 8/25/17 11:10 AM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+get-menu "Window/Show View/Other..." | click
+with [get-window "Show View"]
+{
+	get-tree | select "SonarLint/SonarQube Servers"
+	get-button OK | click
+}
+
+with [get-view "SonarQube Servers"]
+{
+	if -condition [has-link "<a>Connect to a SonarQube server...</a>"] -then
+	{
+		get-link "<a>Connect to a SonarQube server...</a>" | click-link
+
+		with [get-window "Connect to a SonarQube Server"]
+		{
+			if [has-label "Choose connection type"]
+			{
+				// Configure using new SonarLint wizard:
+			    get-button -index 1 | click
+			    get-button "Next >" | click
+			    get-editbox -after [get-label "URL:"] | set-text $SONAR_QUBE_SERVER
+			    get-button "Next >" | click
+			    get-button "Username + Password" | click
+			    get-button "Next >" | click
+				get-editbox -after [get-label "Username:"] | set-text admin
+			    get-editbox -after [get-label "Password:"] | set-text [decrypt "/CLWiEOG/UO3teVLLK29Pg=="]
+			    get-button "Next >" | click
+			    get-button "Next >" | click
+			    get-button Finish | click
+			}
+			-else
+			{
+				// Configure using old SonarLint dialog:
+				get-editbox -after [get-label "URL:"] | set-text $SONAR_QUBE_SERVER
+				get-editbox -after [get-label "Username / Token:"] | set-text admin
+				get-editbox -after [get-label "Password:"] | set-text [decrypt "/CLWiEOG/UO3teVLLK29Pg=="]
+				get-button "Test connection" | click
+				get-button Finish | click
+			}
+		}
+		
+		if -condition [has-window "Secure Storage"]
+		-then {
+			get-window "Secure Storage" | get-button "No" | click
+		}
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

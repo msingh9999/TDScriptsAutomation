@@ -1,0 +1,351 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_gJI9gIl3Eeaf8rtXp2pZyA
+Element-Name: ContentsView
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _aMUzMHRiEeao6LAbRG4SEA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 3/21/18 11:47 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- ContentsView ----------------------------------------------"
+
+global [val testDataset1 "XDEVREG.OLPDLT.COBOL"]
+global [val testDataset2 "XDEVREG.COBOL"]
+global [val testDataset3 "XDEVREG.COBOL.BIG"]
+global [val firstMember "TB000004"]
+global [val lastMember "TB000023"]
+global [val endevorEnvironment "X2"]
+global [val endevorSystem "V3R1B0"]
+global [val endevorSubSystem "BASE"]
+global [val endevorType "PROCESS"]
+global [val endevorStage "P"]
+global [val endevorElement "*"]
+global [val testMember1 "ASMB"]
+global [val testMember2 "ASMC"]
+global [val memFilterPds "XDEVREG.CONTENTS.TEST1.JCL"]
+global [val memFilter1 "XDEVREG.CONTENTS.TEST1.JCL(COB*)"]
+global [val memFilter2 "XDEVREG.CONTENTS.TEST1.JCL(*STD*)"]
+global [val memFilter3 "XDEVREG.CONTENTS.TEST1.JCL(*COB)"]
+global [val memFilter1ValidateFirst "COBCOMP"]
+global [val memFilter2ValidateFirst "TESTDECJ"]
+global [val memFilter2ValidateLast "TESTDFP"]
+global [val memFilter3ValidateFirst "CWXTCOB"]
+global [val loadLibrary "XDEVREG.PDSE.EMBED.SRC.LOAD"]
+global [val loadModule "CB52MAIN"]
+
+proc "handle-endevor-member-browse-error-dialog"
+{
+    try -command
+    {
+        get-window $HOST_EXPLORER | get-button OK | click
+    }
+    -catch
+    {
+    }
+}
+
+add-filter $FILTER_XDEVREG
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset1]
+
+// Test sorting the contents view list
+with [get-view Contents | get-table] {
+    get-item $firstMember | get-property caption | equals $firstMember | verify-true
+    get-item $firstMember | get-property index | equals 0 | verify-true
+    get-item $lastMember | get-property caption | equals $lastMember | verify-true
+    get-item $lastMember | get-property index | equals 4 | verify-true
+}
+get-view Contents | get-table | get-column-header Name | click
+with [get-view Contents | get-table] {
+    get-item $lastMember | get-property caption | equals $lastMember | verify-true
+    get-item $lastMember | get-property index | equals 0 | verify-true
+    get-item $firstMember | get-property caption | equals $firstMember | verify-true
+    get-item $firstMember | get-property index | equals 4 | verify-true
+}
+
+// Validate that an icon is showing
+get-view Contents | get-table | get-column-header Name | click
+get-view Contents | get-table | get-item $firstMember | get-property "image.path" 
+    | equals "com.compuware.frameworks.imagerepository/images/obj/document.gif" | verify-true
+    
+// Double click to open the default editor    
+get-view Contents | get-table | select $firstMember | double-click
+get-editor [format "%s.cbl" $firstMember] | close
+
+// Validate right-click Edit With / Compuware Editor menu
+get-view Contents | get-table | select $firstMember | get-menu "Edit With/Compuware Editor" | click
+get-editor [format "%s.cbl" $firstMember] | close
+
+// Test menus available for PDS cobol member
+get-view Contents | get-table | select $firstMember | get-menu "Copy"
+get-view Contents | get-table | select $firstMember | get-menu "Cut"
+get-view Contents | get-table | select $firstMember | get-menu "Properties"
+get-view Contents | get-table | select $firstMember | get-menu "Refresh"
+get-view Contents | get-table | select $firstMember | get-menu "Assign File Extension..."
+get-view Contents | get-table | select $firstMember | get-menu "Add Files to Project..."
+get-view Contents | get-table | select $firstMember | get-menu "Submit"
+get-view Contents | get-table | select $firstMember | get-menu "Submit Compile"
+get-view Contents | get-table | select $firstMember | get-menu "Search..."
+get-view Contents | get-table | select $firstMember | get-menu "Rename..."
+get-view Contents | get-table | select $firstMember | get-menu "Delete"
+get-view Contents | get-table | select $firstMember | get-menu "Edit With"
+get-view Contents | get-table | select $firstMember | get-menu "Browse With"
+get-view Contents | get-table | select $firstMember | get-menu "Edit"
+get-view Contents | get-table | select $firstMember | get-menu "Browse"
+
+// Test contents view with sections
+get-view "Host Explorer" | get-tree | select [get-pds-member-path -portNUM $PORT -dataset $loadLibrary -member $loadModule]
+    | get-menu "Show Contents" | click
+verify-contents-view-caption -captionValue $loadModule | verify-true
+with [get-view Contents | get-table | select $loadModule]
+{
+    get-menu "Browse"
+    get-menu "Browse With"
+    get-menu "Refresh"
+    get-menu "Properties"
+}
+with [get-view Contents | get-table]
+{
+	get-property "columns[0].caption" | equals "Name" | verify-true
+	get-property "columns[1].caption" | equals "Compile Date" | verify-true
+	get-property "columns[2].caption" | equals "Compile Time" | verify-true
+	get-property "columns[3].caption" | equals "RC" | verify-true
+	get-property "columns[4].caption" | equals "Language" | verify-true
+}
+
+// Test contents view for "Hosts" node
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s" $HOST $PORT]
+with [get-view Contents | get-table] {
+    get-item "z\\/OS Datasets" | get-property caption | equals "z/OS Datasets" | verify-true
+    get-item "z\\/OS UNIX Files" | get-property caption | equals "z/OS UNIX Files" | verify-true
+}
+
+// Test contents view for Z/OS Datasets node
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT]
+get-view Contents | get-table | get-item "xdevreg" | get-property caption | equals xdevreg | verify-true
+
+// Select a dataset with 200+ members and verify that contents view loads - not checking for the exact index of a member in the
+// list in case members are added/removed, just hoping to verify there is no issue populating a list of a couple hundred members
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.COBOL.BIG"]
+with [get-view Contents | get-table] {
+    get-item "WT000710" | get-property caption | equals "WT000710" | verify-true
+    get-item "WT000710" | get-property index -raw | gt 270 | verify-true
+}
+
+// Validate that perspective switches do not reload the contents view if the host explorer selection has not changed.
+// Do this by editing a member.  This switches focus to the editor.  Before CWE-101292 when you set focus back to 
+// the contents view the view was reloaded and positioned to the top of the table.
+with [get-view Contents | get-table] {
+    select WT000690 | double-click
+    select WT000691 | double-click
+}
+
+with [get-view Contents | get-table] {
+    get-item -path WT000691 | get-property selected | equals true | verify-true
+}
+
+get-editor "WT000690.cbl" | close
+get-editor "WT000691.cbl" | close
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.COBOL"]
+get-view Contents | get-table | select "YENTEST"
+with [get-view Contents | get-table] {
+    get-item "YENTEST" | get-property caption | equals "YENTEST" | verify-true
+    get-item "YENTEST" | get-property index -raw| gt 200 | verify-true
+}
+
+// Test sorting and filtering
+get-view "Host Explorer" | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset "XDEVREG.COBOL"]
+    | get-menu "Show Contents" | click
+    
+with [get-view Contents] {
+    get-table | get-column-header Name | click
+    with [get-editbox -after [get-label "XDEVREG.COBOL"]] {
+        set-text CWXGDATE
+    }
+}
+
+with [get-view Contents | get-table] {
+    get-item CWXGDATE | get-property caption | equals CWXGDATE | verify-true
+}
+
+with [get-view Contents] {
+    get-editbox -after [get-label "XDEVREG.COBOL"] | set-text ""
+    get-table | get-column-header Name | click
+    get-editbox -after [get-label "XDEVREG.COBOL"] | set-text CWXGDATE
+}
+
+with [get-view Contents | get-table] {
+    get-item CWXGDATE | get-property caption | equals CWXGDATE | verify-true
+}
+
+with [get-view Contents | get-editbox -after [get-label "XDEVREG.COBOL"]] {
+    set-text ""
+    type-text "CW"
+}
+
+// Test entering partial filter loads table with matched members
+with [get-view Contents | get-table] {
+	try -delay 1000 -times 10 -command {
+		get-view Contents | get-label "" -after [get-label "XDEVREG.COBOL"] | get-property "image.path" 
+    		| equals "com.compuware.frameworks.imagerepository/images/dlcl/clear_co.gif" | verify-true	} -catch {
+		bool false | log [format "Waited %s seconds and could not detect refreshed table." $seconds]
+	}
+	get-item -path "CWE74918" | get-property "columns[0]" | equals "CWE74918" | verify-true
+	get-item -path "CWXGDATE" | get-property "columns[0]" | equals "CWXGDATE" | verify-true	
+}
+
+// Test clearing the filter
+with [get-view Contents] {
+    get-label "" -after [get-label "XDEVREG.COBOL"] | click
+	try -delay 1000 -times 10 -command {
+		get-table | get-property itemCount | equals 240 | verify-true } -catch {
+		bool false | log "Waited 10 seconds and could not detect refreshed table."
+	}
+}
+
+// TODO: Keys are not causing action; can do manually though...needs to get looked into... 
+//// Test Enter key from search field
+//with [get-view Contents | get-editbox -after [get-label "XDEVREG.COBOL"]] {
+//	click-text 7
+//    key-type Enter
+//}
+//
+//get-view Contents | get-table | get-item -path ALA04600 | get-property selected | equals true | verify-true
+//
+//// Test down arrow key from search field
+//with [get-view Contents | get-editbox -after [get-label "XDEVREG.COBOL"]] {
+//	click-text 7
+//    key-type Down
+//}
+//
+//get-view Contents | get-table | get-item -path ALA04600 | get-property selected | equals true | verify-true
+
+//with [get-view Contents | get-editbox -after [get-label "XDEVREG.COBOL"]] {
+	//click-text 3
+    //key-type "M1+a"
+    //set-text ""
+//}
+
+// Validate that the contents views show only filtered members on PDS's which have a member filter.
+// Also validate that multiple member filters on the same PDS are handled correctly.
+add-filter $memFilter1
+add-filter $memFilter2
+add-filter $memFilter3
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $memFilter1 -dataset $memFilterPds]
+with [get-view Contents | get-table] {
+    get-item $memFilter1ValidateFirst | get-property caption | equals $memFilter1ValidateFirst | verify-true
+    get-item $memFilter1ValidateFirst | get-property index | equals 0 | verify-true
+}
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $memFilter2 -dataset $memFilterPds]
+with [get-view Contents | get-table] {
+    get-item $memFilter2ValidateFirst | get-property caption | equals $memFilter2ValidateFirst | verify-true
+    get-item $memFilter2ValidateFirst | get-property index | equals 0 | verify-true
+    get-item $memFilter2ValidateLast | get-property caption | equals $memFilter2ValidateLast | verify-true
+    get-item $memFilter2ValidateLast | get-property index | equals 1 | verify-true
+}
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $memFilter3 -dataset $memFilterPds]
+with [get-view Contents | get-table] {
+    get-item $memFilter3ValidateFirst | get-property caption | equals $memFilter3ValidateFirst | verify-true
+    get-item $memFilter3ValidateFirst | get-property index | equals 0 | verify-true
+}
+
+// Test showing contents on a PDS, then shifting focus to another console (JES Explorer) then clicking show contents on a different PDS
+// and verify the 2nd PDS's contents are displayed
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset2]
+    | get-menu "Show Contents" | click
+get-view Contents | get-label $testDataset2 | get-property caption | equals $testDataset2 | verify-true
+get-view "JES Explorer" | click
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset3]
+    | get-menu "Show Contents" | click
+get-view Contents | get-label $testDataset3 | get-property caption | equals $testDataset3 | verify-true
+
+// Test Endeavor datsets - browse only
+add-host -hostName $HOST_CW11 -portNum $PORT_16196
+login-from-host -hostName $HOST_CW11 -port $PORT_16196
+
+// Delete filter if it already exists and then re-create it
+try -command 
+{
+    get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement] | get-menu Delete | click
+    get-window "Delete Filter" | get-button Yes | click
+}
+-catch
+{
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor" $HOST_CW11 $PORT_16196] | get-menu "Add Filter..." | click
+with [get-window Filter] {
+    with [get-section "Endevor Filter"] {
+        get-combo -after [get-label "Environment:"] | set-text $endevorEnvironment
+        get-combo -after [get-label "System:"] | set-text $endevorSystem
+        get-combo -after [get-label "Subsystem:"] | set-text $endevorSubSystem
+        get-combo -after [get-label "Type:"] | set-text $endevorType
+        get-combo -after [get-label "Stage:"] | set-text $endevorStage
+        get-editbox -after [get-label "Element:"] | set-text $endevorElement
+    }
+    get-button OK | click
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s.%s.%s.%s.%s.%s" $HOST_CW11 $PORT_16196 $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement]
+with [get-view Contents] {
+    get-label [format "%s.%s.%s.%s.%s.%s" $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement] | get-property caption | equals [format "%s.%s.%s.%s.%s.%s" $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement] | verify-true
+    get-table | get-item ASMB | get-property "columns[0]" | equals ASMB | verify-true
+}
+
+// verify menus
+with [get-view Contents | get-table | select $testMember1]
+{
+    get-menu "Browse"
+    get-menu "Browse With"
+    get-menu "Signin Elements..."
+    get-menu "Generate..."
+    get-menu "Checkout..."
+    get-menu "Assign File Extension..."
+    get-menu "Refresh"
+    get-menu "Properties"
+}
+
+// Browse may generate an error dialog as XDEVREG does not have access to these resources
+get-view Contents | get-table | select $testMember1 | get-menu Browse | click
+handle-endevor-member-browse-error-dialog
+get-view Contents | get-table | select $testMember2 | get-menu "Browse With/Compuware Editor" | click
+handle-endevor-member-browse-error-dialog
+
+
+// CWE-121944 contents view should not reload host explorer tree selection after a selection is made from the contents view table itself
+
+// Display the contents of a filter
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu 
+    -path "Show Contents" | click
+
+// Within the contents view display the contents of a PDS    
+with [get-view Contents | get-table] {
+    select "XDEVREG.COBOL" | get-menu -path "Show Contents" | click
+    // Browse a source member from the contents view
+    select CHA1 | get-menu -path Browse | click
+}
+
+// Browse another source member from the contents view - contents view should still display contents of XDEVREG.COBOL
+get-view Contents | get-table | select CHA2 | get-menu -path Browse | click
+
+// verify contents of XDEVREG.COBOL still showing in contents view
+get-view Contents | get-table | get-item -path CHA1 | get-property caption | equals CHA1 | verify-true
+
+close-all-editors
+
+remove-filter -hostName $HOST -port $PORT -filter $memFilter1
+remove-filter -hostName $HOST -port $PORT -filter $memFilter2
+remove-filter -hostName $HOST -port $PORT -filter $memFilter3
+
+remove-host -hostName $HOST_CW11 -portNum $PORT_16196
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

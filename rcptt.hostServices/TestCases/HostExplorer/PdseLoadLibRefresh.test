@@ -1,0 +1,55 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _wdXLMCqfEeeBwLfWkzSZ3Q,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: PdseLoadLibRefresh
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _nmwwMCqaEeeBwLfWkzSZ3Q
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 5/1/17 10:36 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- PdseLoadLibRefresh ----------------------------------------------"
+
+global [val embeddedSrcLoadLib "XDEVREG.PDSE.EMBED.SRC.LOAD"]
+global [val filterXdevregPdse "XDEVREG.PDSE"]
+global [val filterXdevregCompile "XDEVREG.COMPILE"]
+global [val compileJclLib "XDEVREG.COMPILE.JCL"]
+global [val essCompileMem "ESSPGMX"]
+global [val stdCompileMem "PGMX"]
+
+add-filter -filter $filterXdevregCompile
+add-filter -filter $filterXdevregPdse
+
+//Compile the program without embedded source - program should not have children
+submit-job  -dataset $compileJclLib -member $stdCompileMem -jobName "XDEVREGC" -filter $filterXdevregCompile
+
+get-view "Host Explorer" | get-tree 
+    | select [format "Hosts/.*/z\\/OS Datasets/XDEVREG.PDSE/XDEVREG.PDSE.EMBED.SRC.LOAD"] | get-menu Refresh | click
+    
+get-view "Host Explorer" | get-tree | get-item "Hosts/.*/z\\/OS Datasets/XDEVREG.PDSE/XDEVREG.PDSE.EMBED.SRC.LOAD/PGMX" | expand 
+
+get-view "Host Explorer" | get-tree 
+    | get-item "Hosts/.*/z\\/OS Datasets/XDEVREG.PDSE/XDEVREG.PDSE.EMBED.SRC.LOAD/PGMX" 
+    | get-property childCount | equals 0 | verify-true
+
+//Compile the program with embedded source option - after refresh of the dataset, the pgm should then be expandable and ahow children    
+submit-job  -dataset $compileJclLib -member $essCompileMem -jobName "XDEVREGE" -filter $filterXdevregCompile
+
+get-view "Host Explorer" | get-tree 
+    | select "Hosts/.*/z\\/OS Datasets/XDEVREG.PDSE/XDEVREG.PDSE.EMBED.SRC.LOAD" | get-menu Refresh | click
+    
+get-view "Host Explorer" | get-tree | get-item "Hosts/.*/z\\/OS Datasets/XDEVREG.PDSE/XDEVREG.PDSE.EMBED.SRC.LOAD/PGMX" | expand 
+
+get-view "Host Explorer" | get-tree 
+    | get-item "Hosts/.*/z\\/OS Datasets/XDEVREG.PDSE/XDEVREG.PDSE.EMBED.SRC.LOAD/PGMX" 
+    | get-property childCount | equals 3 | verify-true
+    
+remove-filter -filter $filterXdevregPdse
+remove-filter -filter $filterXdevregCompile
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

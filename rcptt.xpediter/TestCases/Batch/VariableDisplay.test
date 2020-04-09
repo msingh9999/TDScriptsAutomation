@@ -1,0 +1,65 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: VariableDisplay
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _4u3JcOcWEea1xbR4reYfxA
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:36 AM
+Tags: CWE-43004
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "GENERALI"]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+// This test is related to CWE-43004 - XE: A field defined as PIC ZZ9,99 with value 10,00 is wrongly changed to 10,,00
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+get-editor "TESTCOB3 [TESTCOB3]" | get-editbox | get-menu "Add Watch Variables..." | click
+with [get-window Watch] {
+    get-table | get-item "EGO-SPESE-OPER-VAL" | check
+    get-button OK | click
+}
+with [get-view Variables | get-tree] {
+    get-item "EGO-SPESE-OPER-VAL" | get-property "columns[0]" | equals "EGO-SPESE-OPER-VAL" | verify-true
+    get-item "EGO-SPESE-OPER-VAL" | get-property "columns[1]" | equals " 10.00" | verify-true
+}
+
+with [get-editor "TESTCOB3 [TESTCOB3]" | get-text-viewer] {
+    set-caret-pos 54 25
+    get-menu "Add Watch Variables..." | click
+}
+get-window Watch | get-button "On current line" | click
+get-window Watch | get-table | get-item "EGO-SPESE-OPER-VAL" | get-property checked | equals false | verify-true
+get-window Watch | get-button Cancel | click
+with [get-editor "TESTCOB3 [TESTCOB3]" | get-text-viewer] {
+    set-caret-pos 55 25
+    get-menu "Add Watch Variables..." | click
+}
+get-window Watch | get-button "On current line" | click
+get-window Watch | get-table | get-item "EGO-SPESE-OPER-VAL-Z" | get-property checked | equals true | verify-true
+get-window Watch | get-button Cancel | click
+
+get-view Debug | get-tree | select "GENERALI [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,672 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresWorkbench
+Element-Type: context
+Element-Version: 2.0
+Id: _YuwFQER7EeamKrg04Gqe-Q
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 10/16/18 4:35 PM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+/* Add a host if it does not already exist. If no host or port are passed in then the default host and port from Constants will be used. */
+proc "add-host" [val hostName $HOST][val portNum $PORT][val encryptProtocol None]
+{
+	if [has-host -hostName $hostName -portNum $portNum | equals false]
+	{
+		get-view "Host Explorer" | get-tree | select Hosts | get-menu Configure | click
+		with [get-window "Preferences (Filtered)"]
+		{
+	    	get-button "Add..." | click
+	    	with [get-window "Host Connections"]
+	    	{
+	        	get-editbox -after [get-label "Host:"] | set-text $hostName
+	        	get-editbox -after [get-label "Port:"] | set-text $portNum
+	        	get-combo -after [get-label "Encryption protocol:"] | select $encryptProtocol
+
+		        get-tab-folder | get-tab-item Advanced | click
+		        get-combo -after [get-label "I/O trace level:"] | select "Requests and Responses"
+
+	        	get-button OK | click
+	    	}
+	    	get-button OK | click
+		}
+	}
+}
+
+/* Add a host if it does not already exist. If no host or port are passed in then the default host and port from Constants will be used. */
+proc "add-host-by-description" [val hostName $HOST][val portNum $PORT][val descriptionHost $DESCRIPTION_HOST][val encryptProtocol None]
+{
+	if [has-host-description -descriptionHost $descriptionHost | equals false]
+	{
+		get-view "Host Explorer" | get-tree | select Hosts | get-menu Configure | click
+		with [get-window "Preferences (Filtered)"]
+		{
+	    	get-button "Add..." | click
+	    	with [get-window "Host Connections"]
+	    	{
+	        	get-editbox -after [get-label "Host:"] | set-text $hostName
+	        	get-editbox -after [get-label "Port:"] | set-text $portNum
+	        	get-editbox -after [get-label "Description:"] | set-text $descriptionHost
+	        	get-combo -after [get-label "Encryption protocol:"] | select $encryptProtocol
+
+		        get-tab-folder | get-tab-item Advanced | click
+		        get-combo -after [get-label "I/O trace level:"] | select "Requests and Responses"
+
+	        	get-button OK | click
+	    	}
+	    	get-button OK | click
+		}
+	}
+}
+
+/* Determines if the specified button is present and enabled/disabled. */
+proc "button-enabled" [val button]
+{
+	try -command
+	{
+		get-button $button | get-property enablement -raw true | equals true | verify-true
+		bool true
+	}
+	-catch
+	{
+		bool false
+	}
+}
+
+/* Close all the open editors.  Default will attempt to close 5 editors. */
+proc "close-all-editors" [val editorCount 5] 
+{
+
+	loop [val count 0] 
+	{
+		if [$count | lt $editorCount] 
+		{
+			try -command 
+			{
+				get-editor -index 0 | close
+				recur [$count | plus 1]
+			}
+			-catch 
+			{
+				log "no more editors to close"
+			}
+		}
+	}
+}
+
+proc "close-cheatsheet"
+{
+	try -command 
+	{
+		get-view "Cheat Sheets" | close
+	}
+	-catch 
+	{
+		log "No Cheat Sheets view available."
+	}
+}
+
+/* Close the specified view. */
+proc "close-view" [val view]
+{
+	try -command 
+	{
+		get-view $view | close
+	}
+	-catch
+	{
+		format "Could not find the view %s to close." $view | log
+	}
+} 
+
+proc "connect-ces" [val url $CES_URL]
+{
+	get-preferences-menu | click
+	with [get-window Preferences]
+	{
+		get-tree | select "Compuware/Enterprise Services"
+		with [get-editbox -after [get-label "URL:"]]
+		{
+    		set-text $url
+		}
+		get-button OK | click
+	}
+}
+
+// Procedure to dismiss the registration prompt by expressing that you never wish to register.
+proc "dismiss-registration"
+{
+	try -times 15 -delay 1000 -command 
+	{
+		get-window "Topaz Workbench Registration" | get-button No | click
+	} 
+	-catch 
+	{
+		// Don't fail the test
+	}
+}
+
+/* Returns a formatted date string that can be used as a suffix for a geneerated datatset.
+   The format is "D050117.T122314"*/
+proc "get-generated-dataset-suffix"
+{
+	format "D%s.T%s" [get-time | format-time -format MMddyy] [get-time | format-time -format HHmmss]
+}
+
+/* Gets the host from a host node's caption (e.g. "CW01:20947"). */
+proc "get-host-from-caption"
+{
+	get-property caption -raw | split -sep ":" | to-list | get 0
+}
+
+/* Gets the port from a host node's caption (e.g. "CW01:20947 [description]"). */
+proc "get-port-from-caption"
+{
+	get-property caption -raw | split -sep ":" | to-list | get 1 | split -sep " " | to-list | get 0
+}
+
+/* Get the internal resource file extension for the given dataset. */
+/* The dataset must be present in the host explorer tree. */
+proc "get-resource-file-extension" [val resourceName] [val hostArg $HOST] [val portArg $PORT] [val filterArg $FILTER_XDEVREG]
+{
+	with [get-view $HOST_EXPLORER | get-tree] 
+	{
+    	select [get-pds-path -hostName $hostArg -portNUM $portArg -filter $filterArg -dataset $resourceName]
+    }
+    invoke-static -pluginId "com.compuware.frameworks.hostservices.test.utils" -className "com.compuware.frameworks.hostservices.test.utils.HostServicesTestUtils" -methodName "getCurrentSelectionFileExtension"
+}
+
+proc "get-view-with-label" [val viewName][val labelName]
+{
+	try -command {
+		get-view $viewName
+		get-label $labelName
+		bool true
+	}
+	-catch {
+		bool false
+	}	
+}
+
+proc "handle-login-dialog" [val userId "xdevreg"] [val password "regress"] [val groupId ""] [val saveCredentials "false"]
+{
+	// wait 10 seconds for the Login dialog, and only enter the credentials if we could get the Login dialog
+	if [has-window Login -times 10 -delay 1000]
+	{
+		with [get-window Login]
+		{
+	    	get-editbox -after [get-label "User ID:"] | set-text $userId
+			get-editbox -after [get-label "Password:"] | set-text $password
+			get-editbox -after [get-label "Group ID:"] | set-text $groupId
+			if [ $saveCredentials | equals true]
+			{
+				get-button "Save credentials" | check
+			}
+	    	get-button OK | click
+		}
+	}
+	-else
+	{
+		log "Not prompted for login."
+	}
+}
+
+/* Determines if the specified button is present. */
+proc "has-button" [val button]
+{
+	try -command {
+		get-button $button | bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/* Determines if the specified host and port is already defined. */
+proc "has-host" [val hostName $HOST] [val portNum $PORT]
+{
+	try -command {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $hostName $portNum] | bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/* Determines if the specified host with description is already defined. */
+proc "has-host-description" [val descriptionHost $DESCRIPTION_HOST] 
+{
+	try -command {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s" $descriptionHost] | bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/* Determines if the specified link exists. */
+proc "has-link" [val linkText]
+{
+	try -command {
+		get-link $linkText
+		bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/* Determines if the specified menu item exists. */
+proc "has-menu" [val menuName]
+{
+	try -command {
+		get-menu $menuName
+		bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/* Determines if the specified view is present. */
+proc "has-view" [val view]
+{
+	try -command {
+		get-view $view | bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/* Determines if the specified window exists. */
+proc "has-window" [val windowText] [val times 1] [val delay 0]
+{
+	try -times $times -delay $delay -command
+	{
+		get-window $windowText
+		bool true
+	}
+	-catch
+	{
+		bool false
+	}
+}
+
+/**
+ * Determines if the specified item exists.
+ */
+proc "has-item" [val path]
+{
+	try
+	{
+		get-item $path
+		bool true
+	}
+	-catch
+	{
+		bool false
+	}
+}
+
+/**
+ * Determines if the specified label exists.
+ */
+proc "has-label" [val text]
+{
+	try
+	{
+		get-label $text
+		bool true
+	}
+	-catch
+	{
+		bool false
+	}
+}
+
+// Procedure to initiate multiple key presses with a delay.
+proc "key-type-with-delay" [val key][val times 1][val delay 100]
+{
+	repeat [val index] -times $times -command
+	{
+		key-type $key
+		wait $delay
+	}
+}
+
+proc "login" [val codePage $CODEPAGE]
+{
+	// Make sure the HCI is up:
+	has-window "Host Explorer" | eq false | assert-true -message "Login not available - HCI may be down."
+
+	with [get-window Login] {
+	    //get-editbox -after [get-label "User ID:"] | set-text xdevreg
+	    //get-editbox -after [get-label "Password:"] | set-text [decrypt "GCCQ5KeLMRHd4spOzx8A1g=="]
+	    get-editbox -after [get-label "User ID:"] | set-text pfhmks0
+	    get-editbox -after [get-label "Password:"] | set-text [decrypt "WDxMW7E+/9OQp89uaoaAQQ=="]
+		get-section "Additional Parameters" | get-combo -after [get-label "Host code page:"] | select $codePage
+	    get-button OK | click
+	}
+
+	// Make sure the login succeeded:
+	has-window Login | eq false | assert-true -message "Login failed. User ID may be revoked, or HCI may be down."
+}
+
+/* Login to the specified host if the xdevreg user is not already logged in.  If no host and port are specified, the default host and
+port will be used. */
+proc "login-from-host" [val hostName $HOST][val port $PORT] [val codePage $CODEPAGE]
+{
+	if [get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $hostName $port] | has-menu "Login..." | equals true]
+	{
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $hostName $port] | get-menu "Login..." | click
+		login $codePage
+	}
+}
+
+/* Login to the specified host if the xdevreg user is not already logged in.  If no host and port are specified, the default host and
+port will be used. */
+proc "login-from-host-by-description" [val descriptionHost $DESCRIPTION_HOST][val codePage $CODEPAGE]
+{
+	if [get-view "Host Explorer" | get-tree | select [format "Hosts/%s" $descriptionHost] | has-menu "Login..." | equals true]
+	{
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s" $descriptionHost] | get-menu "Login..." | click
+		login $codePage
+	}
+}
+/* Logout of the specified host.  If no host and port are specified, the default host and port will be used. */
+proc "logout" [val hostName $HOST][val port $PORT]
+{
+	try -command
+	{
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s" $hostName $port] | get-menu Logout | click
+		get-window Logout | get-button Yes | click
+		bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+proc "logout-by-description" [val hostName]
+{
+	try -command
+	{
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s" $hostName] | get-menu Logout | click
+		get-window Logout | get-button Yes | click
+		bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+proc "open-perspective" [val perspective]
+{
+	get-menu [format "Compuware/%s" $perspective] | click
+}
+
+/* Removes all defined hosts by deleting the HCIConfig.xml file and publishing a HostListUpdated Event. This does not use UI functionality to delete the hosts. */
+proc "remove-all-hosts-native"
+{
+	invoke-static -pluginId "com.compuware.frameworks.hostservices.test.utils" -className "com.compuware.frameworks.hostservices.test.utils.HostServicesTestUtils" -methodName "removeAllHosts"
+}
+
+/* Delete the specified host connection. */
+proc "remove-host" [val hostName $HOST][val portNum $PORT]
+{
+	logout -hostName $hostName -port $portNum
+	get-view "Host Explorer" | get-tree | select Hosts | get-menu Configure | click
+	with [get-window "Preferences (Filtered)"]
+	{
+		// Select with path host/port
+		get-table | get-items | foreach [val item] {
+			if [and [$item | get-property "values['Host']" -raw | eq $hostName] [$item | get-property "values['Port']" -raw | eq $portNum]] {
+				$item | select-item
+			}
+		}
+
+    	get-button Remove | click
+    	get-window "Remove Connection" | get-button Yes | click
+    	get-button OK | click
+	}
+}
+
+proc "remove-host-by-description" [val descriptionHost]
+{
+	logout-by-description -hostName $descriptionHost
+	get-view "Host Explorer" | get-tree | select Hosts | get-menu Configure | click
+	with [get-window "Preferences (Filtered)"]
+	{
+		// Select with path host description
+		get-table | get-items | foreach [val item] {
+			if [$item | get-property "values['Description']" -raw | eq $descriptionHost] {
+				$item | select-item
+			}
+		}
+
+    	get-button Remove | click
+    	get-window "Remove Connection" | get-button Yes | click
+    	get-button OK | click
+	}
+}
+
+// Procedure to remove the initial prompt to synchronize with the CES when a URL is defined in the Topaz ini file.
+proc "remove-ces-sync-prompt"
+{
+	try -times 30 -delay 1000 -command 
+	{
+		get-window "Compuware Enterprise Services Synchronization" | get-button "Never Sync" | click
+	} 
+	-catch 
+	{
+		// Don't fail the test
+	}
+}
+
+/* Removes all remote hosts, optionally keeping our default host ($HOST:$PORT). */
+proc "remove-extra-hosts" [val keepDefaultHost true]
+{
+	with [get-view "Host Explorer" | get-tree | get-item "Hosts"]
+	{
+		collapse-all
+		expand
+
+		get-items | foreach
+		{
+			// If this node is a "remote host", we will check if we need to remove it.
+			if [or [get-property "image.path" -raw | equals $REMOTE_HOST_IMAGE]
+				   [get-property "image.path" -raw | equals $REMOTE_HOST_CONNECTED_IMAGE]]
+			{
+				if [or [bool $keepDefaultHost | eq [bool false]] [get-property caption -raw | not-eq [format "%s:%s" $HOST $PORT]]]
+				{
+					format "Removing host node: '%s'" [get-property caption -raw] | str | log
+					if [get-property caption -raw | contains ":"]
+					{
+						logout [get-host-from-caption] [get-port-from-caption]
+						remove-host [get-host-from-caption] [get-port-from-caption]
+					}
+					-else
+					{
+						logout-by-description [get-property caption -raw]
+						remove-host-by-description [get-property caption -raw]
+					}
+				}
+			}
+		}
+	}
+}
+
+/* Remove all of the JDBC connections. */
+proc "remove-jdbc-connections"
+{
+	get-preferences-menu | click
+	with [get-window Preferences]
+	{
+		get-tree | select "Compuware/Host Connections"
+	    get-tab-folder | get-tab-item JDBC | click
+	    get-table | get-items | foreach [val item] 
+	    {
+			$item | select-item
+			get-window Preferences | get-button Remove | click
+	    	get-window "Remove Database Configuration" | get-button OK | click
+		}
+	    
+	    get-button OK | click
+	}
+}
+
+proc "select-host-and-login" [val hostName $HOST][val port $PORT]
+{
+	get-view Console | get-button "Connect...\tF6" | click
+	with [get-window "Host Explorer"] {
+    	get-table | select [format "%s:%s" $hostName $port]
+    	get-button OK | click
+    	handle-login-dialog
+	}
+}
+
+proc "select-host-by-description-and-login" [val descriptionHost $DESCRIPTION_HOST][val username][val password]
+{	
+	if [has-logged-in-by-description -descriptionHost $descriptionHost | equals false]
+	{
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s" $descriptionHost] | get-menu "Login..." | click
+    	handle-login-dialog -userId $username -password $password
+    }
+	
+}
+
+/* Determines if the specified host is already logged into. */
+proc "has-logged-in-by-description" [val descriptionHost $DESCRIPTION_HOST] 
+{
+	try -command {
+		get-view "Host Explorer" | get-tree | select [format "Hosts/%s" $descriptionHost] | get-menu "Login..." | bool true
+	}
+	-catch {
+		bool false
+	}
+}
+
+/*Wait for the login dialog to appear - this can be used if you just need to wait for the dialog and not logging in. For instance, testing a message on the dialog.*/
+proc "wait-for-login-dialog"
+{
+	try -times 10 -delay 1000 -command
+	{
+		get-window Login
+	}
+	-catch 
+	{
+		log "Login dialog not found."
+	}
+}
+
+/**
+ * Generates a unique dataset name by appending ".T<timestamp>" to the end of the specified dataset suffix.
+ */
+proc "generate-unique-dataset-name" [val datasetSuffix]
+{
+	format "%s.T%s" [$datasetSuffix] [get-time | format-time -format mmssSSS]
+}
+
+/**
+ * This method appends a '.' after the resource name followed by the specified extension (defaults to "data").
+ * <p>
+ * Do not include a leading period for the extension parameter.
+ * <p>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * get-editor [format-with-extension $memberName "cbl"]
+ * </code>
+ */
+proc "format-with-extension" [val resourceName] [val extension "data"]
+{
+	format "%s.%s" [$resourceName] [$extension]
+}
+
+/**
+ * Gets the menu for the specified menu path from an enumerated menu list (such as the menu for opening/displaying a
+ * console).
+ * <p>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * get-button "Display Selected Console" | click -arrow<br>
+ * get-enumerated-menu "Compuware Console" | click
+ * </code>
+ */
+proc "get-enumerated-menu" [val menuPath]
+{
+	loop [val count 1]
+	{
+		try
+		{
+			get-menu -path [format "%s %s" $count $menuPath]
+		}
+		-catch
+		{
+			if [$count | lt 9]
+			{
+				recur [$count | plus 1]
+			}
+			-else
+			{
+				bool false | assert-true -message [format "Unable to find %s menu option." $menuPath]
+			}
+		}
+	}
+}
+
+/**
+ * Displays the specified console.
+ * <p>
+ * <b>Example:</b>
+ * <p>
+ * <code>
+ * display-console "Compuware Console"
+ * </code>
+ */
+proc "display-console" [val menuPath]
+{
+	with [get-view Console]
+	{
+		// If the console is already displayed, we are good to go
+		if [has-label $menuPath | not]
+		{
+			try
+			{
+				// Otherwise, first try to display an already opened console
+				get-button "Display Selected Console" | click -arrow
+				get-enumerated-menu $menuPath | click
+			}
+			-catch
+			{
+				// If not already opened, lets try to open it
+				get-button "Open Console" | click -arrow
+				get-enumerated-menu $menuPath | click
+			}
+		}
+	}
+}
+
+/**
+ * Determines if the specified editor exists.
+ */
+proc "has-editor" [val editorName]
+{
+	try
+	{
+		get-editor $editorName
+		bool true
+	}
+	-catch
+	{
+		bool false
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

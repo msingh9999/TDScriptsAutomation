@@ -1,0 +1,45 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q,_XnPvkEUIEeamKrg04Gqe-Q
+Element-Name: DeleteLocalResource
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _d4qcADQvEeiwHMn-ztqr8g
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 3/30/18 11:51 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName "LocalDelete"]
+global [val file "fileDelete"]
+global [val folder "folderDelete"]
+
+create-online-project -projectName $projectName -hostName $HOST -port $PORT
+get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Source" $projectName $HOST $PORT] | get-menu -path "New/File" | click
+with [get-window "New File"] {
+    get-editbox -after [get-label "File name:"] | set-text $file
+    get-button Finish | click
+    get-window Warning | get-button OK | click
+}
+get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Source/%s" $projectName $HOST $PORT $file] | get-menu -path Delete 
+    | click
+get-window "Delete Resources" | get-button [format "Delete resources from host %s:%s? (cannot be undone)" $HOST $PORT] 
+    | get-property enablement | equals false | verify-true
+get-window "Delete Resources" | get-button Yes | click
+get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Source" $projectName $HOST $PORT] | get-menu -path "New/Folder" | click
+with [get-window "New Folder"] {
+    get-editbox -after [get-label "Folder name:"] | set-text $folder
+    get-button Finish | click
+}
+get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]/Source/%s" $projectName $HOST $PORT $folder] | get-menu 
+    -path Delete | click
+get-window "Delete Resources" | get-button [format "Delete resources from host %s:%s? (cannot be undone)" $HOST $PORT]
+    | get-property enablement | equals false | verify-true
+get-window "Delete Resources" | get-button Yes | click
+
+delete-online-project -projectName $projectName -hostName $HOST -port $PORT
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,42 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteHostServices
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _Sp7SQEUOEeamKrg04Gqe-Q
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 8/25/17 1:42 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_lVbuIIl1EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteCes' path: 'TestCases/Ces/SuiteCes.suite'
+_wOHu8Il1EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteCesSynchronization' path: 'TestCases/CesSynchronization/SuiteCesSynchronization.suite'
+_igNYAIl2EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteDatasetSelectionDialog' path: 'TestCases/DatasetSelectionDialog/SuiteDatasetSelectionDialog.suite'
+_m-2tkIl2EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteEditors' path: 'TestCases/Editors/SuiteEditors.suite'
+_vMdBIIl2EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteEndevor' path: 'TestCases/Endevor/SuiteEndevor.suite'
+__rJBIIl2EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteHostExplorer' path: 'TestCases/HostExplorer/SuiteHostExplorer.suite'
+_MdZdMK3KEearMpD0xmwacQ	// kind: 'suite' name: 'SuiteHostSelectionDialog' path: 'TestCases/HostSelectionDialog/SuiteHostSelectionDialog.suite'
+_Ul5U0KKGEeajnfYDhbdKFw	// kind: 'suite' name: 'SuiteHostServicesAPI' path: 'TestCases/HostServicesAPI/SuiteHostServicesAPI.suite'
+_MfLUUIl3EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteImportExport' path: 'TestCases/ImportExport/SuiteImportExport.suite'
+_odyegBh1Eeeh9I0ITUmrtQ	// kind: 'suite' name: 'SuiteJdbc' path: 'TestCases/JDBC/SuiteJdbc.suite'
+_hQMggL5OEeajusfmOW4rkQ	// kind: 'suite' name: 'SuiteJesExplorer' path: 'TestCases/JesExplorer/SuiteJesExplorer.suite'
+_cnFMAIl3EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteLicensing' path: 'TestCases/Licensing/SuiteLicensing.suite'
+_g3mmAIl3EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteLogin' path: 'TestCases/Login/SuiteLogin.suite'
+_k6QjIIl3EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteOfflineProjects' path: 'TestCases/OfflineProjects/SuiteOfflineProjects.suite'
+_r2risIl3EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteOnlineProjects' path: 'TestCases/OnlineProjects/SuiteOnlineProjects.suite'
+_qK1cAIm8EeedhOtWf28DzA	// kind: 'suite' name: 'SuitePassTicket' path: 'TestCases/PassTicket/SuitePassTicket.suite'
+_-J8esIl3EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuitePreferences' path: 'TestCases/Preferences/SuitePreferences.suite'
+_bQoCcKBMEea7jO7LWS5X_w	// kind: 'suite' name: 'SuitePropertiesView' path: 'TestCases/PropertiesView/SuitePropertiesView.suite'
+_-eslgIvOEeakRZO-pZTR5w	// kind: 'suite' name: 'SuiteSearch' path: 'TestCases/Search/SuiteSearch.suite'
+_y3yvoLfHEeaZj-_yDyxeGA	// kind: 'suite' name: 'SuiteSlickEditCopybooks' path: 'TestCases/SlickEditCopybooks/SuiteSlickEditCopybooks.suite'
+_CusGcKy9EearpKw8qQl8DQ	// kind: 'suite' name: 'SuiteSonarLintIntegration' path: 'TestCases/SonarLintIntegration/SuiteSonarLintIntegration.suite'
+_JixDAIl2EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteTsoCommandsConsole' path: 'TestCases/Consoles/TsoCommandsConsole/SuiteTsoCommandsConsole.suite'
+_uLHe0L5OEeajusfmOW4rkQ	// kind: 'suite' name: 'SuiteUnix' path: 'TestCases/Unix/SuiteUnix.suite'
+_XP2eEIl2EeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteZosConsole' path: 'TestCases/Consoles/ZosConsole/SuiteZosConsole.suite'
+_MJiIQBryEeeLrZD9rw5kPA	// kind: 'suite' name: 'SuiteBidirectionalText' path: 'TestCases/BidirectionalText/SuiteBidirectionalText.suite'
+_mFW4oL5OEeajusfmOW4rkQ	// kind: 'suite' name: 'SuiteLocalFiles' path: 'TestCases/LocalFiles/SuiteLocalFiles.suite'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

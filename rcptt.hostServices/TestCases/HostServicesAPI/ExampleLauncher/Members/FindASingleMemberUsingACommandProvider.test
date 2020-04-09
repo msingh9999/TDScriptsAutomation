@@ -1,0 +1,91 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wvcyALzIEearCfJIpjdCZQ,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: FindASingleMemberUsingACommandProvider
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _OLXLYL5TEearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 1:37 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/Members/Find a Single Member Using a Command Provider"]
+global [val resultDialogTitle "Find a Single Member Using a Command Provider Results"]
+
+/****** Procedures ******/
+
+proc "enter-member-in-dialog" [val dsn] [val member]
+{
+	with [get-window "Find a Single Member Using a Command Provider Example"]
+	{
+	    with [get-editbox -after [get-label "Dataset name:"]]
+	    {
+	        set-text $dsn
+	    }
+	    with [get-editbox -after [get-label "Member name:"]]
+	    {
+	        set-value $member
+	    }
+	    get-button Run | click
+	}
+}
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+// Test no dsn
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "" -member "MEMNAME"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"pdsName\" is not a valid dataset name for code page 1047. Argument value: "
+
+// Test a dsn that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.DSNTOOLARGE" -member "MEMNAME"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"pdsName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.DSNTOOLARGE"
+
+// Test a dsn that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.INVALID!.CHAR" -member "MEMNAME"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"pdsName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.INVALID!.CHAR"
+
+// Test a non-existant dataset
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.NOT.FOUND" -member "MEMNAME"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Dataset XDEVREG.NOT.FOUND was not found."
+
+// Test no member name
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.NOT.FOUND" -member ""
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"memberName\" must have a length between 1 and 8. Argument length: 0"
+
+// Test a member name that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.NOT.FOUND" -member "TOOLARGETOBEVALID"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"memberName\" must have a length between 1 and 8. Argument length: 17"
+
+// Test a member name that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.NOT.FOUND" -member "MEMNAME!"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"memberName\" is not a valid member name for code page 1047. Argument value: MEMNAME!"
+
+// Test a non-existant member
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -member "MEMNAME"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Could not find \"XDEVREG.HS.API.TEST.PDS.CNTL(MEMNAME)\" on host \"cw01:%s\"" $PORT]
+
+// Test with a valid, existing member
+execute-example -exampleDirectory $exampleDirectory
+enter-member-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -member "CWXTCOBN"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found \"XDEVREG.HS.API.TEST.PDS.CNTL(CWXTCOBN)\" on host \"cw01:%s\"" $PORT]
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

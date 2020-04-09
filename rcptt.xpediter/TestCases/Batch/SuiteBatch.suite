@@ -1,0 +1,41 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteBatch
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _4asJ8ImEEeaOKusaXEFUkQ
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/13/18 7:41 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_jdlusJwsEeaiiqUfzPUFZQ	// kind: 'test' name: 'AssemblerSignedVariables' path: 'AssemblerSignedVariables.test'
+_5eoVEOyeEeahS5eQmd5eMA	// kind: 'test' name: 'BatchLaunchSecureCredentials' path: 'BatchLaunchSecureCredentials.test'
+_O5tfsNwOEeajr9LZV8jCbA	// kind: 'test' name: 'ChangeVariableValues' path: 'ChangeVariableValues.test'
+_Y80I4ApcEeesMvJPWcM7uA	// kind: 'test' name: 'CobolVariablesTruncBin' path: 'CobolVariablesTruncBin.test'
+_f0b0EO-ZEeawB5qWQVfx8Q	// kind: 'test' name: 'CobolVariablesTruncOpt' path: 'CobolVariablesTruncOpt.test'
+_anIVoApcEeesMvJPWcM7uA	// kind: 'test' name: 'CobolVariablesTruncStd' path: 'CobolVariablesTruncStd.test'
+_qe7jUERwEeamKrg04Gqe-Q	// kind: 'test' name: 'CreateLaunchWithCodepage1143' path: 'CreateLaunchWithCodepage1143.test'
+_iBBZQIv1Eea1Gdzc0BbeFg	// kind: 'test' name: 'DDIONotRequired' path: 'DDIONotRequired.test'
+_tYi8wMCbEeasVt9-GrdU6w	// kind: 'test' name: 'ExitAbendDialog' path: 'ExitAbendDialog.test'
+_MqtVYBCvEeeHt5Kmy-PtwA	// kind: 'test' name: 'OccursDependOnComp3' path: 'OccursDependOnComp3.test'
+_13XIUBDNEeeHt5Kmy-PtwA	// kind: 'test' name: 'OccursDependOnComp5' path: 'OccursDependOnComp5.test'
+_ir4K4BDNEeeHt5Kmy-PtwA	// kind: 'test' name: 'OccursDependOnPic9Signed' path: 'OccursDependOnPic9Signed.test'
+_3QhUQBLpEeeHt5Kmy-PtwA	// kind: 'test' name: 'OccursDependOnPic9Unsigned' path: 'OccursDependOnPic9Unsigned.test'
+_iSrIwP6aEeaVnozrU55lPw	// kind: 'test' name: 'QualifiedVariableNamesC' path: 'QualifiedVariableNamesC.test'
+_b5Z5kP6aEeaVnozrU55lPw	// kind: 'test' name: 'QualifiedVariableNamesCobol' path: 'QualifiedVariableNamesCobol.test'
+_gX76YP6aEeaVnozrU55lPw	// kind: 'test' name: 'QualifiedVariableNamesPli' path: 'QualifiedVariableNamesPli.test'
+_Dfb6YL42Eeaqe9EaNYGaSg	// kind: 'test' name: 'SlickeditEditorLicense' path: 'SlickeditEditorLicense.test'
+_72AfgP3eEea9vcJNXnCCPw	// kind: 'test' name: 'StepReadStatement' path: 'StepReadStatement.test'
+_ySZwgN8MEea2SeJaJsG74g	// kind: 'test' name: 'SubProgramInitialAndExitBreakpoints' path: 'SubProgramInitialAndExitBreakpoints.test'
+_4u3JcOcWEea1xbR4reYfxA	// kind: 'test' name: 'VariableDisplay' path: 'VariableDisplay.test'
+_Bnlv8POUEeaVCap_2OEg5w	// kind: 'test' name: 'VisualizerCwxtcob' path: 'VisualizerCwxtcob.test'
+_pUrHMHwJEeaucpLG7Fz7mQ	// kind: 'test' name: 'XTBatchTargetTab' path: 'XTBatchTargetTab.test'
+_Bt1CEDvmEeeWi7symNUhhw	// kind: 'test' name: 'SecureConnectionTrimain' path: 'SecureConnectionTrimain.test'
+_SlFJEC4HEeiR-uj2BNFW6Q	// kind: 'test' name: 'FailedInterceptionDialog' path: 'FailedInterceptionDialog.test'
+_0bZ40DnEEeilUsX7os_HSg	// kind: 'test' name: 'OnlineProjectDebug' path: 'OnlineProjectDebug.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

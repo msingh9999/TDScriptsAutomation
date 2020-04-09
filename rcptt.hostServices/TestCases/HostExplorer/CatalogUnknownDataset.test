@@ -1,0 +1,50 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CatalogUnknownDataset
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _8IA4cOiIEeaytpQl30sn2w
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/27/17 9:40 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CatalogUnknownDataset ----------------------------------------------"
+
+// Test dataset name greater than 8 characters
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Catalog..." | click
+with [get-window Catalog] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text WRONGNAME
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    get-editbox -after [get-label "Volume serial:"] | set-text NMS000
+    get-button OK | click
+}
+get-window Catalog | get-editbox -after [get-label "Catalog Dataset"] | get-property text 
+    | equals "WRONGNAME is an invalid dataset name." | verify-true
+
+get-window Catalog | get-button Cancel | click
+
+// Test valid dataset name that does not exist
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu "Catalog..." | click
+with [get-window Catalog] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text "XDEVREG.BAD"
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    get-editbox -after [get-label "Volume serial:"] | set-text NMS000
+    get-button OK | click
+}
+get-window Catalog | get-editbox -after [get-label "Catalog Dataset"] | get-property text 
+    | equals "XDEVREG.BAD is an invalid dataset name." | verify-true
+
+get-window Catalog | get-button Cancel | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,18 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteHostServicesAndRegression
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _6Rj1UMFFEeaPHKVWbry8Pw
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 12/13/16 12:39 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_Sp7SQEUOEeamKrg04Gqe-Q	// kind: 'suite' name: 'SuiteHostServices' path: 'SuiteHostServices.suite'
+_i3qyoLvzEea2UcoPeLeX6A	// kind: 'suite' name: 'SuiteHostServicesRegression' path: 'Regression/SuiteHostServicesRegression.suite'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

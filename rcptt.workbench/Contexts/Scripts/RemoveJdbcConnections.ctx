@@ -1,0 +1,16 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: RemoveJdbcConnections
+Element-Type: context
+Element-Version: 2.0
+Id: _inZboBZAEeeh9I0ITUmrtQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 3/31/17 2:34 PM
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+remove-jdbc-connections
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

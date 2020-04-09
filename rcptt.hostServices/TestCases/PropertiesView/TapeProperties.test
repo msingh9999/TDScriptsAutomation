@@ -1,0 +1,39 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: TapeProperties
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Oyq7cBiGEeeh9I0ITUmrtQ
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/24/17 1:36 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- TapeProperties ----------------------------------------------"
+
+global [val tapeDataset "XDEVREG.TAPE.TEST1"]
+global [val tapeFilter "XDEVREG.TAPE"]
+
+add-filter -filter $tapeFilter
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -filter $tapeFilter -dataset $tapeDataset]
+
+
+get-view Properties | get-tree | get-item "Block Size" | get-property "columns[1]" | equals "?" | verify-true
+
+get-view Properties | get-tree | get-item "Logical Record Length" | get-property "columns[1]" | equals "?" | verify-true
+
+get-view Properties | get-tree | get-item "Name" | get-property "columns[1]" | equals $tapeDataset | verify-true
+
+get-view Properties | get-tree | get-item "Organization" | get-property "columns[1]" | equals "PS" | verify-true
+
+get-view Properties | get-tree | get-item "Record Format" | get-property "columns[1]" | equals "?" | verify-true
+
+get-view Properties | get-tree | get-item "Type" | get-property "columns[1]" | equals "SEQ" | verify-true
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,45 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _XnPvkEUIEeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: ProjectDecorators
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _9lmNADaOEeiFposq7y9hiw
+Runtime-Version: 2.3.0.201803210513
+Save-Time: 4/2/18 12:36 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName "testDecorator"]
+global [val datasetName "XDEVREG.XPED.COBOL"]
+global [val memberName "CWXTCOB.cbl"]
+global [val hostDescription "cw01"]
+
+create-online-project -projectName $projectName -hostName $HOST -port $PORT
+add-source-online-project -projectName $projectName -datasetName $datasetName -hostName $HOST -portNum $PORT
+
+get-view $PROJECT_EXPLORER | get-tree | get-item 
+    -path [format "%s \\[%s:%s\\]/Source/%s \\[%s:%s\\]/%s \\[%s on %s:%s\\]" $projectName $HOST $PORT $datasetName $HOST $PORT $memberName $datasetName $HOST $PORT]
+    | get-property caption | equals [format "%s [%s on %s:%s]" $memberName $datasetName $HOST $PORT] | verify-true
+with [get-view $HOST_EXPLORER] {
+    click
+    get-tree | select [format "Hosts/%s:%s" $HOST $PORT] | get-menu -path "Edit..." | click
+}
+with [get-window "Host Connections"] {
+    get-editbox -after [get-label "Description:"] | set-text $hostDescription
+    get-button OK | click
+}
+with [get-view $PROJECT_EXPLORER] {
+    click
+    get-tree | select [format "%s [%s:%s]" $projectName $HOST $PORT] | get-menu -path Refresh | click
+}
+get-view $PROJECT_EXPLORER | get-tree | get-item 
+    -path [format "%s \\[%s\\]/Source/%s \\[%s\\]/%s \\[%s on %s\\]" $projectName $hostDescription $datasetName $hostDescription $memberName $datasetName $hostDescription]
+    | get-property caption | equals [format "%s [%s on %s]" $memberName $datasetName $hostDescription] | verify-true
+    
+delete-online-project-with-description -projectName $projectName -description $hostDescription
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

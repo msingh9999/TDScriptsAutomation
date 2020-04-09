@@ -1,0 +1,82 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: caretCharacter
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _kVV4UINmEeeBlORhDXuIag
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 9/12/17 8:11 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests creating/listing/editing local files with a caret character in the name.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val tempFolder [format "TEMP_FOLDER_T%S" [get-time | format-time -format mmssSSS]]]
+
+if [has-drive-filter -driveName "C" | equals false] {
+	//get-view $HOST_EXPLORER | get-tree | get-item "Hosts" | expand-all
+	//get-view $HOST_EXPLORER | get-tree | get-item "Drives" | get-menu "Add Filter..." | click
+	get-view $HOST_EXPLORER | get-tree | select $LOCAL_DRIVE_PATH | get-menu "Add Filter..." | click
+	with [get-window Filter] {
+	    get-editbox -after [get-label "Filter:"] | set-text C
+	    get-button OK | click
+	}
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C" $LOCAL_DRIVE_PATH] | get-menu "New Folder" | click
+with [get-window "New Folder"] {
+    with [get-editbox -after [get-label "Folder name:"]] {
+        set-text $tempFolder
+    }
+    get-button OK | click
+}
+
+// Create a new local file with a single caret as the file name
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu "New File..." 
+    | click
+with [get-window "New File"] {
+    with [get-editbox -after [get-label "File name:"]] {
+        set-text "^"
+    }
+    get-button OK | click
+}
+
+get-editor "^" | close
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "^"] | get-menu "Open With/Compuware Editor" | click
+with [get-editor "^" | get-text-viewer] {
+    type-text "This is a test"
+    key-type "M1+s"
+}
+get-view $HOST_EXPLORER | click
+get-editor "^" | close
+
+// Create a new folder named ^abc123
+
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu 
+    -path "New Folder" | click
+with [get-window "New Folder"] {
+    get-editbox -after [get-label "Folder name:"] | set-text "^abc123"
+    get-button OK | click
+}
+get-view $HOST_EXPLORER | get-tree | get-item -path [format "%s/C/%s/%s" $LOCAL_DRIVE_PATH $tempFolder "^abc123"]
+    | get-property caption | equals "^abc123" | verify-true
+    
+// Delete the temporary folder
+    
+get-view $HOST_EXPLORER | get-tree | select [format "%s/C/%s" $LOCAL_DRIVE_PATH $tempFolder] | get-menu -path Delete 
+    | click
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

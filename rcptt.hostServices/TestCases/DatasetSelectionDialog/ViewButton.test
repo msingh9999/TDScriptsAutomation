@@ -1,0 +1,105 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: ViewButton
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _LJHQYEUHEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 8/22/17 9:45 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- ViewButton ----------------------------------------------"
+// open the dialog and view a Sequential dataset
+get-menu "Search/Dataset..." | click
+with [get-window Search] {
+    get-group Scope | get-button "Add..." | click
+    with [get-window Datasets] {
+        get-button "Browse..." | click
+        with [get-window "Dataset Selection"] {
+            with [get-section Datasets] {
+                with [get-editbox -after [get-label "Name:"]] {
+                    set-text XDEVREG
+                    key-type Enter
+                }
+                get-table | select "XDEVREG.SEQ.JCL.TEST1"
+            }
+            get-button "View..." | click
+        }
+    }
+}
+
+// verify that the text viewer is populated
+with [get-window Search | get-window Datasets | get-window "Dataset Selection" | get-window "XDEVREG.SEQ.JCL.TEST1" 
+    | get-text-viewer] {
+    get-property "getText()" | is-empty | verify-false
+    get-property "getLineCount()" | equals 11 | verify-true
+}
+
+// repeat view the Sequential dataset and verify that the text viewer is populated again
+with [get-window Search | get-window Datasets | get-window "Dataset Selection"] {
+    get-window "XDEVREG.SEQ.JCL.TEST1" | get-button Close | click
+    get-button "View..." | click
+}
+with [get-window Search | get-window Datasets | get-window "Dataset Selection" | get-window "XDEVREG.SEQ.JCL.TEST1" 
+    | get-text-viewer] {
+    get-property "getText()" | is-empty | verify-false
+    get-property "getLineCount()" | equals 11 | verify-true
+}
+
+// view a PDS member
+with [get-window Search | get-window Datasets | get-window "Dataset Selection"] {
+    get-window "XDEVREG.SEQ.JCL.TEST1" | get-button Close | click
+    get-section Datasets | get-table | select "XDEVREG.COBOL"
+    get-section Members | get-table | select ALATRA10
+    get-button "View..." | click
+}
+
+// verify that the text viewer is populated
+with [get-window Search | get-window Datasets | get-window "Dataset Selection" | get-window ALATRA10 
+    | get-text-viewer] {
+    get-property "getText()" | is-empty | verify-false
+    get-property "getLineCount()" | equals 2651 | verify-true
+}
+
+// repeat view the PDS member and verify that the text viewer is populated again
+with [get-window Search | get-window Datasets | get-window "Dataset Selection"] {
+    get-window ALATRA10 | get-button Close | click
+    get-button "View..." | click
+}
+with [get-window Search | get-window Datasets | get-window "Dataset Selection" | get-window ALATRA10 
+    | get-text-viewer] {
+    get-property "getText()" | is-empty | verify-false
+    get-property "getLineCount()" | equals 2651 | verify-true
+}
+
+// view another PDS member and verify that the text viewer is populated
+with [get-window Search | get-window Datasets | get-window "Dataset Selection"] {
+    get-window ALATRA10 | get-button Close | click
+    get-section Members | get-table | select ALA04600
+    get-button "View..." | click
+}
+with [get-window Search | get-window Datasets | get-window "Dataset Selection" | get-window ALA04600 
+    | get-text-viewer] {
+    get-property "getText()" | is-empty | verify-false
+    get-property "getLineCount()" | equals 660 | verify-true
+}
+
+// close the dialogs
+with [get-window Search] {
+    with [get-window Datasets] {
+        with [get-window "Dataset Selection"] {
+            get-window ALA04600 | get-button Close | click
+            get-button Cancel | click
+        }
+        get-button Cancel | click
+    }
+    get-button Cancel | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

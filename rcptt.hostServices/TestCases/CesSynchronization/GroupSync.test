@@ -1,0 +1,126 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_l8aZYER7EeamKrg04Gqe-Q,_ishV8ER7EeamKrg04Gqe-Q
+Element-Name: GroupSync
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _-9phMGByEeay6evYDwkcbg
+Runtime-Version: 2.1.0.201606221726
+Save-Time: 5/26/17 2:37 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val cesSyncUrl1 $CES_URL]
+
+log "---------------------------------------------- GroupSync ----------------------------------------------"
+
+// Connect and sync with CES on http://10.100.10.48:48226/compuware - our default test server - connections should stay the same
+
+connect-ces $cesSyncUrl1
+
+// Select and accept all of the incoming connections for the cw01 and Endevor Groups
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-group "Central Administration" | get-button "Sync..." | click
+    with [get-window "Compuware Enterprise Services Synchronization"] {
+        get-button "Clear All" | click
+        with [get-tree] {
+            get-item "Endevor" | check
+            get-item "cw01" | check
+        }
+        get-button Finish | click
+    }
+}
+
+// Verify that 6 connections were added
+
+with [get-window Preferences | get-window "Compuware Enterprise Services Synchronization" | get-table] {
+    get-item "HCI Host Connections" | get-property "columns[0]" | equals "HCI Host Connections" | verify-true
+    get-item "HCI Host Connections" | get-property "columns[1]" | equals "6 connection(s) added." | verify-true
+}
+with [get-window Preferences] {
+    get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+    get-button OK | click
+}
+
+// Now use mocked data to simulate changes to the previously synched groups.
+// Some connection attributes have been changed, and also a connection has been deleted from group cw01,
+// a connection has been added to group cw01 and a connection added to group Endevor
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "setMockCommandSetForGroupUpdate"
+
+get-preferences-menu | click
+with [get-window Preferences] {
+    get-tree | select "Compuware/Enterprise Services"
+    get-group "Central Administration" | get-button "Sync..." | click
+}
+
+// Verify the preselected groups that were saved in preferences and the preselected updates/deletes
+
+with [get-window Preferences | get-window "Compuware Enterprise Services Synchronization" | get-tree] {
+    get-item Endevor | get-property caption | equals Endevor | verify-true
+    get-item Endevor | get-property checked | equals true | verify-true
+    get-item "Endevor/Endevor Add Test \\[cw11:16198\\]" | get-property caption 
+        | equals "Endevor Add Test [cw11:16198]" | verify-true
+    get-item "Endevor/Endevor Add Test \\[cw11:16198\\]" | get-property checked | equals true | verify-true
+    get-item "Endevor/Endevor Add Test \\[cw11:16198\\]" | get-property "image.path" 
+        | equals "com.compuware.frameworks.imagerepository/images/elcl/add.gif" | verify-true
+    get-item cw01 | get-property caption | equals cw01 | verify-true
+    get-item cw01 | get-property checked | equals true | verify-true
+    get-item "cw01/CW01 FA QA \\[cw01:16198\\]" | get-property caption | equals "CW01 FA QA [cw01:16198]" | verify-true
+    get-item "cw01/CW01 FA QA \\[cw01:16198\\]" | get-property checked | equals true | verify-true
+    get-item "cw01/CW01 FA QA \\[cw01:16198\\]" | get-property "image.path" 
+        | equals "com.compuware.frameworks.imagerepository/images/elcl/change.gif" | verify-true
+    get-item "cw01/CW01 Prod 16.3 \\[CW01:20947\\]" | get-property caption | equals "CW01 Prod 16.3 [CW01:20947]" 
+        | verify-true
+    get-item "cw01/CW01 Prod 16.3 \\[CW01:20947\\]" | get-property checked | equals true | verify-true
+    get-item "cw01/CW01 Prod 16.3 \\[CW01:20947\\]" | get-property "image.path" 
+        | equals "com.compuware.frameworks.imagerepository/images/elcl/add.gif" | verify-true
+    get-item "cw01/CW01 Prod 17.2 \\[cw01:30947\\]" | get-property caption | equals "CW01 Prod 17.2 [cw01:30947]" 
+        | verify-true
+    get-item "cw01/CW01 Prod 17.2 \\[cw01:30947\\]" | get-property checked | equals true | verify-true
+    get-item "cw01/CW01 Prod 17.2 \\[cw01:30947\\]" | get-property "image.path" 
+        | equals "com.compuware.frameworks.imagerepository/images/elcl/change.gif" | verify-true
+    get-item "cw01/IS-cw01 \\[cw01:16196\\]" | get-property caption | equals "IS-cw01 [cw01:16196]" | verify-true
+    get-item "cw01/IS-cw01 \\[cw01:16196\\]" | get-property checked | equals true | verify-true
+    get-item "cw01/IS-cw01 \\[cw01:16196\\]" | get-property "image.path" 
+        | equals "com.compuware.frameworks.imagerepository/images/elcl/delete.gif" | verify-true
+    get-item "cw01/Passphrase Testing \\[cw01:27536\\]" | get-property caption 
+        | equals "Passphrase Testing [cw01:27536]" | verify-true
+    get-item "cw01/Passphrase Testing \\[cw01:27536\\]" | get-property checked | equals true | verify-true
+    get-item "cw01/Passphrase Testing \\[cw01:27536\\]" | get-property "image.path" 
+        | equals "com.compuware.frameworks.imagerepository/images/elcl/add.gif" | verify-true
+    get-item cw09 | get-property caption | equals cw09 | verify-true
+    get-item cw09 | get-property checked | equals false | verify-true
+    get-item "cw09/IS-cw09 \\(CSS 9.0\\) \\[cw09:16196\\]" | get-property caption 
+        | equals "IS-cw09 (CSS 9.0) [cw09:16196]" | verify-true
+    get-item "cw09/IS-cw09 \\(CSS 9.0\\) \\[cw09:16196\\]" | get-property checked | equals false | verify-true
+    get-item CW06 | get-property caption | equals CW06 | verify-true
+    get-item CW06 | get-property checked | equals false | verify-true
+    get-item "CW06/IS-cw06 \\[cw06:16196\\]" | get-property caption | equals "IS-cw06 [cw06:16196]" | verify-true
+    get-item "CW06/IS-cw06 \\[cw06:16196\\]" | get-property checked | equals false | verify-true
+}
+
+// Verify that 2 connections were added, 3 updated and 1 deleted.
+
+get-window Preferences | get-window "Compuware Enterprise Services Synchronization" | get-button Finish | click
+with [get-window Preferences | get-window "Compuware Enterprise Services Synchronization" | get-table] {
+    get-item "HCI Host Connections" | get-property "columns[0]" | equals "HCI Host Connections" | verify-true
+    get-item "HCI Host Connections" | get-property "columns[1]" 
+        | equals "3 connection(s) added. 2 connection(s) updated. 3 connection(s) deleted." | verify-true
+}
+with [get-window Preferences] {
+    get-window "Compuware Enterprise Services Synchronization" | get-button OK | click
+    get-button OK | click
+}
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "resetRealCommandSet"
+
+remove-all-hosts-native
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

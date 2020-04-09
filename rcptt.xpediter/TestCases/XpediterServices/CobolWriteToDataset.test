@@ -1,0 +1,90 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CobolWriteToDataset
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: __-g6kHuhEee_C6KOSf2P3w
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/25/17 6:48 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val cobolMember "CWXTCOB2"]
+
+open-perspective $HOST_EXPLORER
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $cobolMember]
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+with [get-window "Debug Configurations"] {
+
+    //add test loadlib with VSAM file support
+    get-tab-folder | get-tab-item "Load Libraries" | click
+    get-group "Load libraries" | get-button "Add..." | click
+    with [get-window Datasets] 
+    {
+        get-editbox | set-text "XT.R170000.SMPE.SLXTLOAD"
+        get-button OK | click
+    }
+
+    get-button Debug | click
+}
+
+login
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "createCwxtcobWriteListener"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "addCwxtcobWriteListener"
+
+with [get-editor "CWXTCOB [CWXTCOB]"] {
+    get-left-ruler | get-ruler-column AnnotationColumn | double-click-ruler 360
+}
+
+get-button "Resume (F8)" | click
+wait-for-breakpoint -stackFramePath "CWXTCOB2 [Xpediter Batch Debug Session]/.*/Thread [CWXTCOB, Step: STEP1] (Suspended (breakpoint))/CWXTCOB [CWXTCOB] (procedure: 0000-MAINLINE line: 360)"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "debugCwxtcobVariables"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " JOHN SMITH      NORTH   H   10/15/81   00   1083.00     0.00      0.00  1083.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " ROY GARDNER     NORTH   S   12/31/92   74    750.00     0.00   3300.00  4050.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " DAN PEARSON     NORTH   S   07/20/89   72    850.00     0.00   1000.00  1850.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " MICHAEL DAYTON  SOUTH   S   08/30/82   65    825.00     0.00   6000.00  6825.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " DENNIS WHITE    SOUTH   S   02/29/88   71   1050.00     0.00   1120.00  2170.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " VALERIE OLSEN   EAST    S   05/01/94   77    900.00     0.00   5600.00  6500.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " LAURA MARTIN    EAST    S   06/14/83   66   1225.00     0.00   6000.00  7225.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " MARCIA SULLIVAN EAST    H   04/05/93   76   1200.00   180.00      0.00  1380.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " JAMES MORRISON  EAST    H   09/13/91   74   1017.50     0.00      0.00  1017.50"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " THOMAS LONG     WEST    H   03/31/87   70   1000.00     0.00      0.00  1000.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " DONNA BROWN     WEST    S   11/11/81   63   1000.00     0.00   3333.00  4333.00"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " SAMUEL ADDAMS   WEST    H   01/02/86   69   1100.00    82.50      0.00  1182.50"
+
+invoke-static -pluginId "com.compuware.xpediter.rcptt" -className "com.compuware.xpediter.rcptt.XpediterServicesUtils" -methodName "validateCwxtcobVariable" -args " MARK JOHNSON    WEST    S   09/30/82   64    750.00     0.00   6000.00  6750.00"
+
+with [get-view Debug] {
+    get-tree | select "CWXTCOB2 [Xpediter Batch Debug Session]" 
+        | select "CWXTCOB2 [Xpediter Batch Debug Session]" | get-menu "Terminate and Remove" | click
+}
+get-window "Terminate and Remove" | get-button Yes | click
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

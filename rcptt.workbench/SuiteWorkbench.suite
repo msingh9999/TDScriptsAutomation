@@ -1,0 +1,17 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteWorkbench
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _PDQTUOMLEeaO0oZBXy4WsQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 1/25/17 9:46 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_XTiHcOMLEeaO0oZBXy4WsQ	// kind: 'test' name: 'RestartMenu' path: 'RestartMenu.test'
+_m55YUOMLEeaO0oZBXy4WsQ	// kind: 'test' name: 'TitleShowsWorkspace' path: 'TitleShowsWorkspace.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

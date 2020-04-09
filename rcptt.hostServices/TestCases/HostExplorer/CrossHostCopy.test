@@ -1,0 +1,68 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: CrossHostCopy
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _E_flECjfEeawwty1Y0abzw
+Runtime-Version: 2.2.0.201609192323
+Save-Time: 9/21/16 11:54 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Test was converted from swtbot
+
+global [val sourceDataset "XDEVREG.DEMO.SEQS3"]
+global [val targetDataset [format "XDEVREG.DEMO.SEQS3X.T%S" [get-time | format-time -format mmssSSS]]]
+
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+// Perform the copy option two times
+
+loop [val count 1] 
+{
+
+	// delete the target PDS in case it is still there
+	try -command {
+	    delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $targetDataset
+	} -catch {
+	}
+	
+	// Copy XDEVREG.DEMO.SEQS3 to XDEVREG.DEMO.SEQS3X.T123456
+	get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $sourceDataset] 
+	    | get-menu "Copy To..." | click
+	with [get-window Copy] {
+	    get-combo -after [get-label "Target host:"] | select [format "%s:%s" $HOST $PORT]
+	    get-table | select $sourceDataset -column Source
+	    get-button "Rename..." | click
+	    with [get-window Datasets] {
+	        get-editbox | set-text $targetDataset
+	        get-button OK | click
+	    }
+	    get-button Copy | click
+	}
+	get-window Copy | get-table | get-item Success | get-property caption | equals Success | verify-true
+	
+	with [get-window Copy] {
+	    get-button Close | click
+	}
+	
+	select-filter -hostName $HOST -port $PORT -filter $FILTER_XDEVREG | get-menu "Refresh" | click
+	
+	// delete the PDS we created via copy
+	delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $targetDataset  
+
+
+    if [$count | lt 2]
+    {
+    	recur [$count | plus 1] 
+    }
+} 
+
+
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

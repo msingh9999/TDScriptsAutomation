@@ -1,0 +1,75 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_qoJmoID-Eeau_5-Qg9vVJQ,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CCPerspectiveRepositoryAdded
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _GxF8AML7EeeXvP0mx0Lvdg
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 11/6/17 10:38 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests adding of a repository from an Xpediter batch debug configuration to the Code Coverage perspective list of repositories.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CCPerspectiveRepositoryAdded ---------------------------------------"
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "BATCOB15"] // CWXTCOB
+global [val currentDate [format "%s" [get-time | format-time -format "MM/dd/yy"]]]
+global [val repoName "XDEVREG.RCPTT.REPOSIT"]
+
+// Remove all repositories for all defined z/OS hosts
+invoke-static -pluginId "com.compuware.codecoverage.rcptt" -className "com.compuware.codecoverage.rcptt.CodeCoverageTestUtilities" -methodName "removeAllRepositories"
+
+open-perspective -perspective "Code Coverage"
+
+try -command
+{
+	get-view "Code Coverage" | get-tree | select [format "Repositories/%s:%s/%s" $HOST $PORT $repoName] | get-menu 
+    	-path Remove | click
+}
+-catch
+{
+	format "Could not find the repository %s to delete." $repoName | log
+}
+
+open-perspective $HOST_EXPLORER
+
+set-cc-perspective-switch-preference "Always"
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $jclMember] 
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+
+with [get-window "Debug Configurations"] {
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | check
+    get-combo -after [get-label "Repository:"] | set-text $repoName
+    get-combo -after [get-label "System:"] | set-text CW01
+    get-combo -after [get-label "Test ID:"] | set-text TEST1
+    get-button Debug | click
+}
+
+handle-login-dialog
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+get-button "Resume (F8)" | click
+
+try -delay 1000 -times 120 -command 
+{
+	get-view "Code Coverage" | get-tree | get-item -path [format "Repositories/%s:%s/%s" $HOST $PORT $repoName]
+    	| get-property caption | equals $repoName | verify-true
+}
+
+close-all-editors
+open-perspective $HOST_EXPLORER
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

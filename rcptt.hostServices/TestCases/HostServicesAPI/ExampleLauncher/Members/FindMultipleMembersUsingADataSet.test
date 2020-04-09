@@ -1,0 +1,122 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wvcyALzIEearCfJIpjdCZQ,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: FindMultipleMembersUsingADataSet
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _KNNFAL5ZEearCfJIpjdCZQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/14/17 1:38 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+/****** Global variables ******/
+
+global [val exampleDirectory "Host Services API/Members/Find Multiple Members Using a Dataset"]
+global [val resultDialogTitle "Find Multiple Members Using a Dataset Results"]
+
+/****** Procedures ******/
+
+proc "enter-filter-in-dialog" [val dsn] [val filter "*"]
+{
+	with [get-window "Find Multiple Members Using a Dataset Example"]
+	{
+	    with [get-editbox -after [get-label "Dataset name:"]]
+	    {
+	        set-text $dsn
+	    }
+	    with [get-editbox -after [get-label "Member filter:"]]
+	    {
+	        set-value $filter
+	    }
+	    get-button Run | click
+	}
+}
+
+/****** Start up ******/
+
+open-example-launcher-view
+
+/****** Tests ******/
+
+// Test no dsn
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn ""
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"pdsName\" is not a valid dataset name for code page 1047. Argument value: "
+
+// Test a dsn that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.DSNTOOLARGE"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"pdsName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.DSNTOOLARGE"
+
+// Test a dsn that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.INVALID!.CHAR"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"pdsName\" is not a valid dataset name for code page 1047. Argument value: XDEVREG.INVALID!.CHAR"
+
+// Test a non-existant dataset
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.NOT.FOUND"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Could not find partitioned dataset named \"XDEVREG.NOT.FOUND\""
+
+// Test an empty dataset
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.EMPTY"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Could not find any members in dataset \"XDEVREG.HS.API.TEST.PDS.EMPTY\" for filter \"*\" on host \"cw01:%s\"" $PORT]
+
+// Test no member filter
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter ""
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"memberFilter\" must have a length between 1 and 8. Argument length: 0"
+
+// Test a member filter that is too large
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "TOOLARGETOBEVALID"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"memberFilter\" must have a length between 1 and 8. Argument length: 17"
+
+// Test a member filter that has an invalid character
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "MEMNAME!"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue "Argument \"memberFilter\" is not a valid member filter for code page 1047. Argument value: MEMNAME!"
+
+// Test with valid member filters
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "*"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following members in dataset \"XDEVREG.HS.API.TEST.PDS.CNTL\" on host \"cw01:%s\":\n"
++"   CWXTCOBN\n"
++"   IMSACW01\n"
++"   IMSBCW01\n"
++"   TRIMAINA\n"
++"   TRIMAINX\n"
++"   TRIMAIN2\n"
++"   TRIMAIN9" $PORT]
+
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "IMS*"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following members in dataset \"XDEVREG.HS.API.TEST.PDS.CNTL\" on host \"cw01:%s\":\n"
++"   IMSACW01\n"
++"   IMSBCW01" $PORT]
+
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "*01"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following members in dataset \"XDEVREG.HS.API.TEST.PDS.CNTL\" on host \"cw01:%s\":\n"
++"   IMSACW01\n"
++"   IMSBCW01" $PORT]
+
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "TRIMAIN%"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Found the following members in dataset \"XDEVREG.HS.API.TEST.PDS.CNTL\" on host \"cw01:%s\":\n"
++"   TRIMAINA\n"
++"   TRIMAINX\n"
++"   TRIMAIN2\n"
++"   TRIMAIN9" $PORT]
+
+execute-example -exampleDirectory $exampleDirectory
+enter-filter-in-dialog -dsn "XDEVREG.HS.API.TEST.PDS.CNTL" -filter "Z*"
+verify-example-result -dialogTitle $resultDialogTitle -resultValue [format "Could not find any members in dataset \"XDEVREG.HS.API.TEST.PDS.CNTL\" for filter \"Z*\" on host \"cw01:%s\"" $PORT]
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

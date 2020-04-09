@@ -1,0 +1,376 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _UrIe0ER7EeamKrg04Gqe-Q,_YuwFQER7EeamKrg04Gqe-Q,_PprFMER9EeamKrg04Gqe-Q,_l8_BIER7EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: RepositoryAllocationMenus
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _Lrj10KhrEeeZkd__Sq4alg
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 10/30/17 9:00 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- RepositoryAllocationMenus ----------------------------------------------"
+
+proc "validate-dialog-default-with-name" [val repoName ""]
+{
+	with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+	    with [get-label "Allocate Xpediter/Code Coverage Repository"] {
+	        get-property enablement | equals true | verify-true
+	        get-property caption | equals "Allocate Xpediter/Code Coverage Repository" | verify-true
+	    }
+	    with [get-editbox -after [get-label "Repository dataset name:"]] {
+	        get-property enablement | equals true | verify-true
+	        get-property text | equals $repoName | verify-true
+	    }
+	    with [get-label "Repository dataset name:"] {
+	        get-property enablement | equals true | verify-true
+	        get-property caption | equals "Repository dataset name:" | verify-true
+	    }
+	    with [get-group "Repository attributes"] 
+	    {
+	        with [get-label "Space units:"] 
+	        {
+	            get-property enablement | equals true | verify-true
+	            get-property caption | equals "Spa&ce units:" | verify-true
+	        }
+	        with [get-combo -after [get-label "Space units:"]] 
+	        {
+	            get-property enablement | equals true | verify-true
+	            get-property selection | equals Cylinders | verify-true
+	            get-property "values[0]" | equals Cylinders | verify-true
+	            get-property "values[1]" | equals Tracks | verify-true
+	            get-property "values[2]" | equals Records | verify-true
+	            get-property "values[3]" | equals Megabytes | verify-true
+	        }
+	        with [get-label "Primary quantity:"] 
+	        {
+	            get-property enablement | equals true | verify-true
+	            get-property caption | equals "&Primary quantity:" | verify-true
+	        }
+	        with [get-editbox -after [get-label "Primary quantity:"]] 
+	        {
+	            get-property enablement | equals true | verify-true
+	            get-property text | equals 10 | verify-true
+	            get-property "decorators[0].visible" | equals true | verify-true
+	            get-property "decorators[0].description" | equals "Primary quantity must be specified." | verify-true
+	        }
+	        with [get-label "Volume:"] 
+	        {
+	            get-property enablement | equals true | verify-true
+	            get-property caption | equals "&Volume:" | verify-true
+	        }
+	        with [get-editbox -after [get-label "Volume:"]] 
+	        {
+	            get-property enablement | equals true | verify-true
+	            get-property text | equals "" | verify-true
+	        }
+	    }
+	    with [get-group "SMS parameters"] {
+	        with [get-label "Management class:"] {
+	            get-property enablement | equals true | verify-true
+	            get-property caption | equals "&Management class:" | verify-true
+	        }
+	        with [get-editbox -after [get-label "Management class:"]] {
+	            get-property enablement | equals true | verify-true
+	            get-property text | equals "" | verify-true
+	        }
+	        with [get-label "Storage class:"] {
+	            get-property enablement | equals true | verify-true
+	            get-property caption | equals "Sto&rage class:" | verify-true
+	        }
+	        with [get-editbox -after [get-label "Storage class:"]] {
+	            get-property enablement | equals true | verify-true
+	            get-property text | equals "" | verify-true
+	        }
+	        with [get-label "Data class:"] {
+	            get-property enablement | equals true | verify-true
+	            get-property caption | equals "Da&ta class:" | verify-true
+	        }
+	        with [get-editbox -after [get-label "Data class:"]] {
+	            get-property enablement | equals true | verify-true
+	            get-property text | equals "" | verify-true
+	        }
+	    }
+	    with [get-button "Restore Defaults"] {
+	        get-property enablement | equals true | verify-true
+	        get-property caption | equals "&Restore Defaults" | verify-true
+	    }
+	    with [get-button "< Back"] {
+	        get-property enablement | equals true | verify-true
+	        get-property caption | equals "< &Back" | verify-true
+	    }
+	    with [get-button "Next >"] {
+	        get-property enablement | equals false | verify-true
+	        get-property caption | equals "&Next >" | verify-true
+	    }
+	    with [get-button Finish] {
+	    	if [$repoName | not-eq ""] 
+	    	{
+	        	get-property enablement | equals true | verify-true
+	    	}
+	    	-else
+	    	{
+	        	get-property enablement | equals false | verify-true
+	    	}
+	        get-property caption | equals "&Finish" | verify-true
+	    }
+	    with [get-button Cancel] {
+	        get-property enablement | equals true | verify-true
+	        get-property caption | equals Cancel | verify-true
+	    }
+	}
+}
+
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | get-property caption 
+    | equals "Xpediter/Code Coverage Repository" | verify-true
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | get-property enablement | equals true | verify-true
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | click
+
+validate-dialog-default-with-name
+
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button "< Back" | click
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-label "Select Host"] {
+    get-property enablement | equals true | verify-true
+    get-property caption | equals "Select Host" | verify-true
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    get-button "Next >" | click
+    get-button Cancel | click
+}
+
+// Add second connection and validate that we get the Host Select wizard page
+add-host $HOST_CW09 $PORT
+
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | click
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    with [get-combo -after [get-label "Host:"]] {
+        get-property selection | equals [format "%s:%s" $HOST $PORT] | verify-true
+        get-property "values[0]" | equals [format "%s:%s" $HOST $PORT] | verify-true
+        get-property "values[1]" | equals [format "%s:%s" $HOST_CW09 $PORT] | verify-true
+    }
+    with [get-button "Configure..."] {
+        get-property enablement | equals true | verify-true
+        get-property caption | equals "&Configure..." | verify-true
+    }
+}
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button "Configure..." | click
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-window "Preferences (Filtered)" 
+    | get-label "Host Connections"] {
+    get-property enablement | equals true | verify-true
+    get-property caption | equals "Host Connections" | verify-true
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    get-window "Preferences (Filtered)" | get-button Cancel | click
+    get-button "Next >" | click
+    get-button Cancel | click
+}
+
+get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT]
+with [get-view "Host Explorer" | get-tree] {
+    get-menu -path "Allocate/Xpediter\\/Code Coverage Repository..." | get-property caption 
+        | equals "Xpediter/Code Coverage Repository..." | verify-true
+    get-menu -path "Allocate/Xpediter\\/Code Coverage Repository..." | get-property enablement | equals true 
+        | verify-true
+}
+get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/z\\/OS Datasets" $HOST $PORT] | get-menu 
+    -path "Allocate/Xpediter\\/Code Coverage Repository..." | click
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+ 	with [get-editbox -after [get-label "Allocate Xpediter/Code Coverage Repository"]]
+    {
+    	get-property enablement | equals true | verify-true
+    	get-property text | equals "Dataset name must be specified." | verify-true
+    }
+    get-button Cancel | click
+}
+
+remove-host -hostName $HOST_CW09 -portNum $PORT
+
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | click
+// Check respository name validations
+get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox -after [get-label "Repository dataset name:"] 
+    | set-text "A.1"
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox 
+    -after [get-label "Repository dataset name:"]] {
+    get-property enablement | equals true | verify-true
+    get-property text | equals "A.1" | verify-true
+    get-property "decorators[1].visible" | equals true | verify-true
+    get-property "decorators[1].description" 
+        | equals "Dataset name is invalid. Valid name qualifiers have length 1 to 8 and non-numeric first character." 
+        | verify-true
+}
+
+// Max name
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox -after [get-label "Repository dataset name:"]]
+{
+	// Set the maximum lenght
+    set-text "A1234567.B1234567.C1234567.D1234567.E1234567"
+	// Add a character to the name
+    click-text 44
+    type-text "A"
+    // Validate that we were unable to add
+    get-property enablement | equals true | verify-true
+    get-property text | equals "A1234567.B1234567.C1234567.D1234567.E1234567" | verify-true
+}
+
+// Qualifier validation
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox -after [get-label "Repository dataset name:"] ]
+{
+	// Qualifier too long
+    set-text "A1234567.B12345678.C1234567"
+    get-property enablement | equals true | verify-true
+    get-property text | equals "A1234567.B12345678.C1234567" | verify-true
+    get-property "decorators[1].visible" | equals true | verify-true
+    get-property "decorators[1].description" 
+        | equals "Dataset name is invalid. Valid name qualifiers have length 1 to 8 and non-numeric first character." 
+        | verify-true
+	// Qualifier starts with a number
+    set-text "A1234567.12345678.C1234567"
+    get-property text | equals "A1234567.12345678.C1234567" | verify-true
+    get-property "decorators[1].visible" | equals true | verify-true
+    get-property "decorators[1].description" 
+        | equals "Dataset name is invalid. Valid name qualifiers have length 1 to 8 and non-numeric first character." 
+        | verify-true
+    // Invalid character
+    set-text "A1234567.B!"
+    get-property text | equals "A1234567.B!" | verify-true
+    get-property "decorators[1].visible" | equals true | verify-true
+    get-property "decorators[1].description" 
+        | equals "Dataset name is invalid. Valid name qualifiers have length 1 to 8 and non-numeric first character." 
+        | verify-true
+}
+
+// Give the repository a valid name and go on to check the attributes
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    get-editbox -after [get-label "Repository dataset name:"] | set-text "A1234567.B"
+    get-group "Repository attributes" | get-editbox -after [get-label "Primary quantity:"] | set-text "-5"
+}
+
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-group "Repository attributes" | get-editbox 
+    -after [get-label "Primary quantity:"]] {
+    get-property enablement | equals true | verify-true
+    get-property text | equals "-5" | verify-true
+    get-property "decorators[0].visible" | equals true | verify-true
+    get-property "decorators[0].description" | equals "Primary quantity is invalid. Valid values are 1 to 999999." 
+        | verify-true
+}
+
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    with [get-group "Repository attributes"] {
+        get-editbox -after [get-label "Primary quantity:"] | set-text 999999
+        get-combo -after [get-label "Space units:"] | select Megabytes
+    }
+    get-group "SMS parameters" | get-editbox -after [get-label "Management class:"] | set-text "$%"
+}
+
+// Invalid SMS attributes
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-group "SMS parameters" | get-editbox 
+    -after [get-label "Management class:"]] {
+    get-property enablement | equals true | verify-true
+    get-property text | equals "$%" | verify-true
+    get-property "decorators[0].visible" | equals true | verify-true
+    get-property "decorators[0].description" 
+        | equals "Management class is invalid. Valid class names have length 1 to 8 and alphanumeric characters." 
+        | verify-true
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-group "SMS parameters"] {
+    with [get-editbox -after [get-label "Management class:"]] {
+        set-text "$MANAGE"
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    get-editbox -after [get-label "Storage class:"] | set-text "!"
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-group "SMS parameters" | get-editbox 
+    -after [get-label "Storage class:"]] {
+    get-property enablement | equals true | verify-true
+    get-property text | equals "!" | verify-true
+    get-property "decorators[0].visible" | equals true | verify-true
+    get-property "decorators[0].description" 
+        | equals "Storage class is invalid. Valid class names have length 1 to 8 and alphanumeric characters." 
+        | verify-true
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    with [get-group "SMS parameters" | get-editbox -after [get-label "Storage class:"]] {
+        set-text "$STORAGE"
+        key-type "TRAVERSE_TAB_NEXT"
+    }
+    with [get-group "Repository attributes"] {
+        get-editbox -after [get-label "Volume:"] | set-text VOLUME
+    }
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    with [get-group "SMS parameters"] {
+        get-editbox -after [get-label "Management class:"] | get-property text | equals "$MANAGE" | verify-true
+        get-editbox -after [get-label "Storage class:"] | get-property text | equals "$STORAGE" | verify-true
+    }
+    with [get-group "Repository attributes"] {
+        get-editbox -after [get-label "Volume:"] | get-property text | equals VOLUME | verify-true
+    }
+}
+
+// Test restore defaults
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button "Restore Defaults" | click
+validate-dialog-default-with-name "A1234567.B"
+
+// Test Restore Defaults keeps the last valid repository name
+get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox -after [get-label "Repository dataset name:"] 
+    | set-text "A1234567.B.C%"
+with [get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox 
+    -after [get-label "Repository dataset name:"]] {
+    get-property enablement | equals true | verify-true
+    get-property text | equals "A1234567.B.C%" | verify-true
+    get-property "decorators[1].visible" | equals true | verify-true
+    get-property "decorators[1].description" 
+        | equals "Dataset name is invalid. Valid name qualifiers have length 1 to 8 and non-numeric first character." 
+        | verify-true
+}
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button "Restore Defaults" | click
+validate-dialog-default-with-name "A1234567.B"
+
+// Cancel 
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button Cancel | click
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | click
+validate-dialog-default-with-name    
+    
+get-window "Allocate Xpediter/Code Coverage Repository" | get-editbox -after [get-label "Repository dataset name:"] 
+    | set-text "A.B"
+
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    with [get-group "SMS parameters"] {
+        with [get-editbox -after [get-label "Management class:"]] {
+            set-text MANAGE
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        with [get-editbox -after [get-label "Storage class:"]] {
+            set-text STORAGE
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+    }
+    with [get-group "Repository attributes"] {
+        get-editbox -after [get-label "Volume:"] | set-text VOLUME
+    }
+}
+with [get-window "Allocate Xpediter/Code Coverage Repository"] {
+    get-editbox -after [get-label "Repository dataset name:"] | get-property text | equals "A.B" | verify-true
+    get-group "Repository attributes" | get-editbox -after [get-label "Primary quantity:"] | get-property text 
+        | equals 10 | verify-true
+    with [get-group "SMS parameters"] {
+        get-editbox -after [get-label "Management class:"] | get-property text | equals MANAGE | verify-true
+        get-editbox -after [get-label "Storage class:"] | get-property text | equals STORAGE | verify-true
+    }
+    with [get-group "Repository attributes"] {
+        get-editbox -after [get-label "Volume:"] | get-property text | equals VOLUME | verify-true
+    }
+}
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button Cancel | click
+get-menu -path "File/New/Xpediter\\/Code Coverage Repository" | click
+validate-dialog-default-with-name
+    
+get-window "Allocate Xpediter/Code Coverage Repository" | get-button Cancel | click
+    
+remove-host $HOST $PORT
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,68 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: CesServerURL
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _NOhK0FpJEeadDfq-N81CBA
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/6/18 3:46 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val validCesSyncUrl $CES_URL]
+global [val invalidCesSyncUrl "http://10.100.10.11:48227/compuware/"]
+
+invoke-static -pluginId "com.compuware.frameworks.hostservices.ces.sync.rcptt" -className "com.compuware.frameworks.hostservices.ces.sync.rcptt.CesSyncTestUtilities" -methodName "resetRealCommandSet"
+connect-ces -url "http://10.100.11.13:48226/compuware/"
+
+get-preferences-menu | click
+get-window Preferences | get-group "Central Administration" | get-button "Sync..." | click
+
+with [get-window Preferences | get-window "Error Synchronizing with Compuware Enterprise Services" 
+    | get-label "Compuware Enterprise Services 17.2.1.520 is incompatible with this feature of Topaz Workbench. In order to be compatible, Compuware Enterprise Services must be upgraded to version 17.02.02 or greater."] {
+    get-property caption | equals "Compuware Enterprise Services 17.2.1.520 is incompatible with this feature of Topaz Workbench. In order to be compatible, Compuware Enterprise Services must be upgraded to version 17.02.02 or greater." 
+        | verify-true
+    get-property "toString()" | equals "Label {"
+        + "Compuware Enterprise Services 17.2.1.520 is incompatible with this feature of Topaz Workbench. In order to be compatible, Compuware Enterprise Services must be upgraded to version 17.02.02 or greater.}" 
+        | verify-true
+    get-property caption | equals "Compuware Enterprise Services 17.2.1.520 is incompatible with this feature of Topaz Workbench. In order to be compatible, Compuware Enterprise Services must be upgraded to version 17.02.02 or greater." 
+        | verify-true
+}
+
+with [get-window Preferences] {
+    get-window "Error Synchronizing with Compuware Enterprise Services" | get-button OK | click
+    with [get-editbox -after [get-label "URL:"]] {
+        set-text $invalidCesSyncUrl
+    }
+    get-group "Central Administration" | get-button "Sync..." | click
+}
+get-window Preferences | get-window "Error Synchronizing with Compuware Enterprise Services" 
+    | get-label "Unexpected IO exception: Connect to 10.100.10.11:48227 [/10.100.10.11] failed: Connection refused: connect." 
+    | get-property caption | equals "Unexpected IO exception: Connect to 10.100.10.11:48227 [/10.100.10.11] failed: Connection refused: connect." | verify-true
+with [get-window Preferences] {
+    get-window "Error Synchronizing with Compuware Enterprise Services" | get-button OK | click
+    get-editbox -after [get-label "URL:"] | set-text $validCesSyncUrl
+    get-group "Central Administration" | get-button "Sync..." | click
+}
+get-window Preferences | get-window "Compuware Enterprise Services Synchronization" 
+    | get-label "Synchronize Remote HCI Connections" | get-property caption 
+    | equals "Synchronize Remote HCI Connections" | verify-true
+
+get-window Preferences | get-window "Compuware Enterprise Services Synchronization" | get-button Cancel | click
+
+//test blank URL can be applied and saved
+with [get-window Preferences] 
+{
+    get-editbox -after [get-label "URL:"] | set-text ""
+    get-button Apply | click
+}
+get-window Preferences | get-editbox -after [get-label "URL:"] | get-property text | is-empty | verify-true
+
+get-window Preferences | get-button OK | click
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

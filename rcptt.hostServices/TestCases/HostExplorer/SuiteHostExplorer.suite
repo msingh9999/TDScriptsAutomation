@@ -1,0 +1,52 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteHostExplorer
+Element-Type: testsuite
+Element-Version: 2.0
+Id: __rJBIIl2EeaOKusaXEFUkQ
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/12/18 9:52 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_9y6_YOb5EeasbYye5lRrsQ	// kind: 'test' name: 'AbstractDetailsDialog' path: 'AbstractDetailsDialog.test'
+_hNjPEJRzEeao1evQwM79aA	// kind: 'test' name: 'AliasMenus' path: 'AliasMenus.test'
+_JKOk0LyHEea2UcoPeLeX6A	// kind: 'test' name: 'AllocateMenuAvailability' path: 'AllocateMenuAvailability.test'
+_TmqGUMCLEeaIsKwF5dRmlg	// kind: 'test' name: 'AllocatePds' path: 'AllocatePds.test'
+_ToAxMMCLEeaIsKwF5dRmlg	// kind: 'test' name: 'Allocation' path: 'Allocation.test'
+_HcOUUAJ3Eee2so-HTnFWDw	// kind: 'test' name: 'AssignFileExtAvailability' path: 'AssignFileExtAvailability.test'
+_IPEYoL4-EeajusfmOW4rkQ	// kind: 'test' name: 'CatalogUncatalog' path: 'CatalogUncatalog.test'
+_8IA4cOiIEeaytpQl30sn2w	// kind: 'test' name: 'CatalogUnknownDataset' path: 'CatalogUnknownDataset.test'
+_agoM8EUHEeamKrg04Gqe-Q	// kind: 'test' name: 'CompareWithEachOther' path: 'CompareWithEachOther.test'
+_YeQtoCwnEeebq6lcYkISuw	// kind: 'test' name: 'CompareWithLocalHistory' path: 'CompareWithLocalHistory.test'
+_JrRQ4L4-EeajusfmOW4rkQ	// kind: 'test' name: 'Compress' path: 'Compress.test'
+_U3SY8AWxEeeYiqdW2ECFig	// kind: 'test' name: 'ConnectionPropertiesCredentialsTab' path: 'ConnectionPropertiesCredentialsTab.test'
+_aMUzMHRiEeao6LAbRG4SEA	// kind: 'test' name: 'ContentsView' path: 'ContentsView.test'
+_0VbYQJd7EeaNgptFFKO0sw	// kind: 'test' name: 'ContentsViewDragDrop' path: 'ContentsViewDragDrop.test'
+_K4dyUCjZEeawwty1Y0abzw	// kind: 'test' name: 'CopyTimeout' path: 'CopyTimeout.test'
+_E_flECjfEeawwty1Y0abzw	// kind: 'test' name: 'CrossHostCopy' path: 'CrossHostCopy.test'
+_jBVC8IasEee6NL9PVuutmA	// kind: 'test' name: 'DatasetMemberNameCopyPaste' path: 'DatasetMemberNameCopyPaste.test'
+_z1OXYL5NEeajusfmOW4rkQ	// kind: 'test' name: 'DDIO' path: 'DDIO.test'
+_2263cBu7EeeBQZldCHQxpA	// kind: 'test' name: 'EmbeddedDDIOReturnCode' path: 'EmbeddedDDIOReturnCode.test'
+_Z1cjAAA1EeeBeM3FsMkDsw	// kind: 'test' name: 'EmbeddedSrcLoadModuleActions' path: 'EmbeddedSrcLoadModuleActions.test'
+_dZsxYJiaEeepZuqfJ12XnA	// kind: 'test' name: 'FilterWithWildcardedHighLevelQualifier' path: 'FilterWithWildcardedHighLevelQualifier.test'
+_UzpTgFolEeadDfq-N81CBA	// kind: 'test' name: 'HostConnectionsPreferences' path: 'HostConnectionsPreferences.test'
+_x3uuACiyEeawwty1Y0abzw	// kind: 'test' name: 'HostExplorerUtilities' path: 'HostExplorerUtilities.test'
+_yzOJECi2Eeawwty1Y0abzw	// kind: 'test' name: 'HostTargetMoveCopyDialog' path: 'HostTargetMoveCopyDialog.test'
+_-dMOMJ0oEeaEL9K2GkMuew	// kind: 'test' name: 'LinkWithContentsEnabled' path: 'LinkWithContentsEnabled.test'
+_N4WykMOzEeaIsKwF5dRmlg	// kind: 'test' name: 'LoadModuleSections' path: 'LoadModuleSections.test'
+_6TUs4KGpEeaeEIh2rZ7i-Q	// kind: 'test' name: 'MoveCopyDialogHostErrorDialog' path: 'MoveCopyDialogHostErrorDialog.test'
+_UksRgL4-EeajusfmOW4rkQ	// kind: 'test' name: 'NewMember' path: 'NewMember.test'
+_lcFZcCXyEeivuPlmsfKsWw	// kind: 'test' name: 'OpenDatasetsWithAccentCharacters' path: 'OpenDatasetsWithAccentCharacters.test'
+_nmwwMCqaEeeBwLfWkzSZ3Q	// kind: 'test' name: 'PdseLoadLibRefresh' path: 'PdseLoadLibRefresh.test'
+_qQ6R0LyHEea2UcoPeLeX6A	// kind: 'test' name: 'QuickBrowse' path: 'QuickBrowse.test'
+_dwn1kL4-EeajusfmOW4rkQ	// kind: 'test' name: 'Rename' path: 'Rename.test'
+_fNNvYL4-EeajusfmOW4rkQ	// kind: 'test' name: 'SubmitJob' path: 'SubmitJob.test'
+_SvjgUMFpEeaZifM36uMTJA	// kind: 'suite' name: 'SuiteMigratedDatasets' path: 'MigratedDatasets/SuiteMigratedDatasets.suite'
+_oVi7sExuEeeyEImJWGGIYQ	// kind: 'test' name: 'SaveAsRefresh' path: 'SaveAsRefresh.test'
+_n3FpEIQcEeeBzIACB75XrA	// kind: 'test' name: 'Delete' path: 'Delete.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

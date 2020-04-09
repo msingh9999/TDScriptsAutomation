@@ -1,0 +1,24 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsHostServices
+Element-Type: context
+Element-Version: 2.0
+Id: _eEaF4ER8EeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/23/18 2:52 PM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Fri Mar 23 14:52:10 EDT 2018
+SONAR_QUBE_SERVER=http\://sonarqube.nasa.cpwr.corp\:9000/
+JES_DD_COLUMN_NAME=DD
+HOST_EXPLORER=Host Explorer
+JES_JOB_COLUMN_NAME=Job
+SONAR_LINT_PROJECT=SonarLintOnline
+CONNECT_BUTTON=Connect...\\tF6
+PROJECT_EXPLORER=Project Explorer
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

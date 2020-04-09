@@ -1,0 +1,126 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_CdHz0LfKEeaZj-_yDyxeGA,_XnPvkEUIEeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: SpecifyCopybooksIncludes
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _CwQ4oLfSEeaZj-_yDyxeGA
+Runtime-Version: 2.0.2.201511100828
+Save-Time: 12/5/16 6:57 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test Offline Project Copybooks / Includes Configuration
+    - Test creation of project from selection within Host Explorer
+    - Test Add button
+    - Test Remove button
+    - Test Move Up button
+    - Test Move Down button
+	- Test Expand All button
+	- Test Collapse All button
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val projectName [format "OfflineTest%s" [get-time | format-time -format "mmssSSS"]]]
+global [val datasetName1 "XDEVREG.HS.API.TEST.COBOL.COPYLIB"]
+global [val datasetName2 "XDEVREG.HS.API.TEST.COBOL.SOURCE"]
+global [val datasetName3 "XDEVREG.OLPDLT.COBOL"]
+global [val datasetName4 "XDEVREG.OLPDLT.CPYLIB"]
+
+add-filter -filter $FILTER_XDEVREG
+
+// Test creation of project from selections in Host Explorer
+
+with [get-view "Host Explorer" | get-tree] { 
+   	select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetName1]
+   		[get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetName2]
+   		[get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetName3]
+   		[get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $datasetName4] 
+   		| get-menu "Add Files to Project..." | click
+}
+
+with [get-window "Add Files To Project"] {
+    get-button "New Compuware Mainframe Project..." | click
+    with [get-window "New Compuware Mainframe Project"] {
+        get-group "Project type" | get-button "Offline. Download resources to work offline." | click
+        get-editbox -after [get-label "Project name:"] | set-text $projectName
+        get-button Finish | click
+    }
+    get-button Finish | click
+}
+
+get-tab-folder | get-tab-item "Project Explorer" | click
+get-view "Project Explorer" | get-tree | select [format "%s [%s:%s]" $projectName $HOST $PORT] | get-menu "Specify Copybooks\\/Includes..." 
+	| click
+    
+with [get-window "Project Copybooks/Includes"] {
+
+	// Test Add > button
+
+    get-tree | select [format "%s/%s" $projectName $datasetName1][format "%s/%s" $projectName $datasetName3][format "%s/%s" $projectName $datasetName4]
+    get-button "Add >" | click
+    
+    // Test ordering of copybook / include folders using Move Up button
+    // NOTE: Validation of added items will be handled implicitely due to testing ordering below.
+    
+    get-table | select $datasetName4
+    get-button "Move Up" | click
+    get-button "Move Up" | click
+    get-table | select $datasetName1
+    get-button "Move Down" | click
+    get-table | select $datasetName3
+    
+    // Validate final ordering
+    with [get-table] {
+    	get-property "getItems().TableItem[0].getText()" 
+       		| equals $datasetName4 | verify-true
+    	get-property "getItems().TableItem[1].getText()" 
+       		| equals $datasetName3 | verify-true
+    	get-property "getItems().TableItem[2].getText()" 
+       		| equals $datasetName1 | verify-true
+    }
+    
+    // Test Remove button
+    
+    get-button Remove | click
+    
+    // Validate final item count and ordering
+    with [get-table] {
+    	get-property "getItemCount()" | equals 2 | verify-true
+    	get-property "getItems().TableItem[0].getText()" 
+       		| equals $datasetName4 | verify-true
+    	get-property "getItems().TableItem[1].getText()" 
+       		| equals $datasetName1 | verify-true
+    }
+    
+    // Test Collapse All button
+    
+    get-button "Collapse All" | click
+    
+    // Validate Collapse All actually did the collapsing
+    
+	get-window "Project Copybooks/Includes" | get-tree | get-property "getItems().TreeItem[0].getExpanded()" | equals false | verify-true
+    
+    // Test Expand All button
+        
+    get-button "Expand All" | click
+
+    // Validate Expand All actually did the expanding
+    
+	get-window "Project Copybooks/Includes" | get-tree | get-property "getItems().TreeItem[0].getExpanded()" | equals true | verify-true
+
+    get-button OK | click
+}
+
+// Perform any cleanup
+
+delete-offline-project -projectName $projectName
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

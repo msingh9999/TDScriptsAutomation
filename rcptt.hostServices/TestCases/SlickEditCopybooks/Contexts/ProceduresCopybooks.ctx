@@ -1,0 +1,52 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresCopybooks
+Element-Type: context
+Element-Version: 2.0
+Id: _CdHz0LfKEeaZj-_yDyxeGA
+Runtime-Version: 2.0.2.201511100828
+Save-Time: 12/2/16 7:30 AM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Common procedures for copybooks
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+/*
+	Remove the specified concatenation list.
+*/
+proc "remove-host-explorer-concatenation-list" [val name ""]
+{
+ 	with [get-window "Preferences (Filtered)"] {
+    	get-tree -after [get-label "Copybook concatenation lists:"] | select [format "%s" $name]
+    	get-button Remove | click
+	}
+}
+
+/*
+	Remove all concatenation lists from the specified control.
+*/
+proc "remove-all-host-explorer-concatenation-lists"
+{
+	get-button "SlickEdit Copybook Concatenation Lists preferences" | click
+	with [get-window "Preferences (Filtered)"]
+	{
+		with [get-tree -after [get-label "Copybook concatenation lists:"]]
+		{
+			get-items | foreach
+			{
+				format "Removing Copybook Concatenation list: '%s'" [get-property caption -raw] | str | log
+				remove-host-explorer-concatenation-list [get-property caption -raw]
+			}
+		}
+		get-button OK | click		
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

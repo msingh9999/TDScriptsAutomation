@@ -1,0 +1,104 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,_wdXLMCqfEeeBwLfWkzSZ3Q,_La44AA5ZEeeqcLs0Ht7rNg,__J2YgA15EeeqcLs0Ht7rNg,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: HebrewJes
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _SSxMQA5NEeeqcLs0Ht7rNg
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/23/18 3:15 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that Hebrew text is displayed correctly when browsing JES.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+// Note: Most of the validation values in this case contain invisible "Left To Right Marks" (U+200E).
+
+log "---------------------------------------------- HebrewJes ----------------------------------------------"
+
+global [val dataset "XDEVREG.HEBREW.JCL"]
+global [val jclMember "HEBPGMR"]
+global [val memberEditorTitle [format "%s.jcl" $jclMember]]
+global [val jobName "TOPAZHB3"]
+
+global [val expectedSrcLine1 "//* Hebrew: ‎ונועדה לצרכי‎ .0-‎התוכנית מבצעת חלוקה ב"]
+global [val expectedJesLine1 [format "          %s" $expectedSrcLine1]]
+global [val expectedSrcLine2 "//* 19/01/2017 - ‎גירסה התחלתית‎ S059 ‎סמי ביתן"]
+global [val expectedJesLine2 [format "          %s" $expectedSrcLine2]]
+
+set-default-editor "jes" "Compuware Editor"
+
+/*
+ * Test browsing JES translates Hebrew.
+ */
+submit-job $dataset $jclMember -jobName $jobName
+
+get-view $JES_EXPLORER | get-table | select $jobName -column $JES_JOB_COLUMN_NAME
+get-view $JES_EXPLORER | get-table -after [get-label "Selected job.*"] | select JESJCL -column $JES_DD_COLUMN_NAME | double-click
+
+with [get-editor | get-text-viewer]
+{
+	key-type Down -times 2
+	key-type "M2+End"
+   	get-property "getSelectionText()" | equals $expectedJesLine1 | verify-true
+
+	key-type Home -times 2
+	key-type Down -times 1
+	key-type "M2+End"
+	get-property "getSelectionText()" | equals $expectedJesLine2 | verify-true
+}
+get-editor | close
+
+/*
+ * Test that "Submit JCL" from editor translates Hebrew.
+ */
+get-view "Host Explorer" | get-tree | select-pds-member $dataset $jclMember | get-menu -path "Browse With/Compuware Editor"
+	| click
+with [get-editor $memberEditorTitle | get-text-viewer]
+{
+	// Verify JCL contains expected text
+	key-type Down -times 2
+	key-type "M2+End"
+   	get-property "getSelectionText()" | equals $expectedSrcLine1 | verify-true
+
+	key-type Home -times 2
+	key-type Down -times 1
+	key-type "M2+End"
+	get-property "getSelectionText()" | equals $expectedSrcLine2 | verify-true
+}
+
+purge-jobs $jobName
+get-editor "HEBPGMR.jcl" | get-editbox -after [get-label [format "Browsing: XDEVREG.HEBREW.JCL(HEBPGMR) on cw01:%s" $PORT]] 
+    | get-menu -path Submit | click
+get-window "Submit Resource" | get-button OK | click
+get-editor $memberEditorTitle | close
+wait-for-job-completion $jobName
+
+get-view $JES_EXPLORER | get-table | select $jobName -column $JES_JOB_COLUMN_NAME
+get-view $JES_EXPLORER | get-table -after [get-label "Selected job.*"] | select JESJCL -column $JES_DD_COLUMN_NAME | double-click
+
+with [get-editor | get-text-viewer]
+{
+	// Verify JES output shows expected text (proves we submitted the JCL with translated text)
+	key-type Down -times 2
+	key-type "M2+End"
+   	get-property "getSelectionText()" | equals $expectedJesLine1 | verify-true
+
+	key-type Home -times 2
+	key-type Down -times 1
+	key-type "M2+End"
+	get-property "getSelectionText()" | equals $expectedJesLine2 | verify-true
+}
+get-editor | close
+
+// Logout to prevent other tests from running with Hebrew code page.
+logout
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

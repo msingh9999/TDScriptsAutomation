@@ -1,0 +1,338 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.ecl
+Element-Name: ProceduresXpediter
+Element-Type: context
+Element-Version: 2.0
+Id: _TX-14ERwEeamKrg04Gqe-Q
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 2/20/18 11:59 AM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests an Xpediter Batch Debug session that has IMS calling DB2.
+Verify the Visualizer chart contains 2 nodes and the DB node is a DB2 call.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998
+Content-Type: text/ecl
+Entry-Name: .ecl.context
+
+
+// Clear any hung sessions.
+proc "clear-active-session"
+{
+	get-menu -path "Compuware/Xpediter" | click
+	get-view Debug | get-tree | get-items | foreach [val item]
+	{
+		try
+		{
+			log [format "Checking session %s" [$item | get-text] ]
+			if [$item | get-text | contains "<terminated>" | not]
+			{
+				with [$item] 
+				{
+					log [format "Terminating session %s" [$item | get-text] ]
+					select-item | get-menu -path "Terminate" | click
+				}
+			}
+		}
+		-catch
+		{
+			// Ignore failures
+		}
+	}
+}
+
+// Clear all sessions
+proc "clear-all-sessions"
+{
+	get-menu -path "Compuware/Xpediter" | click
+	
+	// Make a pass over the debug sessions terminating the active sessions
+	// Then remove all the terminated sessions
+	clear-active-session
+	try
+	{
+		get-view Debug | get-tree | select "<terminated>.*"  | get-menu -path "Remove All Terminated" | click
+	}
+	-catch
+	{
+		// Ignore failures
+	}
+}
+
+/*
+ * Deletes all Xpediter debug configurations.
+ */
+proc "delete-all-xpediter-debug-configurations"
+{
+	get-menu "Run/Debug Configurations..." | click
+	internal-delete-debug-configurations $XPED_BATCH_DEBUG_SESSION
+	internal-delete-debug-configurations $XPED_TSO_DEBUG_SESSION
+	internal-delete-debug-configurations $XPED_DB2_DEBUG_SESSION
+	internal-delete-debug-configurations $XPED_IMS_DEBUG_SESSION
+	internal-delete-debug-configurations $XPED_CICS_DEBUG_SESSION
+	get-window "Debug Configurations" | get-button Close | click
+}
+
+/*
+ * Internal procedure used by <code>delete-all-xpediter-debug-configurations</code> to delete all debug configurations
+ * of the specified type.
+ * <p>
+ * This procedure requires the Debug Configurations dialog to be open, prior to executing this procedure.
+ */
+proc "internal-delete-debug-configurations" [val configType]
+{
+	with [get-window "Debug Configurations" | get-tree]
+	{
+		if [get-item -path $configType | get-property childCount -raw | gt 0]
+		{
+			select [format "%s/.*" $configType] -all | get-menu -path Delete | click
+		    get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+		}
+	}
+}
+
+/* Delete a batch debug session configuration. */
+proc "delete-batch-debug-session" [val configName] 
+{
+	delete-debug-session -configType $XPED_BATCH_DEBUG_SESSION -configName $configName
+}
+
+/* Delete a CICS debug session configuration. */
+proc "delete-cics-debug-session" [val configName] 
+{
+	delete-debug-session -configType $XPED_CICS_DEBUG_SESSION -configName $configName
+}
+
+/* Delete the specified debug session configuration. */
+proc "delete-debug-session" [val configName] [val configType] 
+{
+	get-menu "Run/Debug Configurations..." | click
+	with [get-window "Debug Configurations"] 
+	{
+		try -command 
+		{
+	    	get-tree | select [format "%s/%s" $configType $configName] | get-menu Delete | click
+	    	get-window "Confirm Launch Configuration Deletion" | get-button Yes | click
+	    }
+	    -catch 
+	    {
+	    	format "%s %s does not exist" $configType $configName | log
+	    }
+	
+		get-button Close | click
+	}
+}
+
+/* Delete a TSO debug session configuration. */
+proc "delete-tso-debug-session" [val configName] 
+{
+	delete-debug-session -configType $XPED_TSO_DEBUG_SESSION -configName $configName
+}
+
+proc "open-xpediter-perspective"
+{
+	open-perspective -perspective "Xpediter"
+}
+
+proc "select-host" [val hostName $HOST] [val portNum $PORT]
+{
+	try -command 
+	{
+		get-combo -after [get-label "Host connection:"] | select [format "%s:%s" $hostName $portNum]
+	}
+	-catch 
+	{
+		log  [format "No selection available for host %s:%s." $hostName $portNum]
+		get-window "Debug Configurations" | get-group "Target system" | get-combo -after [get-label "Host connection:"] 
+    		| get-property "values[0]" | equals [format "%s:%s" $hostName $portNum] | verify-true
+	}
+}
+
+/* Validates context sensitive help for a dialog.
+ *
+ * Clicks the Help button on the dialog and waits up to N seconds to access the help browser.
+ */
+proc "validate-context-help" [val text] [val seconds 10]
+{
+	get-button Help | click
+
+	try -delay 1000 -times $seconds -command 
+	{
+		get-control Browser | get-property text | contains $text | verify-true
+	}
+	-catch 
+	{
+		bool false | log  [format "Waited %s seconds and could not detect help %s" $seconds $text]
+	}
+}
+
+/* Wait for a batch debug session to be in a terminated state. Default waits for 60 seconds. */
+proc "wait-for-batch-terminated" [val configName] [val seconds 60] 
+{
+	wait-for-terminated -configName $configName -seconds $seconds -configType $XPED_BATCH_DEBUG_SESSION
+}
+
+/*
+ * Waits for the caret (cursor) to appear on the specified line. This is useful for determining if execution has
+ * stopped on the specified line (either because of a breakpoint or via stepping.)
+ */
+proc "wait-for-caret-on-line" [val editorName] [val lineNumber] [val seconds 30]
+{
+	try -delay 1000 -times $seconds -command
+	{
+		log [format "wait-for-caret-on-line: attempting to find line: %s" $lineNumber]
+		get-editor $editorName | get-text-viewer | get-property "caretPosition.line" | equals $lineNumber | verify-true
+		log [format "wait-for-caret-on-line: found line."]
+	}
+	-catch
+	{
+		bool false | assert-true -message [format "Waited %s seconds and caret did not appear on line %s in editor '%s'" $seconds $lineNumber $editorName]
+	}
+}
+
+proc "wait-for-breakpoint" [val stackFramePath] [val seconds 30] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		log [format "wait-for-breakpoint: attempting to find breakpoint: %s" $stackFramePath]
+		get-view Debug | get-tree | get-item  $stackFramePath
+		log "wait-for-breakpoint: found breakpoint."
+	}
+	-catch 
+	{
+		bool false | assert-true -message [format "Waited %s seconds and could not detect \"%s\" in the Debug view" $seconds $stackFramePath]
+	}
+}
+
+proc "wait-for-cics-debug-session-connect" [val configName]
+{
+	try -delay 1000 -times 60 -command 
+	{
+		get-view Debug | get-tree | 
+		get-item [format "%s \\[Xpediter CICS Debug Session\\]" $configName] | 
+		get-property caption  | equals [format "%s [Xpediter CICS Debug Session]" $configName] | verify-true
+		wait 400
+	}
+	-catch
+	{
+		bool false | assert-true -message [format "Waited 60 seconds and cics debug session did not connect for config '%s'" $configName]
+	}
+}
+
+/* Wait for a cics debug session to be in a terminated state. Default waits for 60 seconds. */
+proc "wait-for-cics-terminated" [val configName] [val seconds 60] 
+{
+	wait-for-terminated -configName $configName -seconds $seconds -configType $XPED_CICS_DEBUG_SESSION
+}
+
+
+proc "wait-for-debug-config-dialog" [val seconds 60] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-window "Debug Configurations"
+	}
+	-catch 
+	{
+		bool false | assert-true -message [format "Waited %s seconds and could not detect Debug Configurations dialog." $seconds]
+	}
+}
+
+/*Wait for the log to be displayed for the debug session. Default wait is 90 seconds.*/
+proc "wait-for-log" [val logName] [val seconds 90] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-tab-folder -index 2 | get-property activePage | equals [format "%s_log.txt" $logName] | verify-true
+	}
+	-catch 
+	{
+		bool false | assert-true -message [format "Waited %s seconds and could not detect editor tab \"%s_log.txt\"." $seconds $logName]
+	}
+}
+
+/**
+ * When launching a debug session, wait for the specified window/dialog. Waits up to 3 minutes.
+ * <p>
+ * This is usally the "Confirm Perspective Switch" dialog, but there are cases where it will be a different dialog
+ * (e.g. a prompt asking to display the log, when a program does not have DDIO source.)
+ */
+proc "wait-for-window" [val windowName]
+{
+	try -delay 3000 -times 60 -command 
+	{
+		get-window $windowName
+	}
+	-catch
+	{
+		bool false | assert-true -message [format "Waited 3 minutes and window '%s' did not appear." $windowName]
+	}
+}
+
+/*
+ * When launching a debug session from Host Explorer, wait for the perspective switch message and answer yes to switch
+ * to Xpediter. Waits up to 3 minutes.
+ */
+proc "wait-for-perspective-switch-msg"
+{
+	wait-for-window "Confirm Perspective Switch" | get-button Yes | click
+}
+
+/* Wait for the "Resource Validation Failed" dialog */
+proc "wait-for-resource-validation-failed"
+{
+	try -delay 500 -times 30 -command
+	{
+		get-window "Resource Validation Failed"
+	}
+	-catch
+	{
+		bool false | assert-true -message "Waited 15 seconds and 'Resource Validation Failed' window did not appear."
+	}
+}
+
+/*Wait for the source to be displayed for the debug session. Default wait is 180 seconds.*/
+proc "wait-for-source" [val pgmName] [val lmName] [val seconds 180] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-tab-folder -index 2 | get-property activePage | equals [format "%s [%s]" $lmName $pgmName] | verify-true
+	}
+	-catch 
+	{
+		bool false | assert-true -message [format "Waited %s seconds and could not detect editor tab \"%s [%s]\"." $seconds $lmName $pgmName]
+	}
+}
+
+/* Wait for a debug session to be in a terminated state. Default waits for 60 seconds. */
+proc "wait-for-terminated" [val configName] [val configType] [val seconds 60] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		get-view Debug | get-tree | get-item [format "<terminated>%s [%s]" $configName $configType] 
+	}
+	-catch 
+	{
+		bool false | assert-true -message [format "Waited %s seconds and could not detect \"<terminated>%s [%s]\" in the Debug view" $seconds $configName $configType]
+	}
+}
+
+proc "wait-for-variable" [val variableName] [val seconds 60] 
+{
+	try -delay 1000 -times $seconds -command 
+	{
+		log "wait-for-variable: attempting to find variable"
+		get-view Variables | get-tree | get-item $variableName
+		log "wait-for-variable: variable not visible yet; trying again"
+	}
+	-catch 
+	{
+		bool false | assert-true -message [format "Waited %s seconds and could not detect \"%s\" in the Variables view" $seconds $variableName]
+	}
+}
+
+------=_.ecl.context-718f04b4-ed39-33e3-af62-0995e4561998--

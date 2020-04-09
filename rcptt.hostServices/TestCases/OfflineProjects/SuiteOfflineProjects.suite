@@ -1,0 +1,18 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteOfflineProjects
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _k6QjIIl3EeaOKusaXEFUkQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 1/16/17 1:34 PM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_62EmQCfnEeaVl-h40AzGIA	// kind: 'test' name: 'CompuwareMainframeProjectSupport' path: 'CompuwareMainframeProjectSupport.test'
+_on4kQCf3EeaVl-h40AzGIA	// kind: 'test' name: 'ZOSSynchronizationActionService' path: 'ZOSSynchronizationActionService.test'
+_0ZyqUNwYEeajr9LZV8jCbA	// kind: 'test' name: 'BinaryDataWarning' path: 'BinaryDataWarning.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

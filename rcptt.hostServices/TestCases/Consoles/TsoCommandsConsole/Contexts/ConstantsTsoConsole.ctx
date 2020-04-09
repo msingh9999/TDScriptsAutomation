@@ -1,0 +1,23 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Context-Type: org.eclipse.rcptt.ctx.parameters
+Element-Name: ConstantsTsoConsole
+Element-Type: context
+Element-Version: 2.0
+Id: _IQ4-sEUKEeamKrg04Gqe-Q
+Runtime-Version: 2.0.1.201508250612
+Save-Time: 7/8/16 8:48 AM
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee
+Content-Type: text/properties
+Entry-Name: .parameters.context
+
+#Fri Jul 08 08:48:32 EDT 2016
+TSOTestCommand=test command
+TSOCancelButton=Cancel Current Command
+TSOCommandsConsoleTitle=TSO Commands Console
+TSOCommand3=command3
+TSOCommand2=command2
+TSOCommand1=command1
+
+------=_.parameters.context-2e023de5-3294-36a9-ac1d-6701f05a40ee--

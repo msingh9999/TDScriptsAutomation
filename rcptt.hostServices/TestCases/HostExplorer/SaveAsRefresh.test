@@ -1,0 +1,75 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q
+Element-Name: SaveAsRefresh
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _oVi7sExuEeeyEImJWGGIYQ
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/18/18 1:53 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val sourceDataset "XDEVREG.XPED.COBOL"]
+global [val destinationDataset "XDEVREG.COBOL"]
+global [val sourceMember "CCCOB"]
+global [val destinationMember "SAVETEST"]
+
+add-filter -filter $FILTER_XDEVREG
+
+proc "deleteMember" [val dataset] [val member]
+{
+	select-pds-member $dataset $member | get-menu Delete | click
+	with [get-window Delete]
+	{
+	    get-button Delete | click
+	    get-button Done | click
+	}
+	log [format"Delete %s(%s)" $dataset $member]
+}
+
+// Make sure destination members do not already exist (in case of test failures.) This also makes sure the destination
+// dataset has been expanded prior to the copy (otherwise the refresh is irrelevant since the new member will be
+// retrieved when expanded.)
+if [has-pds-member $sourceDataset $destinationMember]
+{
+	deleteMember $sourceDataset $destinationMember
+}
+if [has-pds-member $destinationDataset $destinationMember]
+{
+	deleteMember $destinationDataset $destinationMember
+}
+
+select-pds-member $sourceDataset $sourceMember | double-click
+get-menu "File/Save As..." | click
+with [get-window "Save As"]
+{
+    get-editbox -after [get-label "Member:"] | set-text $destinationMember
+    get-button OK | click
+}
+
+get-view "Host Explorer" | get-tree | get-item [get-pds-member-path $sourceDataset $destinationMember]
+    | get-property caption | equals $destinationMember | verify-true
+get-view "Host Explorer" | click
+get-editor "SAVETEST.cbl" | close
+deleteMember $sourceDataset $destinationMember
+
+get-view "Host Explorer" | get-tree | select-pds-member $sourceDataset $sourceMember | double-click
+get-menu "File/Save As..." | click
+with [get-window "Save As"]
+{
+    get-editbox -after [get-label "Member:"] | set-text $destinationMember
+    get-editbox -after [get-label "Dataset:"] | set-text $destinationDataset
+    get-button OK | click
+}
+
+get-view "Host Explorer" | get-tree | get-item [get-pds-member-path $destinationDataset $destinationMember]
+	| get-property caption | equals $destinationMember | verify-true
+get-editor "SAVETEST.cbl" | close
+deleteMember $destinationDataset $destinationMember
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

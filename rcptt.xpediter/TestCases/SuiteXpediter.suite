@@ -1,0 +1,28 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteXpediter
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _35A1IME7EeaPHKVWbry8Pw
+Manually-Ordered: true
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 10/13/17 6:37 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_4asJ8ImEEeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteBatch' path: 'Batch/SuiteBatch.suite'
+_AAihAImFEeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteCics' path: 'Cics/SuiteCics.suite'
+_Nx5ycK2pEeeVX9g6VuqA5g	// kind: 'suite' name: 'SuiteCodeCoverage' path: 'CodeCoverage/SuiteCodeCoverage.suite'
+_iuzIYLY-Eeak39QdlE0Nvg	// kind: 'suite' name: 'SuiteImsMpp' path: 'ImsMpp/SuiteImsMpp.suite'
+_y8VG8LY-Eeak39QdlE0Nvg	// kind: 'suite' name: 'SuiteLaunchConfiguration' path: 'LaunchConfiguration/SuiteLaunchConfiguration.suite'
+_6x2RsLY-Eeak39QdlE0Nvg	// kind: 'suite' name: 'SuiteMemoryView' path: 'MemoryView/SuiteMemoryView.suite'
+_LXVdQLY_Eeak39QdlE0Nvg	// kind: 'suite' name: 'SuiteXpedPreferences' path: 'Preferences/SuiteXpedPreferences.suite'
+_HCN0AImFEeaOKusaXEFUkQ	// kind: 'suite' name: 'SuiteTsoInteractive' path: 'TsoInteractive/SuiteTsoInteractive.suite'
+_S24_ELY_Eeak39QdlE0Nvg	// kind: 'suite' name: 'SuiteVerticalHex' path: 'VerticalHex/SuiteVerticalHex.suite'
+_6GP10O06EeaJFfr7b3zF8A	// kind: 'suite' name: 'SuiteXpediterServices' path: 'XpediterServices/SuiteXpediterServices.suite'
+_d4nZIBryEeeLrZD9rw5kPA	// kind: 'suite' name: 'SuiteBidirectionalTextXped' path: 'BidirectionalText/SuiteBidirectionalTextXped.suite'
+_ynFmwJxsEee5T_BDt0pU3g	// kind: 'suite' name: 'SuiteHelp' path: 'Help/SuiteHelp.suite'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

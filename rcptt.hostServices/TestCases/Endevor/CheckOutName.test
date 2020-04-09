@@ -1,0 +1,76 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: CheckOutName
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _9uW6wDpDEeenec1Fvy4gYQ
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 3/19/18 11:59 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val endevorEnvironment "X2"]
+global [val endevorSystem "TEST"]
+global [val endevorSubSystem "BASE"]
+global [val endevorType "COBOL"]
+global [val endevorStage "D"]
+global [val endevorElement "S*"]
+global [val endevorFilter [format "%s.%s.%s.%s.%s.%s" $endevorEnvironment $endevorSystem $endevorSubSystem $endevorType $endevorStage $endevorElement]]
+
+add-host -hostName $HOST_CW11 -portNum $PORT_16196
+login-from-host -hostName $HOST_CW11 -port $PORT_16196
+
+// Delete filter if it already exists and then re-create it
+try -command 
+{
+    get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor/%s" $HOST_CW11 $PORT_16196 $endevorFilter] | get-menu Delete | click
+}
+-catch
+{
+}
+
+get-view $HOST_EXPLORER | get-tree | select [format "Hosts/%s:%s/Endevor" $HOST_CW11 $PORT_16196] | get-menu "Add Filter..." | click
+with [get-window Filter]
+{
+    with [get-section "Endevor Filter"]
+    {
+        get-combo -after [get-label "Environment:"] | set-text $endevorEnvironment
+        get-combo -after [get-label "System:"] | set-text $endevorSystem
+        get-combo -after [get-label "Subsystem:"] | set-text $endevorSubSystem
+        get-combo -after [get-label "Type:"] | set-text $endevorType
+        get-combo -after [get-label "Stage:"] | set-text $endevorStage
+        get-editbox -after [get-label "Element:"] | set-text $endevorElement
+    }
+    get-button OK | click
+}
+with [get-view "Host Explorer"]
+{
+    get-tree | select [format "Hosts/%s:%s/Endevor/%s/SCOTT \\(01.01\\)" $HOST_CW11 $PORT_16196 $endevorFilter] | click
+}
+
+get-view Properties | click
+get-view Properties | get-tree | get-item Name | get-property "columns[1]" | equals "SCOTT (01.01)" | verify-true
+get-view "Host Explorer" | get-tree | select [format "Hosts/%s:%s/Endevor/%s/SCOTT \\(01.01\\)" $HOST_CW11 $PORT_16196 $endevorFilter] 
+    | get-menu "Checkout..." | click
+with [get-window Checkout] {
+    get-section "Checkout Location" | get-button "Browse..." | click
+    with [get-window "Dataset Selection"] {
+        with [get-section Datasets] {
+            with [get-editbox -after [get-label "Name:"]] {
+                set-text "XDEVREG.*"
+                key-type Enter
+            }
+            get-table | select "XDEVREG.COBOL.SOURCE"
+        }
+        get-button OK | click
+    }
+    get-section "Endevor Options" | get-button "Replace element if it exists" | check
+    get-button OK | click
+}
+get-window Checkout | get-button OK | click
+get-view Properties | get-tree | get-item Name | get-property "columns[1]" | equals "SCOTT (01.01)" | verify-true
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

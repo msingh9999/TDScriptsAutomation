@@ -1,0 +1,68 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_urTgQEU4EeamKrg04Gqe-Q,_qoJmoID-Eeau_5-Qg9vVJQ,_vZ3AoJ-TEeaqXcq-JvSnkA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_J07C0A10EeeqcLs0Ht7rNg,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CodeCoverageReportAndListing
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _jqOQ8K2mEeeVX9g6VuqA5g
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/12/18 4:14 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- CodeCoverageReportAndListing ----------------------------------------------"
+global [val jclDataset "XDEVREG.XPED.JCL"]
+global [val jclMember "BATCOB12"] // CWXTCOB
+global [val currentDate [format "%s" [get-time | format-time -format "M/d/yy"]]]
+
+open-perspective $HOST_EXPLORER
+
+set-cc-perspective-switch-preference "Never"
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $jclDataset -member $jclMember] 
+    | get-menu "Debug As/Xpediter Batch Debug Session..." | click
+
+with [get-window "Debug Configurations"] {
+    get-tab-folder | get-tab-item "Code Coverage" | click
+    get-button "Collect Code Coverage" | check
+    get-combo -after [get-label "Repository:"] | set-text "XDEVREG.RCPTT.REPOSIT"
+    get-combo -after [get-label "System:"] | set-text CW01
+    get-combo -after [get-label "Test ID:"] | set-text TEST1
+    get-button Debug | click
+}
+
+handle-login-dialog
+wait-for-perspective-switch-msg
+close-view "Cheat Sheets"
+
+get-button "Resume (F8)" | click
+
+wait-for-batch-terminated -configName $jclMember
+
+get-view [format "%s.*" $currentDate] | click
+get-view [format "%s.*" $currentDate] | get-tree | get-item -path "System: CW01" | get-property "getExpanded()" | equals true 
+    | verify-true
+get-view [format "%s.*" $currentDate] | get-tree | get-item -path "System: CW01/Test ID: TEST1" | get-property "getExpanded()" 
+    | equals true | verify-true
+    
+get-view Annotations | get-tree | get-item -path "Unexecuted.*" | get-property caption 
+    | contains "Unexecuted" | verify-true
+get-view [format "%s.*" $currentDate] | click
+get-view [format "%s.*" $currentDate] | get-tree | get-item -path "System: CW01" | get-property caption | equals "System: CW01" 
+    | verify-true
+
+get-editor "CWXTCOB (.*)" | get-label "Report: .*" | get-property caption 
+    | contains "System: CW01 Test ID: TEST1" | verify-true
+get-view Debug | click
+get-view [format "%s.*" $currentDate] | close
+get-view Annotations | click
+get-view Debug | click
+get-view Annotations | close
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

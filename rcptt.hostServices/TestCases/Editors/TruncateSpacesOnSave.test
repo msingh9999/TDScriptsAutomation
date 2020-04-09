@@ -1,0 +1,120 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q,__J2YgA15EeeqcLs0Ht7rNg,_J07C0A10EeeqcLs0Ht7rNg
+Element-Name: TruncateSpacesOnSave
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _tUO_gBPUEee6saWtr3i4Ew
+Runtime-Version: 2.2.0.201705230341
+Save-Time: 8/16/17 1:46 PM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests that extra spaces are truncated from long lines (above record length)
+Cases covered:
+* Spaces past record length are removed
+* Spaces below the record length are not removed
+* Hebrew "Left To Right Marks" are not counted when calculating the line's length
+* Hebrew "Left To Right Marks" are also truncated (for Hebrew code page)
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val dataset "XDEVREG.HEBREW.COBOL"]
+global [val tempDataset [format "XDEVREG.HEBREW.COBOL.T%S" [get-time | format-time -format mmssSSS]]]
+global [val member SOURCE]
+global [val memberEditorTitle [format "%s.cbl" $member]]
+global [val LTR_MARK "‎"] // U+200E
+
+copy-pds -sourcePDS $dataset -targetPDS $tempDataset
+
+global [val originalText "This is a test with Hebrew ‎שנבג‎ 123.\nשנב‎ abc 12 ‎חלך‎ 34 -0 ‎בסז"]
+global [val editedText "This is a test with Hebrew ‎שנבג‎ 123.\nשצמזנב‎ abc 13 ‎חלך‎ 34 -0 ‎בסז"]
+get-view "Host Explorer" | get-tree | select-pds-member $tempDataset $member | get-menu -path "Edit With/Compuware Editor"
+	| click
+with [get-editor $memberEditorTitle | get-text-viewer]
+{
+	/**
+	 * Test extra spaces are removed. 
+	 */
+    key-type "M1+a"
+    key-type Del
+    type-text "         1         2         3         4         5         6         7         8"
+    key-type Enter
+    key-type Home
+    type-text "12345678901234567890123456789012345678901234567890123456789012345678901234567890       "
+    key-type Enter
+    key-type "M1+s"
+    get-property text | equals
+    	  "         1         2         3         4         5         6         7         8\n"
+    	+ "12345678901234567890123456789012345678901234567890123456789012345678901234567890\n" | verify-true
+
+	/**
+	 * Test only the spaces above record length (80) are removed. 
+	 */
+    key-type "M1+a"
+    key-type Del
+    type-text "         1         2         3         4         5         6         7         8"
+    key-type Enter
+    key-type Home
+    type-text "12345678901234567890123456789012345678901234567890123456789012345678901234567          "
+    key-type Enter
+    key-type "M1+s"
+    get-property text | equals
+    	  "         1         2         3         4         5         6         7         8\n"
+    	+ "12345678901234567890123456789012345678901234567890123456789012345678901234567   \n" | verify-true
+
+	/**
+	 * Test Left To Right Markers are not counted for line's length.
+	 */
+    key-type "M1+a"
+    key-type Del
+    type-text "v        1         2         3   v     4         5         6         7         8"
+    key-type Enter
+    key-type Home
+    type-text "‎" // Left To Right Mark - U+200E
+    type-text "123456789012345678901234567890123"
+    type-text "‎" // Left To Right Mark - U+200E
+    type-text "45678901234567890123456789012345678901234567890       "
+    key-type Enter
+    key-type "M1+s"
+    get-property text | equals
+    	  // There are Left To Right Marks before the characters under the "v"s:
+    	  "v        1         2         3   v     4         5         6         7         8\n"
+    	+ "‎123456789012345678901234567890123‎45678901234567890123456789012345678901234567890\n" | verify-true
+
+	/**
+	 * Test Left To Right Marks after record length are removed with spaces. 
+	 */
+    key-type "M1+a"
+    key-type Del
+    type-text "         1         2         3         4         5         6         7         8"
+    key-type Enter
+    key-type Home
+    type-text "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    type-text "‎" // Left To Right Mark - U+200E (this one should remain)
+    type-text "    "
+    type-text "‎" // Left To Right Mark - U+200E (this one should be removed with the spaces)
+    type-text "  "
+    key-type Enter
+    key-type "M1+s"
+    get-property text | equals
+    	  "         1         2         3         4         5         6         7         8\n"
+    	  // There is a Left To Right Mark before this character --------------------------v
+    	+ "12345678901234567890123456789012345678901234567890123456789012345678901234567890‎\n" | verify-true
+}
+
+get-editor $memberEditorTitle | close
+
+delete-pds -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG -datasetName $tempDataset
+
+// Logout to prevent other tests from running with Hebrew code page.
+logout
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

@@ -1,0 +1,60 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _CdHz0LfKEeaZj-_yDyxeGA,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q
+Element-Name: LongCopybookName
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _VjmdoDGpEeeQ_Kc4lyDgMQ
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/25/17 8:31 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- LongCopybookName ----------------------------------------------"
+
+global [val concatList1 "CopybookConcatList1"]
+
+add-filter -filter $FILTER_XDEVREG
+
+remove-all-host-explorer-concatenation-lists
+
+get-button "SlickEdit Copybook Concatenation Lists preferences" | click
+with [get-window "Preferences (Filtered)"] {
+    get-button "New..." | click
+    with [get-window "Copybook Concatenation List"] {
+        get-editbox -after [get-label "Copybook concatenation list name:"] | set-text $concatList1
+        get-button "Browse..." | click
+        with [get-window "Dataset Selection"] {
+            with [get-section Datasets] {
+                with [get-editbox -after [get-label "Name:"]] {
+                    set-text XDEVREG
+                    key-type Enter
+                }
+                get-table | select "XDEVREG.TEST.MANY.COBOL.COPY"
+            }
+            get-button OK | click
+        }
+        get-button OK | click
+    }
+    get-button OK | click
+}
+
+get-view Console | get-button "Clear Console" | click
+
+get-view "Host Explorer" | get-tree | select-pds-member "XDEVREG.TEST.MANY.COBOL" "LONGTEST" 
+    | get-menu "Edit With/Compuware Editor powered by SlickEdit" | click
+    
+get-window "SlickEdit Copybook Download" | get-button Yes | click
+
+get-window "Copybooks Not Found" | get-button Ignore | click
+
+get-view Console | get-text-viewer | get-property text | contains "The download was successful" | verify-false
+
+remove-all-host-explorer-concatenation-lists
+
+close-all-editors
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

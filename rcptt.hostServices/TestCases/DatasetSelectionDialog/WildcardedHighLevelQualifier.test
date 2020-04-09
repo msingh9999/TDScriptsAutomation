@@ -1,0 +1,67 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _kRuZMER7EeamKrg04Gqe-Q,_kR5YUER7EeamKrg04Gqe-Q
+Element-Name: WildcardedHighLevelQualifier
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _vXxicJlIEeepZuqfJ12XnA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 9/27/17 10:07 AM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- WildcardedHighLevelQualifier ----------------------------------------------"
+
+global [val wildcardFilter "xdevr*"]
+global [val disabledMessage 
+	[format "Filter %s was rejected. Using wildcards in the high-level qualifier is disabled on this host by your system administrator." $wildcardFilter]]
+
+get-menu "Search/Dataset..." | click
+with [get-window Search]
+{
+    get-group Scope | get-button "Add..." | click
+    with [get-window Datasets]
+    {
+        get-button "Browse..." | click
+        with [get-window "Dataset Selection"]
+        {
+            with [get-section Datasets]
+            {
+		        get-editbox -after [get-label "Name:"] | set-text $wildcardFilter
+		        get-button List | click
+            }
+
+            get-table | get-item -path "XDEVREG.CC.JCL" | get-property caption | equals "XDEVREG.CC.JCL" | verify-true
+
+		    get-combo -after [get-label "Host:"] | select [format "%s:%s" $HOST $PORT_20947]
+		    with [get-section Datasets]
+		    {
+		        get-editbox -after [get-label "Name:"] | set-text $wildcardFilter
+		        get-button List | click
+		    }
+
+			get-editbox -after [get-label "Dataset Selection"] | get-property text | equals $disabledMessage | verify-true
+
+		    with [get-section Datasets]
+		    {
+		        get-editbox -after [get-label "Name:"] | set-text "*.TEST"
+		        get-button List | click
+		    }
+
+			get-editbox -after [get-label "Dataset Selection"] | get-property text 
+			    | equals "The specified filter is either invalid or the scope is too broad." | verify-true
+			
+	        get-button Cancel | click
+        }
+
+        get-button Cancel | click
+    }
+
+    get-button Cancel | click
+}
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

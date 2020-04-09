@@ -1,0 +1,19 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: SuiteHostServicesRegression
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _i3qyoLvzEea2UcoPeLeX6A
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 7/28/17 7:31 AM
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_DuqP8HQ5Eeao6LAbRG4SEA	// kind: 'test' name: 'VSAM' path: 'VSAM.test'
+_B791MHQ3Eeao6LAbRG4SEA	// kind: 'test' name: 'SequentialDatasets' path: 'SequentialDatasets.test'
+_46YcoC7tEea435dpAOQKHg	// kind: 'test' name: 'BrowseEdit' path: 'BrowseEdit.test'
+_jnT_4GJEEee_-JfTQJQ4Yg	// kind: 'test' name: 'FailedStartedTask' path: 'FailedStartedTask.test'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

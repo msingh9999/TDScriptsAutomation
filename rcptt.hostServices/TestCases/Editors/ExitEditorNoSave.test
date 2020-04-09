@@ -1,0 +1,64 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: ExitEditorNoSave
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _G1Xh4AgYEeeYgsE6-tO-9w
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/24/17 1:25 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+global [val testDataset "XDEVREG.EDIT.TEST"]
+global [val testMember1 [format "T%S" [get-time | format-time -format mmssSSS]]]
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+add-filter -hostName $HOST -portNum $PORT -filter $FILTER_XDEVREG
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset] 
+    | get-menu "New Member..." | click
+with [get-window "New Member"] {
+    get-editbox -after [get-label "Member name:"] | set-text $testMember1
+    get-button OK | click
+}
+
+get-editor [concat $testMember1 ".data"] | close
+
+get-view $HOST_EXPLORER | get-tree | select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset -member $testMember1] 
+    | get-menu "Edit With/Compuware Editor" | click
+with [get-editor [concat $testMember1 ".data"] | get-text-viewer] {
+    type-text a
+    key-type BackSpace
+    get-editor [concat $testMember1 ".data"] | close
+}
+get-window $HOST_EXPLORER | close
+
+get-editor [concat $testMember1 ".data"] | close
+get-window $HOST_EXPLORER | key-type "TRAVERSE_ESCAPE"
+
+// Should not get a 2nd prompt to save from Eclipse
+verify-error { get-window "Save Resource" }
+
+get-editor [concat $testMember1 ".data"] | close
+get-window $HOST_EXPLORER | close
+
+// Should not get a 2nd prompt to save from Eclipse
+verify-error { get-window "Save Resource" }
+
+get-editor [concat $testMember1 ".data"] | close
+get-window $HOST_EXPLORER | get-button No | click
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [get-pds-member-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testDataset -member $testMember1]
+    get-menu Delete | click
+}
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

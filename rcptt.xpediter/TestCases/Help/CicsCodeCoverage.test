@@ -1,0 +1,143 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _eEaF4ER8EeamKrg04Gqe-Q,_ktRQQER8EeamKrg04Gqe-Q,_pXfDgHICEee33KwN8W2N2w,_PprFMER9EeamKrg04Gqe-Q,_kRuZMER7EeamKrg04Gqe-Q,_aEjwMLjIEeebSNbxTgM6gQ
+Element-Name: CicsCodeCoverage
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _0xNisJxxEee5T_BDt0pU3g
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 3/21/18 9:17 AM
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Test to validate Xpediter CICS Code Coverage context sensitive help
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "----------------------------------------------- CicsCodeCoverage -----------------------------------------------"
+
+global [val CWDEMCB2 CWDEMCB2]
+
+open-xpediter-perspective
+close-cheatsheet
+
+get-menu -path "Run/Debug Configurations..." | click
+with [get-window "Debug Configurations"] {
+	get-tree | select "Xpediter CICS Debug Session"
+	get-button "New launch configuration" | click
+	get-editbox -after [get-label "Name:"] | set-text $CWDEMCB2
+	get-group "Target system" | get-combo -after [get-label "CICS region:"] | select "CICS H01AC087 QA"
+	with [get-group "Program to debug"] {
+		with [get-editbox -after [get-label "Load Module:"]] {
+			set-text CWDEMCB2
+			key-type TRAVERSE_TAB_NEXT
+		}
+		get-editbox -after [get-label "CSECT:"] | set-text CWDEMCB2
+	}
+	get-button Debug | click
+}
+
+handle-login-dialog
+wait-for-source -pgmName $CWDEMCB2 -lmName $CWDEMCB2
+
+get-menu -path "Window/Show View/CICS Code Coverage" | click
+
+get-view "CICS Code Coverage" | get-button "Add Test Definition..." | click
+with [get-window "CICS Code Coverage"] {
+	validate-context-help "Code Coverage collection for CICS consists of defining the test criteria, beginning the Co" +
+		"de Coverage data collection, executing the CICS transactions, and halting the collection"
+}
+
+with [get-window "CICS Code Coverage"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-view "CICS Code Coverage" | get-table | select PAYROLL | double-click
+with [get-window "CICS Code Coverage"] {
+	validate-context-help "Code Coverage collection for CICS consists of defining the test criteria, beginning the Co" +
+		"de Coverage data collection, executing the CICS transactions, and halting the collection"
+}
+
+with [get-window "CICS Code Coverage"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-view "CICS Code Coverage" | get-table | select [get-item -path GOLF -index 1] | double-click
+with [get-window "CICS Code Coverage"] {
+	get-group "User IDs" | get-button "Add..." | click
+	with [get-window "CICS Code Coverage"] {
+		validate-context-help "Code Coverage collection for CICS consists of defining the test criteria, beginning th" +
+			"e Code Coverage data collection, executing the CICS transactions, and halting the collection"
+	}
+}
+
+with [get-window "CICS Code Coverage" | get-window "CICS Code Coverage"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+get-window "CICS Code Coverage" | get-button Cancel | click
+get-view "CICS Code Coverage" | get-table | select [get-item -path GOLF -index 1] | double-click
+with [get-window "CICS Code Coverage"] {
+	get-group Masks | get-button "Add..." | click
+	with [get-window "CICS Code Coverage"] {
+		validate-context-help "Code Coverage collection for CICS consists of defining the test criteria, beginning th" +
+			"e Code Coverage data collection, executing the CICS transactions, and halting the collection"
+	}
+}
+
+with [get-window "CICS Code Coverage" | get-window "CICS Code Coverage"] {
+	get-button Help | click
+	get-button Cancel | click
+}
+
+with [get-window "CICS Code Coverage"] {
+	get-group Masks | get-button "Add..." | key-type TRAVERSE_TAB_NEXT
+	get-button OK | key-type TRAVERSE_TAB_NEXT
+	get-button Cancel | click
+}
+
+with [get-view "CICS Code Coverage"] {
+	get-table | select PAYROLL | get-menu -path "View Collection Activity..." | click
+	get-button "Show Archive..." | click
+	with [get-window "CICS Code Coverage"] {
+		validate-context-help "Code Coverage collection for CICS consists of defining the test criteria, beginning th" +
+			"e Code Coverage data collection, executing the CICS transactions, and halting the collection"
+	}
+}
+
+with [get-window "CICS Code Coverage"] {
+	get-button Help | click
+	get-button Close | click
+}
+get-view "CICS Code Coverage" | get-table | select [get-item -path PAYROLL -index 1] | double-click
+get-window "CICS Code Coverage" | get-button Cancel | click
+get-view "CICS Code Coverage" | get-table | select PAYROLL | double-click
+with [get-window "CICS Code Coverage"] {
+	get-group Masks | get-table | select Include
+	get-group "User IDs" | get-table | select Include
+	get-button Cancel | click
+}
+
+get-view "CICS Code Coverage" | get-table | select [get-item -path PAYROLL -index 2] | double-click
+with [get-window "CICS Code Coverage"] {
+	get-group Masks | get-table | select [get-item -path Include -index 1]
+	get-group "User IDs" | get-table | select [get-item -path Include -index 2]
+	get-button Cancel | click
+}
+
+get-view Debug | get-tree | select "CWDEMCB2 [Xpediter CICS Debug Session]" | get-menu -path "Terminate and Remove"
+	| click
+get-window "Terminate and Remove" | get-button Yes | click
+
+close-all-editors
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

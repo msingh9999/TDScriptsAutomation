@@ -1,0 +1,99 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _PprFMER9EeamKrg04Gqe-Q
+Element-Name: EnableAddDatasets
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _h3rg4P-BEeaNk7oX-tKcJA
+Runtime-Version: 2.2.0.201606232320
+Save-Time: 4/12/17 10:00 AM
+Tags: CWE-101524
+Testcase-Type: ecl
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+Tests enable state of the Host Services Dataset Search dialog's Add button.
+
+CWE-101524: Bad error dialog shown when initiate Search or from Project Explorer Add to Concatenation List for an online project
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- EnableAddDatasets ----------------------------------------------"
+// Remove all hosts
+remove-all-hosts-native
+
+// open the dialog and view a Sequential dataset
+get-menu "Search/Dataset..." | click
+
+with [get-window Search] {
+	get-group Scope | get-button "Add..." | get-property enablement | equals true | verify-false
+	get-button Cancel | click
+}
+
+add-host -hostName $HOST -portNum $PORT_16196
+add-host -hostName $HOST_CW09 -portNum $PORT_16196
+add-host -hostName $HOST_CW06 -portNum $PORT_16196
+
+// open the dialog and view a Sequential dataset
+get-menu "Search/Dataset..." | click
+
+get-window Search | get-group Scope | get-button "Add..." | get-property enablement | equals true | verify-true
+
+with [get-window Search] {
+    get-group Scope | get-button "Configure..." | click
+    with [get-window "Preferences (Filtered)"] {
+        get-table | select Ungrouped
+        get-button Remove | click
+        get-window "Remove Connection" | get-button Yes | click
+        get-button OK | click
+    }
+
+	get-group Scope | get-button "Add..." | get-property enablement | equals true | verify-true
+
+    get-group Scope | get-button "Configure..." | click
+    with [get-window "Preferences (Filtered)"] {
+        get-table | select Ungrouped
+        get-button Remove | click
+        get-window "Remove Connection" | get-button Yes | click
+        get-button OK | click
+    }
+
+	get-group Scope | get-button "Add..." | get-property enablement | equals true | verify-true
+
+    get-group Scope | get-button "Configure..." | click
+    with [get-window "Preferences (Filtered)"] {
+        get-table | select Ungrouped
+        get-button Remove | click
+        get-window "Remove Connection" | get-button Yes | click
+        get-button OK | click
+    }
+
+	get-group Scope | get-button "Add..." | get-property enablement | equals true | verify-false
+
+    get-group Scope | get-button "Configure..." | click
+    with [get-window "Preferences (Filtered)"] {
+        get-button "Add..." | click
+        with [get-window "Host Connections"] {
+            with [get-editbox -after [get-label "Host:"]] {
+                set-text $HOST
+                key-type "TRAVERSE_TAB_NEXT"
+            }
+            get-editbox -after [get-label "Port:"] | set-text $PORT
+            get-button OK | click
+        }
+        get-button OK | click
+    }
+    
+	get-group Scope | get-button "Add..." | get-property enablement | equals true | verify-true
+	
+	get-button Cancel | click
+}
+
+// Remove all hosts
+remove-all-hosts-native
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--

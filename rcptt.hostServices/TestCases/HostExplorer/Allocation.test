@@ -1,0 +1,293 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Contexts: _l8aZYER7EeamKrg04Gqe-Q
+Element-Name: Allocation
+Element-Type: testcase
+Element-Version: 3.0
+External-Reference: 
+Id: _ToAxMMCLEeaIsKwF5dRmlg
+Runtime-Version: 2.2.0.201706152316
+Save-Time: 9/25/17 12:23 PM
+Testcase-Type: ecl
+
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac
+Content-Type: text/ecl
+Entry-Name: .content
+
+log "---------------------------------------------- Allocation ----------------------------------------------"
+global [val testPDS1 [format "XDEVREG.TESTALOC.T%S" [get-time | format-time -format mmssSSS]]]
+wait -ms 1000
+global [val testPDS2 [format "XDEVREG.TESTALOC.T%S" [get-time | format-time -format mmssSSS]]]
+
+// Test Allocation Wizards with no host connections defined
+
+get-menu "File/New/Compuware Source Listing Datasets" | click
+with [get-window "Create Source Listing Datasets"] {
+    get-editbox -after [get-label "Select Host"] | get-property text 
+        | equals "No hosts have been defined. Click the Configure button to add a host." | verify-true
+    get-button "Configure..." | get-property enablement | equals true | verify-true
+}
+get-window "Create Source Listing Datasets" | get-button Cancel | click
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-editbox -after [get-label "Select Host"] | get-property text 
+        | equals "No hosts have been defined. Click the Configure button to add a host." | verify-true
+    get-button "Configure..." | get-property enablement | equals true | verify-true
+}
+get-window "Allocate Dataset" | get-button Cancel | click
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-editbox -after [get-label "Select Host"] | get-property text 
+        | equals "No hosts have been defined. Click the Configure button to add a host." | verify-true
+    get-button "Configure..." | get-property enablement | equals true | verify-true
+}
+get-window "Allocate VSAM Cluster" | get-button Cancel | click
+
+// Add a host
+
+add-host -hostName $HOST -portNum $PORT
+login-from-host -hostName $HOST -port $PORT
+add-filter $FILTER_XDEVREG
+
+// Test "Allocate Like"
+
+
+get-menu "File/New/PDS or Sequential Dataset" | click
+
+with [get-window "Allocate Dataset"] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS1
+    }
+    get-button "Allocate Like..." | click
+    with [get-window "Dataset Selection"] {
+        with [get-section Datasets] {
+            with [get-editbox -after [get-label "Name:"]] {
+                set-text "XDEVREG*"
+            }
+            get-button List | click
+            get-table | select "XDEVREG.COBOL"
+        }
+        get-button OK | click
+    }
+    get-button Finish | click
+	get-window "Allocate Dataset" | get-button OK | click
+}
+get-view $HOST_EXPLORER | get-tree | select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1] 
+    | get-menu Delete | click
+with [get-window Delete] {
+    get-button Delete | click
+    get-button Done | click
+}
+
+// Test various attributes for PDS allocation
+
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-button "Next >" | get-property enablement | equals false | verify-true
+    get-button Finish | get-property enablement | equals false | verify-true
+    get-editbox -after [get-label "Allocate Dataset"] | get-property text | equals "Dataset name must be specified." 
+        | verify-true
+}
+with [get-window "Allocate Dataset"] {
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS2
+    }
+    with [get-group "Dataset attributes"] {
+        get-combo -after [get-label "Dataset type:"] | select LIBRARY
+        get-editbox -after [get-label "Primary quantity:"] | set-text ""
+    }
+}
+get-window "Allocate Dataset" | get-editbox -after [get-label "Allocate Dataset"] | get-property text 
+    | equals "Primary quantity must be specified." | verify-true
+with [get-window "Allocate Dataset" | get-group "Dataset attributes"] {
+    get-editbox -after [get-label "Primary quantity:"] | set-text 57
+    get-editbox -after [get-label "Secondary quantity:"] | set-text ""
+    get-editbox -after [get-label "Record length:"] | set-text ""
+}
+get-window "Allocate Dataset" | get-editbox -after [get-label "Allocate Dataset"] | get-property text 
+    | equals "Record length must be specified." | verify-true
+with [get-window "Allocate Dataset"] {
+    with [get-group "Dataset attributes"] {
+        get-editbox -after [get-label "Record length:"] | set-text 80
+        with [get-editbox -after [get-label "Block size:"]] {
+            set-text ""
+            key-type "M1+z"
+            set-text 27920
+            key-type "M1+z"
+        }
+        get-button "Set expiration:" | check
+        get-date-time | set-value "2027/1/1 9:1:49"
+    }
+    get-button Finish | click
+	get-window "Allocate Dataset" | get-button OK | click
+}
+with [get-view "Host Explorer" | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS2]  | get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $testPDS2 | get-property "values['Results']" 
+    | equals [format "Resource %S successfully deleted." $testPDS2] | verify-true
+get-window Delete | get-button Done | click
+
+// Test allocating a VSAM Cluster
+
+get-menu "File/New/VSAM Cluster" | click
+with [get-window "Allocate VSAM Cluster"] {
+    get-button "Next >" | get-property enablement | equals false | verify-true
+    get-button Finish | get-property enablement | equals false | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+    get-editbox -after [get-label "Basic VSAM Allocation Options"] | get-property text 
+        | equals "Cluster name must be specified." | verify-true
+}
+with [get-window "Allocate VSAM Cluster"] {
+    with [get-editbox -after [get-label "Cluster name:"]] {
+        set-text $testPDS1
+    }
+    with [get-group "Cluster/Data space"] {
+        get-editbox -after [get-label "Primary:"] | set-text 10
+        get-editbox -after [get-label "Secondary:"] | set-text 5
+    }
+    with [get-group "Allocation options"] {
+        with [get-editbox -after [get-label "Average record size:"]] {
+            set-text 80
+            key-type "TRAVERSE_TAB_NEXT"
+        }
+        get-editbox -after [get-label "Maximum record size:"] | set-text 120
+        get-editbox -after [get-label "Key length:"] | set-text 5
+        get-editbox -after [get-label "Key offset:"] | set-text 0
+        with [get-button Reusable] {
+            uncheck
+            check
+        }
+        with [get-button "Erase on delete"] {
+            uncheck
+            check
+        }
+        get-button "Set expiration:" | check
+        get-date-time | set-value "2025/1/1 9:16:19"
+    }
+
+    get-button "< Back" | get-property enablement | equals true | verify-true
+    get-button "Next >" | get-property enablement | equals true | verify-true
+    get-button Finish | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+    get-button "Next >" | click
+    get-group Owner | get-button "Current user" | click
+    get-button Finish | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+    get-button "< Back" | get-property enablement | equals true | verify-true
+	get-button Finish | click
+	get-window "Allocate VSAM Cluster" | get-button OK | click
+}
+
+with [get-view "Host Explorer" | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]  | get-menu Delete | click
+}
+
+with [get-window Delete] {
+	get-button Delete | click
+	get-table | get-item $testPDS1 | get-property "values['Results']" | equals [format "Resource %S successfully deleted." $testPDS1] | verify-true
+	get-button Done | click
+}
+
+// Test Allocation of Compuware Source Listing dataset
+
+get-menu "File/New/Compuware Source Listing Datasets" | click
+with [get-window "Create Source Listing Datasets"] {
+    get-editbox -after [get-label "Create Source Listing Datasets"] | get-property text 
+        | equals "Dataset name field in Shared directory allocation group must be specified." | verify-true
+    get-button "< Back" | get-property enablement | equals true | verify-true
+    get-button "Next >" | get-property enablement | equals false | verify-true
+    get-button Finish | get-property enablement | equals false | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+with [get-window "Create Source Listing Datasets"] {
+    with [get-group "Shared directory allocation"] {
+        with [get-editbox -after [get-label "Dataset name:"]] {
+            set-text $testPDS1
+        }
+        get-editbox -after [get-label "Volume:"] | set-text 1
+    }
+    with [get-group "Database allocation" | get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS1
+    }
+}
+get-window "Create Source Listing Datasets" | get-editbox -after [get-label "Create Source Listing Datasets"] 
+    | get-property text | equals "The shared directory dataset and the database dataset must have different names." 
+    | verify-true
+with [get-window "Create Source Listing Datasets"] {
+    with [get-group "Database allocation"] {
+        get-editbox -after [get-label "Dataset name:"] | set-text $testPDS2
+        get-editbox -after [get-label "Volume:"] | set-text 1
+    }
+    get-button Finish | click
+	get-window "Create Source Listing Datasets" | get-button OK | click
+}
+
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS2]
+    get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+with [get-window Delete | get-table] {
+    get-item $testPDS1 | get-property "values['Results']" 
+        | equals [format "Resource %S successfully deleted." $testPDS1] | verify-true
+    get-item $testPDS2 | get-property "values['Results']" 
+        | equals [format "Resource %S successfully deleted." $testPDS2] | verify-true
+}
+get-window Delete | get-button Done | click
+
+
+// Allocate a sequential dataset
+
+get-menu "File/New/PDS or Sequential Dataset" | click
+with [get-window "Allocate Dataset"] {
+    get-button "< Back" | get-property enablement | equals true | verify-true
+    get-button Finish | get-property enablement | equals false | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+    with [get-editbox -after [get-label "Dataset name:"]] {
+        set-text $testPDS1
+    }
+    with [get-group "Dataset attributes"] {
+        get-combo -after [get-label "Dataset type:"] | select ""
+        get-combo -after [get-label "Space units:"] | select Blocks
+        get-editbox -after [get-label "Primary quantity:"] | set-text 78
+        get-editbox -after [get-label "Secondary quantity:"] | set-text 0
+        get-combo -after [get-label "Record format:"] | select F
+        get-editbox -after [get-label "Block size:"] | set-text 80
+        get-button "Set expiration:" | check
+        get-date-time | set-value "2025/1/1 9:49:3"
+    }
+    with [get-group "SMS parameters"] {
+        get-editbox -after [get-label "Management class:"] | set-text "@NONSTD@"
+        with [get-editbox -after [get-label "Storage class:"]] {
+            set-text STDNOCSH
+        }
+    }
+    get-group "Dataset location" | get-editbox -after [get-label "Volume:"] | set-text PRD916
+}
+with [get-window "Allocate Dataset"] {
+    get-button Finish | get-property enablement | equals true | verify-true
+    get-button Cancel | get-property enablement | equals true | verify-true
+}
+with [get-window "Allocate Dataset"]
+{
+	get-button Finish | click
+	get-window "Allocate Dataset" | get-label [format "Dataset %S has been allocated on host %s:%s." $testPDS1 $HOST $PORT] 
+	    | get-property caption | equals [format "Dataset %S has been allocated on host %s:%s." $testPDS1 $HOST $PORT] 
+	    | verify-true
+	get-window "Allocate Dataset" | get-button OK | click
+}
+with [get-view $HOST_EXPLORER | get-tree] {
+    select [format "Hosts/%s:%s/z\\/OS Datasets/%s" $HOST $PORT $FILTER_XDEVREG] | get-menu Refresh | click
+    select [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1] [get-pds-path -hostName $HOST -portNUM $PORT -filter $FILTER_XDEVREG -dataset $testPDS1]
+    get-menu Delete | click
+}
+get-window Delete | get-button Delete | click
+get-window Delete | get-table | get-item $testPDS1 | get-property "values['Results']" 
+    | equals [format "Resource %s successfully deleted." $testPDS1] | verify-true
+get-window Delete | get-button Done | click
+------=_.content-0a7243a0-75d3-3d5f-9791-539de0e5b7ac--
